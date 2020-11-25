@@ -1,0 +1,4 @@
+/home/daniel/Desktop/ApoloBasic/build/CMakeFiles/edit_cache.dir
+/home/daniel/Desktop/ApoloBasic/build/CMakeFiles/rebuild_cache.dir
+/home/daniel/Desktop/ApoloBasic/build/CMakeFiles/myapp.dir
+/home/daniel/Desktop/ApoloBasic/build/CMakeFiles/ApoloBasic.dir
