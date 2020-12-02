@@ -21,8 +21,5 @@ ELSE()
     message(FATAL_ERROR "YOU SHOULD HAVE LOCALLY INSTALLED THE WXWIDGETS PACKAGE")
 ENDIF()
 
-add_executable(myapp src/pruebawx.cpp)
-target_link_libraries(myapp mrcore ${OPENGL_LIBRARIES} ${wxWidgets_LIBRARIES})
-
 add_executable(ApoloLite src/main.cpp src/mainWindow.cpp src/canvas.cpp)
 target_link_libraries(ApoloLite mrcore ${OPENGL_LIBRARIES} ${wxWidgets_LIBRARIES})
