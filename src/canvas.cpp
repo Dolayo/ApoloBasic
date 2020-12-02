@@ -1,7 +1,7 @@
 #include <canvas.h>
 
 BEGIN_EVENT_TABLE(canvas, wxGLCanvas)
-    EVT_PAINT    (canvas::Paintit)
+    EVT_PAINT(canvas::OnPaint)
 	EVT_SIZE(canvas::Resized)
 	EVT_MOTION(canvas::OnMouseMove)
 	EVT_RIGHT_DOWN(canvas::OnMouseClick)
@@ -11,20 +11,16 @@ BEGIN_EVENT_TABLE(canvas, wxGLCanvas)
 	EVT_CHAR(canvas::OnKey)
 END_EVENT_TABLE()
 
-canvas::canvas(wxFrame *parent): wxGLCanvas(parent, wxID_ANY,  wxDefaultPosition, wxDefaultSize, 0, wxT("GLCanvas")){
+canvas::canvas(wxWindow *parent, wxPoint pos, wxSize size ): wxGLCanvas(parent, wxID_ANY,NULL,  pos, size, 0, wxT("Canvas")){
     int argc = 1;
     char* argv[1] = { wxString((wxTheApp->argv)[0]).char_str() };
 	m_context = new wxGLContext(this);
 }
 
 
-void canvas::Paintit(wxPaintEvent& WXUNUSED(event)){
-    Render();
-}
+void canvas::OnPaint(wxPaintEvent& WXUNUSED(event)){
 
-void canvas::Render()
-{
-    SetCurrent();
+    wxGLCanvas::SetCurrent(*m_context);
 
     wxPaintDC(this);
 
@@ -116,10 +112,22 @@ void canvas::OnMouseClick(wxMouseEvent& event)
 void canvas::OnKey(wxKeyEvent& event)
 {
 
-	
-	scene.KeyDown(event.GetUnicodeKey());
-	scene.SpecialKeyDown(event.GetUnicodeKey());
+	wxChar u_keycode = event.GetUnicodeKey();
 
+	if(u_keycode == WXK_NONE)
+	{
+		int i_keycode = event.GetKeyCode();
+
+		scene.KeyDown(i_keycode);
+		scene.SpecialKeyDown(i_keycode);
+	}
+
+	else
+	{
+		scene.KeyDown(u_keycode);
+		scene.SpecialKeyDown(u_keycode);
+	}
+	
 	SetFocus();
 	Refresh();
 }

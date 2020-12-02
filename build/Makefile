@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/daniel/Desktop/ApoloBasic
+CMAKE_SOURCE_DIR = /home/daniel/Desktop/ApoloLite
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/daniel/Desktop/ApoloBasic/build
+CMAKE_BINARY_DIR = /home/daniel/Desktop/ApoloLite/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloBasic/build/CMakeFiles /home/daniel/Desktop/ApoloBasic/build/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloLite/build/CMakeFiles /home/daniel/Desktop/ApoloLite/build/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloBasic/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloLite/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -124,17 +124,17 @@ myapp/fast:
 .PHONY : myapp/fast
 
 #=============================================================================
-# Target rules for targets named ApoloBasic
+# Target rules for targets named ApoloLite
 
 # Build rule for target.
-ApoloBasic: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 ApoloBasic
-.PHONY : ApoloBasic
+ApoloLite: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 ApoloLite
+.PHONY : ApoloLite
 
 # fast build rule for target.
-ApoloBasic/fast:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/build
-.PHONY : ApoloBasic/fast
+ApoloLite/fast:
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/build
+.PHONY : ApoloLite/fast
 
 src/canvas.o: src/canvas.cpp.o
 
@@ -142,7 +142,7 @@ src/canvas.o: src/canvas.cpp.o
 
 # target to build an object file
 src/canvas.cpp.o:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/src/canvas.cpp.o
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/src/canvas.cpp.o
 .PHONY : src/canvas.cpp.o
 
 src/canvas.i: src/canvas.cpp.i
@@ -151,7 +151,7 @@ src/canvas.i: src/canvas.cpp.i
 
 # target to preprocess a source file
 src/canvas.cpp.i:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/src/canvas.cpp.i
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/src/canvas.cpp.i
 .PHONY : src/canvas.cpp.i
 
 src/canvas.s: src/canvas.cpp.s
@@ -160,7 +160,7 @@ src/canvas.s: src/canvas.cpp.s
 
 # target to generate assembly for a file
 src/canvas.cpp.s:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/src/canvas.cpp.s
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/src/canvas.cpp.s
 .PHONY : src/canvas.cpp.s
 
 src/main.o: src/main.cpp.o
@@ -169,7 +169,7 @@ src/main.o: src/main.cpp.o
 
 # target to build an object file
 src/main.cpp.o:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/src/main.cpp.o
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -178,7 +178,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/src/main.cpp.i
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -187,7 +187,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/src/main.cpp.s
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 src/mainWindow.o: src/mainWindow.cpp.o
@@ -196,7 +196,7 @@ src/mainWindow.o: src/mainWindow.cpp.o
 
 # target to build an object file
 src/mainWindow.cpp.o:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/src/mainWindow.cpp.o
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/src/mainWindow.cpp.o
 .PHONY : src/mainWindow.cpp.o
 
 src/mainWindow.i: src/mainWindow.cpp.i
@@ -205,7 +205,7 @@ src/mainWindow.i: src/mainWindow.cpp.i
 
 # target to preprocess a source file
 src/mainWindow.cpp.i:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/src/mainWindow.cpp.i
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/src/mainWindow.cpp.i
 .PHONY : src/mainWindow.cpp.i
 
 src/mainWindow.s: src/mainWindow.cpp.s
@@ -214,7 +214,7 @@ src/mainWindow.s: src/mainWindow.cpp.s
 
 # target to generate assembly for a file
 src/mainWindow.cpp.s:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/src/mainWindow.cpp.s
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/src/mainWindow.cpp.s
 .PHONY : src/mainWindow.cpp.s
 
 src/pruebawx.o: src/pruebawx.cpp.o
@@ -253,7 +253,7 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... myapp"
-	@echo "... ApoloBasic"
+	@echo "... ApoloLite"
 	@echo "... src/canvas.o"
 	@echo "... src/canvas.i"
 	@echo "... src/canvas.s"

@@ -2,6 +2,12 @@
 #include <wx/glcanvas.h>
 #include <mrcore.h>
 
+/////////////// DEBUG
+#include <iostream>
+#include <wx/wfstream.h>
+#include <wx/txtstrm.h>
+/////////////// DEBUG
+
 using namespace mr;
 using namespace std;
 
@@ -9,10 +15,7 @@ class canvas: public wxGLCanvas {
 
 private:
 
-	wxGLContext* m_context;
-
-	void Render();
-	
+	wxGLContext* m_context;	
 
 public:
 
@@ -23,11 +26,12 @@ public:
 	PathPlanner *planner;
 	RobotPath solution;
 
-	canvas(wxFrame* parent);
+	canvas(wxWindow* parent, wxPoint pos, wxSize size );
 
 	virtual ~canvas()
 	{
 		world.destroyContent();
+		delete m_context;
 		Close(true);
 	}
 
@@ -35,7 +39,7 @@ public:
 	void OnMouseClick(wxMouseEvent& event);
 	void Resized(wxSizeEvent& event);
 	void OnKey(wxKeyEvent& event);
-	void Paintit(wxPaintEvent& event);
+	void OnPaint(wxPaintEvent& event);
 
 protected:
     

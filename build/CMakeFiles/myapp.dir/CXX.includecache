@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/daniel/Desktop/ApoloBasic/src/pruebawx.cpp
+/home/daniel/Desktop/ApoloLite/src/pruebawx.cpp
 wx/wx.h
 -
 wx/glcanvas.h

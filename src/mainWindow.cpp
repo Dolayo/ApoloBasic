@@ -1,40 +1,55 @@
 #include <mainWindow.h>
+#include <iostream>
 
 
-BEGIN_EVENT_TABLE(MyFrame, wxFrame)
-    EVT_BUTTON(ID_Plan,  MyFrame::OnPlan)
+BEGIN_EVENT_TABLE(MainWindow, wxFrame)
+    EVT_BUTTON(ID_Plan,  MainWindow::OnPlan)
 END_EVENT_TABLE()
 
-MyFrame::MyFrame(const wxString& title): wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(400, 500))
+MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800))
 {
+	////////////DEBUG
+	wxFFileOutputStream output( stderr );
+	wxTextOutputStream cout( output );
+	////////////DEBUG
     wxMenu *menuFile = new wxMenu;
-    menuFile->Append(ID_Hello, "&Hello...\tCtrl-J", "Help string shown in status bar for this menu item");
+    menuFile->Append(ID_Hello, wxT("&Hello...\tCtrl-J"), wxT("Help string shown in status bar for this menu item"));
     menuFile->AppendSeparator();
     menuFile->Append(wxID_EXIT);
+
     wxMenu *menuHelp = new wxMenu;
     menuHelp->Append(wxID_ABOUT);
+
     wxMenuBar *menuBar = new wxMenuBar;
-    menuBar->Append(menuFile, "&File");
-    menuBar->Append(menuHelp, "&Help");
+    menuBar->Append(menuFile, wxT("&Example"));
+    menuBar->Append(menuHelp, wxT("&Help"));
+
     SetMenuBar( menuBar );
-    CreateStatusBar();
-    SetStatusText("Welcome to wxWidgets!");
-    Bind(wxEVT_MENU, &MyFrame::OnHello, this, ID_Hello);
-    Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
+
+    sb = CreateStatusBar();
+    sb->SetStatusText(wxT("ApoloLite Ready!"));	
+
+    Bind(wxEVT_MENU, &MainWindow::OnExample, this, ID_Hello);
+    Bind(wxEVT_MENU, &MainWindow::OnAbout, this, wxID_ABOUT);
     //Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
-	Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(MyFrame::OnExit));
-	Centre();
 
-	frameGL = new wxFrame((wxFrame *)NULL, -1,  wxT("Hello GL World"), wxPoint(600,100), wxSize(800,800));
-    MyGLCanvas = new canvas(frameGL);
+	Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(MainWindow::OnExit));
+	//Centre();
 
-	wxPanel *panel = new wxPanel(this, wxID_ANY);
-	wxButton *button = new wxButton(panel, ID_Plan,wxT("Plan"), wxPoint(20, 20));
+	//frameGL = new wxFrame((wxFrame *)NULL, -1,  wxT("Visualization Window"), wxPoint(600,100), wxSize(800,800));
+    
+	int width=GetClientSize().GetWidth();
+	int heigth=GetClientSize().GetHeight();
 
-  	Centre();
+	MyGLCanvas = new canvas(this, wxPoint(width-800, 0), wxSize(800, heigth));
+
+	panel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(200, heigth));
+	button = new wxButton(panel, ID_Plan, wxT("Plan"), wxPoint(0, 0),wxSize(100, 50));
+
+  	//Centre();
 }
 
-void MyFrame::OnPlan(wxCommandEvent& WXUNUSED(event))
+void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 {
     WBState gen(MyGLCanvas->myrobot,&(MyGLCanvas->world));
 	WBState *start=gen.createStateFromPoint3D(2.0,-8,0);
@@ -49,7 +64,7 @@ void MyFrame::OnPlan(wxCommandEvent& WXUNUSED(event))
 
 
 
-void MyFrame::OnExit(wxCloseEvent& event)
+void MainWindow::OnExit(wxCloseEvent& event)
 {
 	wxMessageDialog *dial = new wxMessageDialog(NULL,
       wxT("Are you sure to quit?"), wxT("Question"),
@@ -59,26 +74,25 @@ void MyFrame::OnExit(wxCloseEvent& event)
 	dial->Destroy();
 
 	if (ret == wxID_YES) {
-		MyGLCanvas->~canvas();
-		frameGL->Destroy();
+		delete MyGLCanvas;
     	this->Destroy();
 	} else {
 		event.Veto();
 	}
 }
 
-void MyFrame::OnAbout(wxCommandEvent& event)
+void MainWindow::OnAbout(wxCommandEvent& event)
 {
     wxMessageBox("This is a wxWidgets Hello World example",
                  "About Hello World", wxOK | wxICON_INFORMATION);
 }
 
-void MyFrame::OnHello(wxCommandEvent& event)
+void MainWindow::OnExample(wxCommandEvent& event)
 {
     //wxLogMessage("Hello world from wxWidgets!");
 
 	//wxFrame *frameGL = new wxFrame((wxFrame *)NULL, -1,  wxT("Hello GL World"), wxPoint(600,100), wxSize(800,800));
     //new wxGLCanvasSubClass(frameGL);
-	frameGL->Show(TRUE);
+	//frameGL->Show(TRUE);
 
 }

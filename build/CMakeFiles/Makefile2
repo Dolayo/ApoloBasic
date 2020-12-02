@@ -54,10 +54,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/daniel/Desktop/ApoloBasic
+CMAKE_SOURCE_DIR = /home/daniel/Desktop/ApoloLite
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/daniel/Desktop/ApoloBasic/build
+CMAKE_BINARY_DIR = /home/daniel/Desktop/ApoloLite/build
 
 #=============================================================================
 # Target rules for target CMakeFiles/myapp.dir
@@ -66,7 +66,7 @@ CMAKE_BINARY_DIR = /home/daniel/Desktop/ApoloBasic/build
 CMakeFiles/myapp.dir/all:
 	$(MAKE) -f CMakeFiles/myapp.dir/build.make CMakeFiles/myapp.dir/depend
 	$(MAKE) -f CMakeFiles/myapp.dir/build.make CMakeFiles/myapp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/daniel/Desktop/ApoloBasic/build/CMakeFiles --progress-num=5,6 "Built target myapp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/daniel/Desktop/ApoloLite/build/CMakeFiles --progress-num=5,6 "Built target myapp"
 .PHONY : CMakeFiles/myapp.dir/all
 
 # Include target in all.
@@ -76,9 +76,9 @@ all: CMakeFiles/myapp.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/myapp.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloBasic/build/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloLite/build/CMakeFiles 2
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/myapp.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloBasic/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloLite/build/CMakeFiles 0
 .PHONY : CMakeFiles/myapp.dir/rule
 
 # Convenience name for target.
@@ -97,39 +97,39 @@ clean: CMakeFiles/myapp.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/ApoloBasic.dir
+# Target rules for target CMakeFiles/ApoloLite.dir
 
 # All Build rule for target.
-CMakeFiles/ApoloBasic.dir/all:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/depend
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/daniel/Desktop/ApoloBasic/build/CMakeFiles --progress-num=1,2,3,4 "Built target ApoloBasic"
-.PHONY : CMakeFiles/ApoloBasic.dir/all
+CMakeFiles/ApoloLite.dir/all:
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/depend
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/daniel/Desktop/ApoloLite/build/CMakeFiles --progress-num=1,2,3,4 "Built target ApoloLite"
+.PHONY : CMakeFiles/ApoloLite.dir/all
 
 # Include target in all.
-all: CMakeFiles/ApoloBasic.dir/all
+all: CMakeFiles/ApoloLite.dir/all
 
 .PHONY : all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/ApoloBasic.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloBasic/build/CMakeFiles 4
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/ApoloBasic.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloBasic/build/CMakeFiles 0
-.PHONY : CMakeFiles/ApoloBasic.dir/rule
+CMakeFiles/ApoloLite.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloLite/build/CMakeFiles 4
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/ApoloLite.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/daniel/Desktop/ApoloLite/build/CMakeFiles 0
+.PHONY : CMakeFiles/ApoloLite.dir/rule
 
 # Convenience name for target.
-ApoloBasic: CMakeFiles/ApoloBasic.dir/rule
+ApoloLite: CMakeFiles/ApoloLite.dir/rule
 
-.PHONY : ApoloBasic
-
-# clean rule for target.
-CMakeFiles/ApoloBasic.dir/clean:
-	$(MAKE) -f CMakeFiles/ApoloBasic.dir/build.make CMakeFiles/ApoloBasic.dir/clean
-.PHONY : CMakeFiles/ApoloBasic.dir/clean
+.PHONY : ApoloLite
 
 # clean rule for target.
-clean: CMakeFiles/ApoloBasic.dir/clean
+CMakeFiles/ApoloLite.dir/clean:
+	$(MAKE) -f CMakeFiles/ApoloLite.dir/build.make CMakeFiles/ApoloLite.dir/clean
+.PHONY : CMakeFiles/ApoloLite.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/ApoloLite.dir/clean
 
 .PHONY : clean
 

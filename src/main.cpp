@@ -1,11 +1,13 @@
 #include "main.h"
 
-wxIMPLEMENT_APP(MyApp);
+wxIMPLEMENT_APP(ApoloLite);
 
-bool MyApp::OnInit()
+bool ApoloLite::OnInit()
 {
-    frame = new MyFrame("Button"); 
-    
+    frame = new MainWindow( wxT("ApoloLite")); 
+
+    frame->Centre();
     frame->Show(true);
+    
     return true;
 }

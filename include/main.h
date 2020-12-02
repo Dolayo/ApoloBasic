@@ -1,13 +1,14 @@
-#include <wx/wx.h>
+//#include <wx/wx.h>
+
 #include<mainWindow.h>
 
 
 using namespace mr;
 using namespace std;
 
-class MyApp : public wxApp
+class ApoloLite : public wxApp
 {
 public:
     virtual bool OnInit();
-	MyFrame * frame;
+	MainWindow* frame;
 };

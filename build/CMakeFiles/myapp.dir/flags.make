@@ -6,5 +6,5 @@ CXX_FLAGS =  -pthread
 
 CXX_DEFINES = -DWXUSINGDLL -D_FILE_OFFSET_BITS=64 -D__WXGTK__
 
-CXX_INCLUDES = -I/usr/local/mrcore/include -I/home/daniel/Desktop/ApoloBasic/include -isystem /usr/local/lib/wx/include/gtk3-unicode-3.0 -isystem /usr/local/include/wx-3.0 
+CXX_INCLUDES = -I/usr/local/mrcore/include -I/home/daniel/Desktop/ApoloLite/include -isystem /usr/local/lib/wx/include/gtk3-unicode-3.0 -isystem /usr/local/include/wx-3.0 
 
