@@ -1,1 +1,0 @@
-/usr/bin/c++   -pthread  -rdynamic CMakeFiles/myapp.dir/src/pruebawx.cpp.o  -o myapp  -L/usr/local/mrcore/lib  -L/usr/local/lib -Wl,-rpath,/usr/local/mrcore/lib:/usr/local/lib -lmrcore -lOpenGL -lGLX -lGLU -L/usr/local/lib -pthread -lwx_gtk3u_gl-3.0 -lwx_baseu-3.0 -lwx_gtk3u_core-3.0 
