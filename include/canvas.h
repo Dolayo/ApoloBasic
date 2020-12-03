@@ -16,30 +16,38 @@ class canvas: public wxGLCanvas {
 private:
 
 	wxGLContext* m_context;	
+	GLScene scene;
+	World w;
+	WheeledBaseSim *r;
+	Sampler *s;
+	PathPlanner *p;
+	RobotPath sol;
+
+	bool flag;
+
+	friend class MainWindow;
 
 public:
 
-    GLScene scene;
-	World world;
-	WheeledBaseSim *myrobot;
-	Sampler *sampler;
-	PathPlanner *planner;
-	RobotPath solution;
-
-	canvas(wxWindow* parent, wxPoint pos, wxSize size );
+	canvas(wxWindow* parent, wxPoint pos, wxSize size);
 
 	virtual ~canvas()
 	{
-		world.destroyContent();
+		w.destroyContent();
 		delete m_context;
 		Close(true);
 	}
+
+	//void show_world(bool f){show_world_flag = f;}
+
+	void create_world();
 
 	void OnMouseMove(wxMouseEvent& event);
 	void OnMouseClick(wxMouseEvent& event);
 	void Resized(wxSizeEvent& event);
 	void OnKey(wxKeyEvent& event);
 	void OnPaint(wxPaintEvent& event);
+
 
 protected:
     

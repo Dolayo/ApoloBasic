@@ -17,6 +17,14 @@ private:
     wxStatusBar* sb;
     int height;
     int width;
+
+    World world;
+	WheeledBaseSim *myrobot;
+	Sampler *sampler;
+	PathPlanner *planner;
+	RobotPath solution;
+
+    void createEnvironment();
     
 
 	void OnPlan(wxCommandEvent& event);
