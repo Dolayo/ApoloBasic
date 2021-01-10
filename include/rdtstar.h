@@ -39,6 +39,15 @@ using namespace std;
 
 namespace mr{
 
+class WBStar: public WBState
+{
+	WBStar* parent;
+	public:
+	virtual WBStar* getParent(){return parent;}
+	virtual void setParent(WBStar* p){parent = p;}
+};
+
+
 class RDTstar: public SBPathPlanner
 {
 protected:

@@ -142,19 +142,54 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 	{
 		initNode=root;
 		initNode->setCost(0);
+		cout<<" Es esto?"<<endl;
+		WBStar* aux_dynamic = dynamic_cast<WBStar*>(initNode);
+		aux_dynamic->setParent(0);
+		cout<<" NO"<<endl;
+
 	}
 	// Compruebo si n puede tener vecinos, si es asi los almaceno, y busco el 
-	// de menor coste 
+	// de menor coste el cual lo almaceno en initNode
 	vector<RobotState*> neighbors;
+
 	if((radius > n->distanceTo(initNode)) && (paths.size()!=0)) 
 	{
 
 		getNeighbors(n, &neighbors);
 
 		aux = getBest(neighbors, &initNode);
-
+		
 	}
+
 	n->setCost(n->distanceTo(initNode) + initNode->getCost());
+
+	// El segmento mas cercano aux queda dividido por el nuevo segmento a añadir, por lo que
+	// hay que cambiar el padre de los nodos posteriores a initNode hasta el siguiente padre
+	// o hasta el final del segmento si no hay mas padres 
+	if(paths.size()!=0)
+	{
+		cout<<" Empieza el primer cambio"<<endl;
+		WBStar* actual_p = (dynamic_cast<WBStar*>(initNode))->getParent();
+		cout<<" primer dynamic cast correcto"<<endl;
+		// Posicion de initNode en el segmento aux
+		unsigned int j;
+
+		for(int i=0; i<aux->inter.size(); ++i)
+		{
+			if(initNode->isEqual(aux->inter[i])) j = i+1;
+		}
+		cout<<" Posicion j conocida"<<j<<endl;
+		bool same_p = (dynamic_cast<WBStar*>( aux->inter[j]))->getParent()->isEqual(actual_p);
+		cout<<" Variable same_p"<<same_p<<endl;
+		while(same_p && (j<aux->inter.size()))
+		{
+			(dynamic_cast<WBStar*>( aux->inter[j]))->setParent(dynamic_cast<WBStar*>(initNode));
+			same_p = (dynamic_cast<WBStar*>( aux->inter[j]))->getParent()->isEqual(actual_p);
+			++j;
+		}
+		cout<<" While completado"<<j<<endl;
+	}
+
 
 	//este segmento sera el que una al nuevo nodo con el segmento que contiene al nodo de 
 	// menor coste
@@ -200,6 +235,16 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 		newPath->inter.push_back((*auxPath)[i]);
 
 	}
+
+	// Pongo al primer punto de newPath como padre del resto de puntos del segmento
+	cout<<" Es esto?"<<endl;
+	for(int i=0; i<newPath->inter.size(); ++i)
+	{
+		if(i!=0) (dynamic_cast<WBStar*>( newPath->inter[i]))->setParent(dynamic_cast<WBStar*>(newPath->inter.front()));
+	}
+	cout<<" NO"<<endl;
+
+
 	
 	// añado el nuevo path al arbol
 	paths.push_back(newPath);
@@ -290,8 +335,8 @@ RDTstar::RDTtree::PathSegment* RDTstar::RDTtree::getBest(vector<RobotState*> v_n
 void RDTstar::RDTtree::Reconnect( vector<RobotState*> *v_nei, RobotState* Xnew)
 {
 	// Ordeno los vecinos de menor a mayor coste
-	sort(v_nei->begin(),v_nei->end(), [](RobotState* const s1, RobotState* const s2){return s1->getCost()<s2->getCost();});
-	//for(auto vecino: *v_nei)cout<<vecino->getCost()<<endl;
+	sort(v_nei->begin(),v_nei->end(), [](RobotState* const s1, RobotState* const s2){return s1->getCost()>s2->getCost();});
+	for(auto vecino: *v_nei)cout<<vecino->getCost()<<endl;
 	cout<<" Vecinos ordenados"<<endl;
 	// Continua aqui: fijate como hizo miguel lo de añadir un nuevo segmento, pon los costes bien a los puntos que crees, fijate que los nombres de las vriables tengan sentido
 	// que hay mucho copia pega, fijate si puedes eliminar de algun otro lado los nodos que estarían en oldPath y busca el rayo de vision
@@ -317,20 +362,30 @@ void RDTstar::RDTtree::Reconnect( vector<RobotState*> *v_nei, RobotState* Xnew)
 				cout<<oldPath->inter[i]->getCost()<<endl;
 			}
 
-			cout<<" Nuestro vecino tiene u coste de: "<<(*v_nei)[i]->getCost() <<endl;
+			cout<<" Nuestro vecino tiene un coste de: "<<(*v_nei)[i]->getCost() <<endl;
 
-			int n = 0;
+			int n_pos = 0;
 
+			// Busco la posicion del vecino en el segmento
 			for(int j = 0; j<oldPath->inter.size(); ++j)
 			{
-				if ((*oldPath)[j]->isEqual((*v_nei)[i])) n=j+1;
+				if (oldPath->inter[j]->isEqual((*v_nei)[i])) n_pos=j;
+			}
+
+			int np_pos = 0;
+			// Busco la posicion del padre del vecino
+			for(int j = 0; j<oldPath->inter.size(); ++j)
+			{
+				if( (dynamic_cast<WBStar*>(oldPath->inter[j]))->isEqual( (dynamic_cast<WBStar*>((*v_nei)[i]))->getParent() ) ) np_pos=j;
 			}
 
 			cout<<" Borramos el resto de estados del path segment"<<endl;
+			// CONTINUACION: Haz el borrado del segmento desde el vecino hasta su padre en erase 
+			// y soluciona el problema de la creacion de nuevos segmentos derivado de eliminar partes de estos
 			oldPath->inter.erase(oldPath->inter.begin()+n,oldPath->inter.end());
 
 			for(auto r: oldPath->inter)cout<<r->getCost()<<endl;
-
+          
 			bool success;
 
 			// creamos el nuevo segmento desde initNode hasta n
