@@ -1,7 +1,7 @@
 //#include <wx/wx.h>
 #include <canvas.h>
-
-enum{ID_Hello = 1, ID_Plan = 2};
+#include <wx/sizer.h>
+enum{ID_Example = 1, ID_Plan = 2};
 
 class MainWindow : public wxFrame
 {
@@ -15,6 +15,14 @@ private:
     wxPanel* panel;
     wxButton* button;
     wxStatusBar* sb;
+
+    wxMenu *menuExample;
+    wxMenu *menuHelp;
+    wxMenuBar *menuBar;
+
+    wxBoxSizer *box;
+    wxPanel* pan;
+
     int height;
     int width;
 
@@ -26,7 +34,7 @@ private:
 
     void createEnvironment();
     
-
+    void Resize(wxSizeEvent& event);
 	void OnPlan(wxCommandEvent& event);
     void OnExample(wxCommandEvent& event);
     void OnExit(wxCloseEvent& event);

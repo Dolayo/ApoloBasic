@@ -8,7 +8,7 @@ using namespace std;
 
 class ApoloLite : public wxApp
 {
+    MainWindow* frame;
 public:
     virtual bool OnInit();
-	MainWindow* frame;
 };

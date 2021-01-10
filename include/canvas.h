@@ -1,6 +1,6 @@
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
-#include <mrcore.h>
+#include <rdtstar.h>
 
 /////////////// DEBUG
 #include <iostream>
@@ -29,7 +29,7 @@ private:
 
 public:
 
-	canvas(wxWindow* parent, wxPoint pos, wxSize size);
+	canvas(wxFrame* parent, wxPoint pos, wxSize size);
 
 	virtual ~canvas()
 	{

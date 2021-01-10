@@ -11,16 +11,16 @@ BEGIN_EVENT_TABLE(canvas, wxGLCanvas)
 	EVT_CHAR(canvas::OnKey)
 END_EVENT_TABLE()
 
-canvas::canvas(wxWindow *parent, wxPoint pos, wxSize size): 
-		wxGLCanvas(parent, wxID_ANY,NULL,  pos, size, 0, wxT("Canvas")){
+canvas::canvas(wxFrame *parent, wxPoint pos, wxSize size): 
+		wxGLCanvas(parent, wxID_ANY,NULL, pos, size, wxFULL_REPAINT_ON_RESIZE, wxT("Canvas")){
 
-	cout<<"Entro en el constructor del canvas\n";
+	
     int argc = 1;
     char* argv[1] = { wxString((wxTheApp->argv)[0]).char_str() };
 
-	cout<<"Creo el contexto\n";
+
 	m_context = new wxGLContext(this);
-	cout<<"Salgo del constructor\n";
+
 	flag=false;
 }
 
@@ -60,7 +60,9 @@ if(flag)
 void canvas::Resized(wxSizeEvent& event)
 {
 	Refresh(false);
-	event.Skip();
+	//OnSize(event);
+	//Update();
+	//event.Skip();
 }
 
 void canvas::OnMouseMove(wxMouseEvent& event)

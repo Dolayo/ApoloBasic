@@ -4,24 +4,27 @@
 
 BEGIN_EVENT_TABLE(MainWindow, wxFrame)
     EVT_BUTTON(ID_Plan,  MainWindow::OnPlan)
+	EVT_SIZE(MainWindow::Resize)
 END_EVENT_TABLE()
 
-MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800))
+MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800), wxDEFAULT_FRAME_STYLE | wxHSCROLL | wxVSCROLL)
 {
 	////////////DEBUG
 	wxFFileOutputStream output( stderr );
 	wxTextOutputStream cout( output );
 	////////////DEBUG
-    wxMenu *menuFile = new wxMenu;
-    menuFile->Append(ID_Hello, wxT("&Hello...\tCtrl-J"), wxT("Help string shown in status bar for this menu item"));
-    menuFile->AppendSeparator();
-    menuFile->Append(wxID_EXIT);
 
-    wxMenu *menuHelp = new wxMenu;
+    menuExample = new wxMenu;
+    menuExample->Append(ID_Example, wxT("&RDT...\tCtrl-J"), wxT("Example of an RDT planner"));
+    //menuFile->AppendSeparator();
+    //menuFile->Append(wxID_EXIT);
+
+    menuHelp = new wxMenu;
     menuHelp->Append(wxID_ABOUT);
 
-    wxMenuBar *menuBar = new wxMenuBar;
-    menuBar->Append(menuFile, wxT("&Example"));
+	//Juntar todos los desplegables en un objeto global que se inserte en la ventana principal
+    menuBar = new wxMenuBar;
+    menuBar->Append(menuExample, wxT("&Example"));
     menuBar->Append(menuHelp, wxT("&Help"));
 
     SetMenuBar( menuBar );
@@ -29,7 +32,7 @@ MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wx
     sb = CreateStatusBar();
     sb->SetStatusText(wxT("ApoloLite Ready!"));	
 
-    Bind(wxEVT_MENU, &MainWindow::OnExample, this, ID_Hello);
+    Bind(wxEVT_MENU, &MainWindow::OnExample, this, ID_Example);
     Bind(wxEVT_MENU, &MainWindow::OnAbout, this, wxID_ABOUT);
     //Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
 	
@@ -39,17 +42,36 @@ MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wx
 
 	//frameGL = new wxFrame((wxFrame *)NULL, -1,  wxT("Visualization Window"), wxPoint(600,100), wxSize(800,800));
     
-	int width=GetClientSize().GetWidth();
-	int heigth=GetClientSize().GetHeight();
+	width=GetClientSize().GetWidth();
+	height=GetClientSize().GetHeight();
 
-	MyGLCanvas = new canvas(this, wxPoint(width-800, 0), wxSize(800, heigth));
+	wxColour col1;
+	col1.Set(255,0,0);
+	pan = new wxPanel(this, wxID_ANY);
+	//pan->SetBackgroundColour(col1);
+	MyGLCanvas = new canvas(this, wxPoint((int)(width)/3, 0), wxSize((int)(width*2)/3, height));
+	button = new wxButton(this, ID_Plan, wxT("Plan"), wxPoint(20, 20),wxSize(100, 50));
 
-	panel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(200, heigth));
-	button = new wxButton(panel, ID_Plan, wxT("Plan"), wxPoint(0, 0),wxSize(100, 50));
+	
+	box=new wxBoxSizer(wxVERTICAL);
+
+	//box->Add(button, wxSizerFlags(1).Expand().Border(wxALL, 10));
+	//SetAutoLayout(true);
+	//box->Add(pan, wxSizerFlags(1).Expand().Border(wxALL, 10));
+	
+	//SetSizer(box);
+	//box->Fit(MyGLCanvas);
+	
 
   	//Centre();
 }
+void MainWindow::Resize(wxSizeEvent& event)
+{
+	width=GetClientSize().GetWidth();
+	height=GetClientSize().GetHeight();
 
+	//MyGLCanvas->SetSize((int)(width)/3, 0,(int)(width*2)/3, height);
+}
 void MainWindow::createEnvironment()
 {
 	//Intializing test environment Faces included in a FacePart
@@ -85,6 +107,8 @@ void MainWindow::createEnvironment()
 
 void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 {
+	sb->SetStatusText(wxT("Planning!"));
+
     WBState gen(myrobot,&world);
 	WBState *start=gen.createStateFromPoint3D(2.0,-8,0);
 	WBState *goal=gen.createStateFromPoint3D(8.0,1.5,2);
@@ -92,14 +116,12 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 	planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
 	delete start;
 	delete goal;
-	if(planner->computePlan(3000))solution.path=(planner->getPlan())->path;
+	if(planner->computePlan(3000))solution.path=(planner->getPlan())->path;//3000
 	MyGLCanvas->p = this->planner;
 	MyGLCanvas->sol = this->solution;
-	MyGLCanvas->Refresh();
+	MyGLCanvas->Refresh(false);
 
 }
-
-
 
 void MainWindow::OnExit(wxCloseEvent& event)
 {
@@ -121,8 +143,8 @@ void MainWindow::OnExit(wxCloseEvent& event)
 
 void MainWindow::OnAbout(wxCommandEvent& event)
 {
-    wxMessageBox("This is a wxWidgets Hello World example",
-                 "About Hello World", wxOK | wxICON_INFORMATION);
+    wxMessageBox("Click on example and then on plan to see the algorithm's magic ",
+                 "Some hints", wxOK | wxICON_INFORMATION);
 }
 
 void MainWindow::OnExample(wxCommandEvent& event)
@@ -132,6 +154,8 @@ void MainWindow::OnExample(wxCommandEvent& event)
 	//wxFrame *frameGL = new wxFrame((wxFrame *)NULL, -1,  wxT("Hello GL World"), wxPoint(600,100), wxSize(800,800));
     //new wxGLCanvasSubClass(frameGL);
 	//frameGL->Show(TRUE);
+
+	sb->SetStatusText(wxT("Example Ready!"));
 	
 	createEnvironment();
 
@@ -142,7 +166,7 @@ void MainWindow::OnExample(wxCommandEvent& event)
 
 	//creo un planificador y su sistema de muestreo
 	sampler=new RandomSampler(&world);
-	planner=new RDTplanner;
+	planner=new RDTstar;
 	(dynamic_cast<SBPathPlanner *>(planner))->setSampler(sampler); //solo especifico de los basados en muestreo
 
 	MyGLCanvas->w = this->world;
