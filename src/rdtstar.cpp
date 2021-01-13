@@ -144,9 +144,8 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 		initNode->setCost(0);
 		cout<<" Es esto?"<<endl;
 		WBStar* aux_dynamic = dynamic_cast<WBStar*>(initNode);
-		aux_dynamic->setParent(0);
+		if(aux_dynamic!=NULL)aux_dynamic->setParent(0);
 		cout<<" NO"<<endl;
-
 	}
 	// Compruebo si n puede tener vecinos, si es asi los almaceno, y busco el 
 	// de menor coste el cual lo almaceno en initNode
@@ -169,8 +168,9 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 	if(paths.size()!=0)
 	{
 		cout<<" Empieza el primer cambio"<<endl;
-		WBStar* actual_p = (dynamic_cast<WBStar*>(initNode))->getParent();
-		cout<<" primer dynamic cast correcto"<<endl;
+		WBStar* actual_p;
+		if(initNode!=NULL)actual_p = (dynamic_cast<WBStar*>(initNode))->getParent();
+		cout<<" primer dynamic_cast correcto"<<endl;
 		// Posicion de initNode en el segmento aux
 		unsigned int j;
 
@@ -179,13 +179,17 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 			if(initNode->isEqual(aux->inter[i])) j = i+1;
 		}
 		cout<<" Posicion j conocida"<<j<<endl;
-		bool same_p = (dynamic_cast<WBStar*>( aux->inter[j]))->getParent()->isEqual(actual_p);
+		bool same_p;
+		if(aux->inter[j]!=NULL)same_p = (dynamic_cast<WBStar*>( aux->inter[j]))->getParent()->isEqual(actual_p);
 		cout<<" Variable same_p"<<same_p<<endl;
 		while(same_p && (j<aux->inter.size()))
 		{
-			(dynamic_cast<WBStar*>( aux->inter[j]))->setParent(dynamic_cast<WBStar*>(initNode));
-			same_p = (dynamic_cast<WBStar*>( aux->inter[j]))->getParent()->isEqual(actual_p);
-			++j;
+			if( aux->inter[j] != NULL)
+			{
+				(dynamic_cast<WBStar*>( aux->inter[j]))->setParent(dynamic_cast<WBStar*>(initNode));
+				same_p = (dynamic_cast<WBStar*>( aux->inter[j]))->getParent()->isEqual(actual_p);
+				++j;
+			}
 		}
 		cout<<" While completado"<<j<<endl;
 	}
@@ -237,10 +241,13 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 	}
 
 	// Pongo al primer punto de newPath como padre del resto de puntos del segmento
-	cout<<" Es esto?"<<endl;
+	cout<<" Y esto?"<<endl;
 	for(int i=0; i<newPath->inter.size(); ++i)
 	{
-		if(i!=0) (dynamic_cast<WBStar*>( newPath->inter[i]))->setParent(dynamic_cast<WBStar*>(newPath->inter.front()));
+		if(i!=0 && ((newPath->inter[i])!=NULL) && (newPath->inter.front()!=NULL))
+		{
+			(dynamic_cast<WBStar*>( newPath->inter[i]))->setParent(dynamic_cast<WBStar*>(newPath->inter.front()));
+		} 
 	}
 	cout<<" NO"<<endl;
 
@@ -376,16 +383,12 @@ void RDTstar::RDTtree::Reconnect( vector<RobotState*> *v_nei, RobotState* Xnew)
 			// Busco la posicion del padre del vecino
 			for(int j = 0; j<oldPath->inter.size(); ++j)
 			{
-				if( (dynamic_cast<WBStar*>(oldPath->inter[j]))->isEqual( (dynamic_cast<WBStar*>((*v_nei)[i]))->getParent() ) ) np_pos=j;
+				if(oldPath->inter[j]!=NULL && (*v_nei)[i]!=NULL)
+				{
+					if( (dynamic_cast<WBStar*>(oldPath->inter[j]))->isEqual( (dynamic_cast<WBStar*>((*v_nei)[i]))->getParent() ) ) np_pos=j;
+				}
 			}
 
-			cout<<" Borramos el resto de estados del path segment"<<endl;
-			// CONTINUACION: Haz el borrado del segmento desde el vecino hasta su padre en erase 
-			// y soluciona el problema de la creacion de nuevos segmentos derivado de eliminar partes de estos
-			oldPath->inter.erase(oldPath->inter.begin()+n,oldPath->inter.end());
-
-			for(auto r: oldPath->inter)cout<<r->getCost()<<endl;
-          
 			bool success;
 
 			// creamos el nuevo segmento desde initNode hasta n
@@ -398,7 +401,13 @@ void RDTstar::RDTtree::Reconnect( vector<RobotState*> *v_nei, RobotState* Xnew)
 				delete auxPath;
 				continue;
 			}
-			
+
+			cout<<" Borramos el resto de estados del path segment"<<endl;
+			// CONTINUACION: Haz el borrado del segmento desde el vecino hasta su padre en erase 
+			// y soluciona el problema de la creacion de nuevos segmentos derivado de eliminar partes de estos
+			oldPath->inter.erase(oldPath->inter.begin()+n_pos, oldPath->inter.begin()+np_pos);
+
+			for(auto r: oldPath->inter)cout<<r->getCost()<<endl;
 
 			cout<<" añado al nuevo segmento el ultimo estado"<<endl;
 			// añado al nuevo segmento el ultimo estado
