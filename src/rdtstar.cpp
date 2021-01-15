@@ -163,14 +163,19 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 	n->setCost(n->distanceTo(initNode) + initNode->getCost());
 
 	// El segmento mas cercano aux queda dividido por el nuevo segmento a añadir, por lo que
-	// hay que cambiar el padre de los nodos posteriores a initNode hasta el siguiente padre
-	// o hasta el final del segmento si no hay mas padres 
+	// hay que eliminar dicho segmento y sustituirlo por dos segmentos que vayan desde el principio de aux
+	// a initNode, y de initNode hasta el final ed aux
+
+	PathSegment* newPathA=new PathSegment;
+	PathSegment* newPathB=new PathSegment;
+	
 	if(paths.size()!=0)
 	{
-		cout<<" Empieza el primer cambio"<<endl;
+		/*cout<<" Empieza el primer cambio"<<endl;
 		WBStar* actual_p;
 		if(initNode!=NULL)actual_p = (dynamic_cast<WBStar*>(initNode))->getParent();
 		cout<<" primer dynamic_cast correcto"<<endl;
+
 		// Posicion de initNode en el segmento aux
 		unsigned int j;
 
@@ -185,13 +190,57 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 		while(same_p && (j<aux->inter.size()))
 		{
 			if( aux->inter[j] != NULL)
-			{
+			{	
+				++j;
 				(dynamic_cast<WBStar*>( aux->inter[j]))->setParent(dynamic_cast<WBStar*>(initNode));
 				same_p = (dynamic_cast<WBStar*>( aux->inter[j]))->getParent()->isEqual(actual_p);
-				++j;
 			}
 		}
 		cout<<" While completado"<<j<<endl;
+		*/
+
+		newPathA->init=aux->init;
+		newPathB->init=initNode;
+
+		newPathA->parent=aux->parent;
+		newPathB->parent=newPathA;
+
+		bool successA;
+		bool successB;
+
+		RobotPath *auxPathA=RobotPath::createPath(newPathA->init, newPathB->init, successA);
+		RobotPath *auxPathB=RobotPath::createPath(newPathB->init, aux->end,successB);
+		
+		auxPathA->add(newPathB->init);
+		auxPathB->add(aux->end);
+
+		newPathA->end=auxPathA->last();
+		newPathB->end=auxPathB->last();
+
+		for(int i=0;i<auxPathA->size();i++)
+		{
+			if(i!=0)(*auxPathA)[i]->setCost((*auxPathA)[i]->distanceTo(auxPathA->path.front()) + auxPathA->path.front()->getCost());
+
+			if(i!=0 && (*auxPathA)[i]!=NULL && auxPathA->path.front()!= NULL) dynamic_cast<WBStar*>((*auxPathA)[i])->setParent(dynamic_cast<WBStar*>(auxPathA->path.front()));
+
+			newPathA->inter.push_back((*auxPathA)[i]);
+		}
+
+		for(int i=0;i<auxPathB->size();i++)
+		{
+			if(i!=0)(*auxPathB)[i]->setCost((*auxPathB)[i]->distanceTo(auxPathB->path.front()) + auxPathB->path.front()->getCost());
+
+			if(i!=0 && (*auxPathB)[i]!=NULL && auxPathB->path.front()!= NULL) dynamic_cast<WBStar*>((*auxPathB)[i])->setParent(dynamic_cast<WBStar*>(auxPathB->path.front()));
+
+			newPathB->inter.push_back((*auxPathB)[i]);
+		}
+
+		newPathA->id = aux->id;
+		newPathB->id = paths.size()+1;
+		deletePath(aux->id);
+		paths.push_back(newPathA);
+		paths.push_back(newPathB);
+
 	}
 
 
@@ -203,10 +252,10 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 	newPath->init=initNode;
 
 	//el padre del nuevo segmento es el segmento que contiene al nodo de menor coste
-	newPath->parent=aux;
+	newPath->parent=newPathA;
 
-
-	
+	// Asigno el id del path en funcion del orden en que es insertado en el arbol
+	newPath->id = paths.size()+1;
 	
 	bool success;
 	// creamos el nuevo segmento desde initNode hasta n
@@ -434,6 +483,24 @@ void RDTstar::RDTtree::Reconnect( vector<RobotState*> *v_nei, RobotState* Xnew)
 
 
 }
+
+RDTstar::RDTtree::PathSegment* RDTstar::RDTtree::getPathByID(int n)
+{
+	for(int i=0;i<paths.size();++i)
+	{
+		if(paths[i]->id == n) return paths[i];
+	}
+}
+
+void RDTstar::RDTtree::deletePath(int n)
+{
+	for(int i=0;i<paths.size();++i)
+	{
+		if(paths[i]->id==n) paths.erase(paths.begin()+i);
+	}
+	
+}
+
 //////////////Painting methods
 void RDTstar::RDTtree::PathSegment::drawGL()
 {
