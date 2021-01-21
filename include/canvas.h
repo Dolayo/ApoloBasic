@@ -1,11 +1,11 @@
+#include "mrcore.h"
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
-#include <rdtstar.h>
+#include "rdtstar.h"
 
 /////////////// DEBUG
 #include <iostream>
-#include <wx/wfstream.h>
-#include <wx/txtstrm.h>
+
 /////////////// DEBUG
 
 using namespace mr;

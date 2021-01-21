@@ -1,5 +1,7 @@
-#include <canvas.h>
 
+#include "canvas.h"
+//#include <wx/wfstream.h>
+//#include <wx/txtstrm.h>
 BEGIN_EVENT_TABLE(canvas, wxGLCanvas)
     EVT_PAINT(canvas::OnPaint)
 	EVT_SIZE(canvas::Resized)

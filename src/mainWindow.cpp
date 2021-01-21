@@ -10,8 +10,8 @@ END_EVENT_TABLE()
 MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800), wxDEFAULT_FRAME_STYLE | wxHSCROLL | wxVSCROLL)
 {
 	////////////DEBUG
-	wxFFileOutputStream output( stderr );
-	wxTextOutputStream cout( output );
+	//wxFFileOutputStream output( stderr );
+	//wxTextOutputStream cout( output );
 	////////////DEBUG
 
     menuExample = new wxMenu;

@@ -1,2 +1,5 @@
-build/
-pruebawx.cpp
+out/
+.vs/
+.vscode/
+include/.vs/
+src/.vs/

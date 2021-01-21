@@ -1,4 +1,4 @@
-//#include <wx/wx.h>
+/*#include <wx/wx.h>
 
 #include<mainWindow.h>
 
@@ -12,3 +12,4 @@ class ApoloLite : public wxApp
 public:
     virtual bool OnInit();
 };
+*/

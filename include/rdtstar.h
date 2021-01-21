@@ -42,9 +42,12 @@ namespace mr{
 class WBStar: public WBState
 {
 	WBStar* parent;
+	double cost;
 	public:
-	virtual WBStar* getParent(){return parent;}
-	virtual void setParent(WBStar* p){parent = p;}
+		virtual double getCost() { return cost; }
+		virtual void setCost(double c) { cost = c; }
+		virtual WBStar* getParent(){return parent;}
+		virtual void setParent(WBStar* p){parent = p;}
 };
 
 
@@ -69,7 +72,7 @@ protected:
 			}
 			RobotState *operator[](int i){return inter[i];}
 			int size(){return inter.size();} 
-			PathSegment (){id=0;init=0;end=0;parent=0;}
+			PathSegment() { id = 0; init = 0; end = 0; parent = 0; }
 			PathSegment (const PathSegment &n){
 				(*this)=n;
 			}
@@ -94,7 +97,7 @@ protected:
 		PathSegment* findPath4Node( RobotState* node);
 		void getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei);
 		PathSegment* getBest(vector<RobotState*> v_nei, RobotState **best);
-		PathSegment *getPathByID(int n);
+		PathSegment* getPathByID(int n);
 		void deletePath(int n);
 		void drawGL();
 	private:

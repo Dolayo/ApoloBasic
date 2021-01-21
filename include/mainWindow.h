@@ -1,4 +1,5 @@
-//#include <wx/wx.h>
+#include "mrcore.h"
+#include <wx/wx.h>
 #include <canvas.h>
 #include <wx/sizer.h>
 enum{ID_Example = 1, ID_Plan = 2};
