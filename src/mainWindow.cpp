@@ -15,7 +15,8 @@ MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wx
 	////////////DEBUG
 
     menuExample = new wxMenu;
-    menuExample->Append(ID_Example, wxT("&RDT...\tCtrl-J"), wxT("Example of an RDT planner"));
+    menuExample->Append(ID_RDT, wxT("&RDT...\tCtrl-J"), wxT("Example of an RDT planner"));
+	menuExample->Append(ID_RDTstar, wxT("&RDT*...\tCtrl-J"), wxT("Example of an RDT star planner"));
     //menuFile->AppendSeparator();
     //menuFile->Append(wxID_EXIT);
 
@@ -24,7 +25,7 @@ MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wx
 
 	//Juntar todos los desplegables en un objeto global que se inserte en la ventana principal
     menuBar = new wxMenuBar;
-    menuBar->Append(menuExample, wxT("&Example"));
+    menuBar->Append(menuExample, wxT("&Planners"));
     menuBar->Append(menuHelp, wxT("&Help"));
 
     SetMenuBar( menuBar );
@@ -32,7 +33,8 @@ MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wx
     sb = CreateStatusBar();
     sb->SetStatusText(wxT("ApoloLite Ready!"));	
 
-    Bind(wxEVT_MENU, &MainWindow::OnExample, this, ID_Example);
+	Bind(wxEVT_MENU, &MainWindow::OnRDT, this, ID_RDT);
+    Bind(wxEVT_MENU, &MainWindow::OnRDTstar, this, ID_RDTstar);
     Bind(wxEVT_MENU, &MainWindow::OnAbout, this, wxID_ABOUT);
     //Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
 	
@@ -109,18 +111,44 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 {
 	sb->SetStatusText(wxT("Planning!"));
 
-    WBStar gen(myrobot,&world, 0);
-	WBStar *start=gen.createStateFromPoint3D(2.0,-8,0);
-	WBStar *goal=gen.createStateFromPoint3D(8.0,1.5,2);
-	solution.path.clear();
-	planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
-	delete start;
-	delete goal;
-	if(planner->computePlan(3000))solution.path=(planner->getPlan())->path;//3000
-	MyGLCanvas->p = this->planner;
-	MyGLCanvas->sol = this->solution;
-	MyGLCanvas->Refresh(false);
 
+	switch (this->the_planner)
+	{
+		case ID_RDT:
+		{
+			WBState gen(myrobot, &world);
+			WBState* start = gen.createStateFromPoint3D(2.0, -8, 0);
+			WBState* goal = gen.createStateFromPoint3D(8.0, 1.5, 2);
+			solution.path.clear();
+			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
+			delete start;
+			delete goal;
+			if (planner->computePlan(3000))solution.path = (planner->getPlan())->path;//3000
+			MyGLCanvas->p = this->planner;
+			MyGLCanvas->sol = this->solution;
+			MyGLCanvas->Refresh(false);
+			break; 
+		}
+		case ID_RDTstar:
+		{
+			WBStar gen(myrobot, &world, 0);
+			WBStar* start = gen.createStateFromPoint3D(2.0, -8, 0);
+			WBStar* goal = gen.createStateFromPoint3D(8.0, 1.5, 2);
+			solution.path.clear();
+			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
+			delete start;
+			delete goal;
+			if (planner->computePlan(3000))solution.path = (planner->getPlan())->path;//3000
+			MyGLCanvas->p = this->planner;
+			MyGLCanvas->sol = this->solution;
+			MyGLCanvas->Refresh(false);
+			break;
+		}
+		
+		default:
+			sb->SetStatusText(wxT("Something went wrong!"));
+			break;
+	}
 }
 
 void MainWindow::OnExit(wxCloseEvent& event)
@@ -147,7 +175,41 @@ void MainWindow::OnAbout(wxCommandEvent& event)
                  "Some hints", wxOK | wxICON_INFORMATION);
 }
 
-void MainWindow::OnExample(wxCommandEvent& event)
+void MainWindow::OnRDT(wxCommandEvent& event)
+{
+	//wxLogMessage("Hello world from wxWidgets!");
+
+	//wxFrame *frameGL = new wxFrame((wxFrame *)NULL, -1,  wxT("Hello GL World"), wxPoint(600,100), wxSize(800,800));
+	//new wxGLCanvasSubClass(frameGL);
+	//frameGL->Show(TRUE);
+
+
+	this->the_planner = ID_RDT;
+
+	sb->SetStatusText(wxT("RDT Ready!"));
+
+	createEnvironment();
+
+	//creo el robot
+	myrobot = new Pioneer3ATSim;
+	myrobot->setRelativePosition(Vector3D(2.0, 8, 0));
+	world += myrobot;
+
+	//creo un planificador y su sistema de muestreo
+	sampler = new RandomSampler(&world);
+	planner = new RDTplanner;
+	(dynamic_cast<SBPathPlanner*>(planner))->setSampler(sampler); //solo especifico de los basados en muestreo
+
+	MyGLCanvas->w = this->world;
+	MyGLCanvas->r = this->myrobot;
+	MyGLCanvas->s = this->sampler;
+	MyGLCanvas->p = this->planner;
+
+	MyGLCanvas->create_world();
+
+}
+
+void MainWindow::OnRDTstar(wxCommandEvent& event)
 {
     //wxLogMessage("Hello world from wxWidgets!");
 
@@ -155,7 +217,9 @@ void MainWindow::OnExample(wxCommandEvent& event)
     //new wxGLCanvasSubClass(frameGL);
 	//frameGL->Show(TRUE);
 
-	sb->SetStatusText(wxT("Example Ready!"));
+	this->the_planner = ID_RDTstar;
+
+	sb->SetStatusText(wxT("RDT* Ready!"));
 	
 	createEnvironment();
 

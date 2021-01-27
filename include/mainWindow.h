@@ -2,7 +2,7 @@
 #include <wx/wx.h>
 #include <canvas.h>
 #include <wx/sizer.h>
-enum{ID_Example = 1, ID_Plan = 2};
+enum id{ID_RDT = 1, ID_RDTstar = 2, ID_Plan = 3};
 
 class MainWindow : public wxFrame
 {
@@ -11,6 +11,8 @@ public:
 	
 	
 private:
+
+    id the_planner;
 
 	canvas* MyGLCanvas;
     wxPanel* panel;
@@ -37,7 +39,8 @@ private:
     
     void Resize(wxSizeEvent& event);
 	void OnPlan(wxCommandEvent& event);
-    void OnExample(wxCommandEvent& event);
+    void OnRDT(wxCommandEvent& event);
+    void OnRDTstar(wxCommandEvent& event);
     void OnExit(wxCloseEvent& event);
     void OnAbout(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE()
