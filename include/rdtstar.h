@@ -41,13 +41,36 @@ namespace mr{
 
 class WBStar: public WBState
 {
-	WBStar* parent;
-	double cost;
+	protected:
+
+		double cost;
 	public:
+
+		WBStar(WheeledBaseSim* r, World* w, double c):WBState(r, w),cost(c){}
+
+		const WBStar& operator=(const WBStar& n) {
+			sectors = n.sectors;
+			pose = n.pose;
+			world = n.world;
+			robot = n.robot;
+			cost = n.cost;
+			return *this;
+		}
+
+		WBStar(const WBStar& a):WBState(a)
+		{
+			(*this) = a;
+		}
+
+		RobotState* WBStar::createStateFromSample(vector<double> values);
+		WBStar* createStateFromPoint3D(double x, double y, double z);
+		RobotState* WBStar::createStateFromCurrentRobotState();
+
 		virtual double getCost() { return cost; }
 		virtual void setCost(double c) { cost = c; }
-		virtual WBStar* getParent(){return parent;}
-		virtual void setParent(WBStar* p){parent = p;}
+
+		virtual RobotState* clone();
+		virtual ~WBStar();
 };
 
 

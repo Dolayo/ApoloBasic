@@ -109,9 +109,9 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 {
 	sb->SetStatusText(wxT("Planning!"));
 
-    WBState gen(myrobot,&world);
-	WBState *start=gen.createStateFromPoint3D(2.0,-8,0);
-	WBState *goal=gen.createStateFromPoint3D(8.0,1.5,2);
+    WBStar gen(myrobot,&world, 0);
+	WBStar *start=gen.createStateFromPoint3D(2.0,-8,0);
+	WBStar *goal=gen.createStateFromPoint3D(8.0,1.5,2);
 	solution.path.clear();
 	planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
 	delete start;
