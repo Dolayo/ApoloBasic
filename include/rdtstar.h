@@ -82,7 +82,6 @@ protected:
 		class PathSegment{ //internal class for a segment of tree
 			public:
 			
-			int id;
 			vector<RobotState *> inter; //the path segment does not own the nodes
 			RobotState *init;
 			RobotState *end;
@@ -94,8 +93,9 @@ protected:
 				parent=n.parent;
 			}
 			RobotState *operator[](int i){return inter[i];}
+			bool isEqual(PathSegment* p);
 			int size(){return inter.size();} 
-			PathSegment() { id = 0; init = 0; end = 0; parent = 0; }
+			PathSegment() { init = 0; end = 0; parent = 0; }
 			PathSegment (const PathSegment &n){
 				(*this)=n;
 			}
@@ -120,8 +120,7 @@ protected:
 		PathSegment* findPath4Node( RobotState* node);
 		void getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei);
 		PathSegment* getBest(vector<RobotState*> v_nei, RobotState **best);
-		PathSegment* getPathByID(int n);
-		void deletePath(int n);
+		void deletePath(PathSegment* p);
 		void drawGL();
 	private:
 		double radius;
