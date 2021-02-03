@@ -94,7 +94,7 @@ protected:
 			}
 			RobotState *operator[](int i){return inter[i];}
 			bool isEqual(PathSegment* p);
-			int size(){return inter.size();} 
+			int size(){return (int)inter.size();} 
 			PathSegment() { init = 0; end = 0; parent = 0; }
 			PathSegment (const PathSegment &n){
 				(*this)=n;
@@ -109,7 +109,7 @@ protected:
 		vector<PathSegment *> paths;
 		vector<RobotState *> nodes; 
 
-		RDTtree(){root=0;radius=20;}
+		RDTtree(){root=0;radius=30;}
 		int getNumNodes(){return (int)nodes.size();}
 		bool rootTree(RobotState *rot);
 		double distance(RobotState *p, PathSegment *path, RobotState **mnode=0);

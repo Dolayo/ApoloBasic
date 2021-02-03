@@ -7,6 +7,7 @@
 class ApoloLite : public wxApp
 {
 public:
+    ApoloLite():frame(nullptr){}
 	virtual bool OnInit();
 	MainWindow* frame;
 };

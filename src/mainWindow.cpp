@@ -7,16 +7,20 @@ BEGIN_EVENT_TABLE(MainWindow, wxFrame)
 	EVT_SIZE(MainWindow::Resize)
 END_EVENT_TABLE()
 
-MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800), wxDEFAULT_FRAME_STYLE | wxHSCROLL | wxVSCROLL)
+MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800), wxDEFAULT_FRAME_STYLE | wxHSCROLL | wxVSCROLL),
+myrobot(nullptr),
+planner(nullptr),
+sampler(nullptr),
+the_planner(0)
 {
 	////////////DEBUG
 	//wxFFileOutputStream output( stderr );
 	//wxTextOutputStream cout( output );
 	////////////DEBUG
 
-    menuExample = new wxMenu;
-    menuExample->Append(ID_RDT, wxT("&RDT...\tCtrl-J"), wxT("Example of an RDT planner"));
-	menuExample->Append(ID_RDTstar, wxT("&RDT*...\tCtrl-J"), wxT("Example of an RDT star planner"));
+    menuPlanners = new wxMenu;
+	menuPlanners->Append(ID_RDT, wxT("&RDT...\tCtrl-J"), wxT("Example of an RDT planner"));
+	menuPlanners->Append(ID_RDTstar, wxT("&RDT*...\tCtrl-K"), wxT("Example of an RDT star planner"));
     //menuFile->AppendSeparator();
     //menuFile->Append(wxID_EXIT);
 
@@ -25,7 +29,7 @@ MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wx
 
 	//Juntar todos los desplegables en un objeto global que se inserte en la ventana principal
     menuBar = new wxMenuBar;
-    menuBar->Append(menuExample, wxT("&Planners"));
+    menuBar->Append(menuPlanners, wxT("&Planners"));
     menuBar->Append(menuHelp, wxT("&Help"));
 
     SetMenuBar( menuBar );
@@ -114,7 +118,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 
 	switch (this->the_planner)
 	{
-		case ID_RDT:
+		case 0:
 		{
 			WBState gen(myrobot, &world);
 			WBState* start = gen.createStateFromPoint3D(2.0, -8, 0);
@@ -129,7 +133,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			MyGLCanvas->Refresh(false);
 			break; 
 		}
-		case ID_RDTstar:
+		case 1:
 		{
 			WBStar gen(myrobot, &world, 0);
 			WBStar* start = gen.createStateFromPoint3D(2.0, -8, 0);
@@ -184,7 +188,7 @@ void MainWindow::OnRDT(wxCommandEvent& event)
 	//frameGL->Show(TRUE);
 
 
-	this->the_planner = ID_RDT;
+	this->the_planner = 0;
 
 	sb->SetStatusText(wxT("RDT Ready!"));
 
@@ -217,7 +221,7 @@ void MainWindow::OnRDTstar(wxCommandEvent& event)
     //new wxGLCanvasSubClass(frameGL);
 	//frameGL->Show(TRUE);
 
-	this->the_planner = ID_RDTstar;
+	this->the_planner = 1;
 
 	sb->SetStatusText(wxT("RDT* Ready!"));
 	

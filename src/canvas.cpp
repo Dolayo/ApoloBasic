@@ -22,7 +22,9 @@ canvas::canvas(wxFrame *parent, wxPoint pos, wxSize size):
 
 
 	m_context = new wxGLContext(this);
-
+	p = nullptr;
+	r = nullptr;
+	s = nullptr;
 	flag=false;
 }
 

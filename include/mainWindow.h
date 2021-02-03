@@ -12,14 +12,14 @@ public:
 	
 private:
 
-    id the_planner;
+    int the_planner;
 
 	canvas* MyGLCanvas;
-    wxPanel* panel;
+    //wxPanel* panel;
     wxButton* button;
     wxStatusBar* sb;
 
-    wxMenu *menuExample;
+    wxMenu *menuPlanners;
     wxMenu *menuHelp;
     wxMenuBar *menuBar;
 
