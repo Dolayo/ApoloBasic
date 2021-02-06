@@ -109,21 +109,22 @@ protected:
 		vector<PathSegment *> paths;
 		vector<RobotState *> nodes; 
 
-		RDTtree(){root=0;radius=30;}
+		RDTtree() { root = 0; radius = 30; divided = false; }
 		int getNumNodes(){return (int)nodes.size();}
 		bool rootTree(RobotState *rot);
 		double distance(RobotState *p, PathSegment *path, RobotState **mnode=0);
 		PathSegment *getClosestPathSegment(RobotState *n,RobotState **minstate);
 		RobotState *addNode(RobotState *n);
 		RobotPath getPathFromRoot(RobotState *n);
-		void Reconnect( vector<RobotState*> *v_nei, RobotState* Xnew);
+		void Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew);
 		PathSegment* findPath4Node( RobotState* node);
 		void getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei);
-		PathSegment* getBest(vector<RobotState*> v_nei, RobotState **best);
+		PathSegment* getBest(vector<RobotState*>& v_nei, RobotState **best);
 		void deletePath(PathSegment* p);
 		void drawGL();
 	private:
 		double radius;
+		bool divided;
 		void add(RobotState *n)
 		{
 			for(int i=0;i<(int)nodes.size();i++)if(nodes[i]==n)return;
