@@ -93,7 +93,6 @@ protected:
 				parent=n.parent;
 			}
 			RobotState *operator[](int i){return inter[i];}
-			bool isEqual(PathSegment* p);
 			int size(){return (int)inter.size();} 
 			PathSegment() { init = 0; end = 0; parent = 0; }
 			PathSegment (const PathSegment &n){
@@ -120,7 +119,6 @@ protected:
 		PathSegment* findPath4Node( RobotState* node);
 		void getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei);
 		PathSegment* getBest(vector<RobotState*>& v_nei, RobotState **best);
-		void deletePath(PathSegment* p);
 		void drawGL();
 	private:
 		double radius;

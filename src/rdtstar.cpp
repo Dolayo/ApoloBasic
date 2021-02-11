@@ -446,6 +446,8 @@ RDTstar::RDTtree::PathSegment* RDTstar::RDTtree::findPath4Node( RobotState* node
 
 	else return nullptr;
 }
+
+/*
 bool RDTstar::RDTtree::PathSegment::isEqual(PathSegment* p)
 {
 	bool c = true;
@@ -459,7 +461,7 @@ bool RDTstar::RDTtree::PathSegment::isEqual(PathSegment* p)
 		return c;
 	}
 	else return false;
-}
+}*/
 void RDTstar::RDTtree::getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei)
 {
 	
@@ -525,13 +527,9 @@ void RDTstar::RDTtree::Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew)
 			else return false;
 		});
 
-	
-	//for(auto vecino: v_nei)cout<<vecino->getCost()<<endl;
-	// Continua aqui: fijate si puedes eliminar de algun otro lado los nodos que estarían en oldPath
-
 	for(RobotState* vecino: v_nei)
 	{
-		if ((dynamic_cast<WBStar*>(Xnew)) && (dynamic_cast<WBStar*>(vecino)) )
+		if ((dynamic_cast<WBStar*>(Xnew)) && (dynamic_cast<WBStar*>(vecino)))
 		{
 			// Si el coste de un vecino es mayor que la distancia a Xnew mas el coste de Xnew, creo el nuevo segmento de Xnew al vecino
 			if(( vecino->distanceTo(Xnew) + dynamic_cast<WBStar*>(Xnew)->getCost() ) < ( dynamic_cast<WBStar*>(vecino)->getCost() ))
@@ -555,7 +553,7 @@ void RDTstar::RDTtree::Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew)
 				if (success) { auxRePath->add(vecino); }
 				else
 				{
-					cout << " Existe un choque" << endl;
+					// Existe un choque
 					delete auxRePath;
 					delete newRePath;
 					continue;
@@ -565,17 +563,12 @@ void RDTstar::RDTtree::Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew)
 				oldPath->init = vecino;
 
 				newRePath->parent = findPath4Node(Xnew);
-				/*if (!(newRePath->parent)) 
-				{
-					delete auxRePath;
-					delete newRePath;
-					continue;
-				}*/
+
 				oldPath->parent = newRePath;
 
 				newRePath->end = oldPath->init;
 
-				// Primero localizo la posicion del vecino
+				// Primero localizo la posicion del vecino en oldPath
 				int pos_v = 0;
 				for (int j = 0; j < oldPath->size(); ++j)
 				{
@@ -584,8 +577,26 @@ void RDTstar::RDTtree::Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew)
 						pos_v = j;
 					}
 				}
-				//FALTA BORRAR LOS NODOS DE LA LISTA DE NODOS DEL ARBOL
-				// borro los estados de old path que iban antes del vecino
+				// Deleteamos los nodos de la lista del arbol y de la lista de vecinos
+				for (RobotState* oldState_i : oldPath->inter)
+				{
+					if (!(oldState_i == vecino))
+					{
+						for (int j=0;j<nodes.size();++j)
+						{
+							if (oldState_i == nodes[j])
+							{
+								//delete nodes[j];
+								nodes.erase(nodes.begin()+j);
+								break;
+							}
+						}
+					}
+
+					else break;
+				}
+
+				// borro los punteros de old path que iban antes del vecino
 				oldPath->inter.erase(oldPath->inter.begin(), oldPath->inter.begin() + pos_v);
 
 				//relleno el nuevo segmento
@@ -617,18 +628,6 @@ void RDTstar::RDTtree::Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew)
 	}
 }
 
-void RDTstar::RDTtree::deletePath(PathSegment* p)
-{
-	for (int i = 0; i < paths.size(); ++i)
-	{
-		if (paths[i]->isEqual(p))
-		{
-			delete paths[i];
-			paths.erase(paths.begin() + i);
-		}
-	}
-
-}
 
 //////////////Painting methods
 void RDTstar::RDTtree::PathSegment::drawGL()
