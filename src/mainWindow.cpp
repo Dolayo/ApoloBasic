@@ -1,5 +1,6 @@
 #include <mainWindow.h>
 #include <iostream>
+#include "Ship.h"
 
 
 BEGIN_EVENT_TABLE(MainWindow, wxFrame)
@@ -21,6 +22,7 @@ the_planner(0)
     menuPlanners = new wxMenu;
 	menuPlanners->Append(ID_RDT, wxT("&RDT...\tCtrl-J"), wxT("Example of an RDT planner"));
 	menuPlanners->Append(ID_RDTstar, wxT("&RDT*...\tCtrl-K"), wxT("Example of an RDT star planner"));
+	menuPlanners->Append(ID_Ship, wxT("&SHip*...\tCtrl-L"), wxT("Da Ship"));
     //menuFile->AppendSeparator();
     //menuFile->Append(wxID_EXIT);
 
@@ -40,6 +42,7 @@ the_planner(0)
 	Bind(wxEVT_MENU, &MainWindow::OnRDT, this, ID_RDT);
     Bind(wxEVT_MENU, &MainWindow::OnRDTstar, this, ID_RDTstar);
     Bind(wxEVT_MENU, &MainWindow::OnAbout, this, wxID_ABOUT);
+	Bind(wxEVT_MENU, &MainWindow::OnShip, this, ID_Ship);
     //Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
 	
 
@@ -110,7 +113,38 @@ void MainWindow::createEnvironment()
 	
 	world+=building;
 }
+void MainWindow::createShipEnvironment()
+{
+	//Intializing test environment Faces included in a FacePart
+	Face suelo(Transformation3D(0, 0, 0), 0, -10, 10, 10);
+	Face tablon_fino1(Transformation3D(8, 3, 2, X_AXIS, -0.53), 0, 0, 0.2, 3.95);
+	Face tablon_fino2(Transformation3D(8.5, 3, 2, X_AXIS, -0.53), 0, 0, 0.2, 3.95);
+	Face tablon_grueso(Transformation3D(2, 3, 2, X_AXIS, -0.53), 0, 0, 1.4, 3.95);
+	Face plataforma(Transformation3D(2, 0, 2), 0, 0, 8, 3);
+	Face paredfondo1(Transformation3D(0, 0, 0, Y_AXIS, PI / 2), -4, -10, 0, 10);
+	Face paredfondo2;
 
+	paredfondo2.setBase(Transformation3D(0, 0, 0, X_AXIS, -PI / 2));
+	paredfondo2.addVertex(0, -4);
+	paredfondo2.addVertex(10, -4);
+	paredfondo2.addVertex(10, 0);
+	paredfondo2.addVertex(6, 0);
+	paredfondo2.addVertex(6, -1.5);
+	paredfondo2.addVertex(4, -1.5);
+	paredfondo2.addVertex(4, 0);
+	paredfondo2.addVertex(0, 0);
+
+	FaceSetPart* building = new FaceSetPart;
+	building->addFace(suelo);
+	building->addFace(tablon_fino1);
+	building->addFace(tablon_fino2);
+	building->addFace(tablon_grueso);
+	building->addFace(plataforma);
+	building->addFace(paredfondo1);
+	building->addFace(paredfondo2);
+
+	world += building;
+}
 void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 {
 	sb->SetStatusText(wxT("Planning!"));
@@ -244,4 +278,32 @@ void MainWindow::OnRDTstar(wxCommandEvent& event)
 
 	MyGLCanvas->create_world();
 	
+}
+
+void MainWindow::OnShip(wxCommandEvent& event)
+{
+	this->the_planner = 1;
+
+	sb->SetStatusText(wxT("Ship Ready!"));
+
+	createShipEnvironment();
+
+	//creo el robot
+	myship = new Ship();
+	myship->setRelativePosition(Vector3D(2.0, 8, 0));
+	world += myship;
+	/*
+		//creo un planificador y su sistema de muestreo
+	sampler = new RandomSampler(&world);
+	planner = new RDTstar;
+	(dynamic_cast<SBPathPlanner*>(planner))->setSampler(sampler); //solo especifico de los basados en muestreo
+	*/
+
+
+	MyGLCanvas->w = this->world;
+	MyGLCanvas->r = this->myship;//Ponle esta mierda al canvas
+	//MyGLCanvas->s = this->sampler;
+	//MyGLCanvas->p = this->planner;
+
+	MyGLCanvas->create_world();
 }

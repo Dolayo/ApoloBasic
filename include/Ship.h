@@ -27,11 +27,12 @@ namespace mr
 		virtual void loadFromXMLText(char* XmlText);
 
 		// Constructor
-		Ship(double w=0.5, double l=5.0, double m=100.0){}
+		Ship(double w=0.5, double l=5.0, double m=100.0, double c=0.5){}
 
 		virtual bool move(double t, double y);
 		virtual bool getPose3D(Pose3D& pose) { pose = getAbsoluteT3D(); return true; }
 		bool computeGroundedLocation(Transformation3D& p, World* w = 0);
+		bool Ship::dropShip(Transformation3D& t, World* w);
 		virtual void setLocation(const Transformation3D& p)
 		{
 			setAbsoluteT3D(p);
@@ -49,6 +50,9 @@ namespace mr
 		double _length;
 		double _mass;
 		double _I;
+		double _coeff;
+		double _speed;
+		double _rot_speed;
 
 		// Inputs
 		double _thrust;
