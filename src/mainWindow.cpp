@@ -1,17 +1,25 @@
 #include <mainWindow.h>
+
+
 #include <iostream>
-#include "Ship.h"
+#include <string>
+
 
 
 BEGIN_EVENT_TABLE(MainWindow, wxFrame)
-    EVT_BUTTON(ID_Plan,  MainWindow::OnPlan)
-	EVT_SIZE(MainWindow::Resize)
+EVT_BUTTON(ID_Plan, MainWindow::OnPlan)
+EVT_BUTTON(ID_Sim, MainWindow::OnSimulate)
+EVT_SIZE(MainWindow::Resize)
 END_EVENT_TABLE()
 
-MainWindow::MainWindow(const wxString& title): wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800), wxDEFAULT_FRAME_STYLE | wxHSCROLL | wxVSCROLL),
+
+MainWindow::MainWindow(const wxString& title) : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800), wxDEFAULT_FRAME_STYLE | wxHSCROLL | wxVSCROLL),
 myrobot(nullptr),
+myship(nullptr),
 planner(nullptr),
 sampler(nullptr),
+_thrustinp(nullptr),
+_button_sim(nullptr),
 the_planner(0)
 {
 	////////////DEBUG
@@ -81,6 +89,7 @@ void MainWindow::Resize(wxSizeEvent& event)
 
 	//MyGLCanvas->SetSize((int)(width)/3, 0,(int)(width*2)/3, height);
 }
+
 void MainWindow::createEnvironment()
 {
 	//Intializing test environment Faces included in a FacePart
@@ -113,38 +122,56 @@ void MainWindow::createEnvironment()
 	
 	world+=building;
 }
+
 void MainWindow::createShipEnvironment()
 {
 	//Intializing test environment Faces included in a FacePart
-	Face suelo(Transformation3D(0, 0, 0), 0, -10, 10, 10);
-	Face tablon_fino1(Transformation3D(8, 3, 2, X_AXIS, -0.53), 0, 0, 0.2, 3.95);
-	Face tablon_fino2(Transformation3D(8.5, 3, 2, X_AXIS, -0.53), 0, 0, 0.2, 3.95);
-	Face tablon_grueso(Transformation3D(2, 3, 2, X_AXIS, -0.53), 0, 0, 1.4, 3.95);
-	Face plataforma(Transformation3D(2, 0, 2), 0, 0, 8, 3);
-	Face paredfondo1(Transformation3D(0, 0, 0, Y_AXIS, PI / 2), -4, -10, 0, 10);
-	Face paredfondo2;
+	Face deep(Transformation3D(0, 0, 0), 0, -10, 10, 10);
+	deep.setColor(0.1451, 0.1569, 0.3137,1);
+	Face land1;
+	Face land2;
+	Face land3;
+	Face land4;
 
-	paredfondo2.setBase(Transformation3D(0, 0, 0, X_AXIS, -PI / 2));
-	paredfondo2.addVertex(0, -4);
-	paredfondo2.addVertex(10, -4);
-	paredfondo2.addVertex(10, 0);
-	paredfondo2.addVertex(6, 0);
-	paredfondo2.addVertex(6, -1.5);
-	paredfondo2.addVertex(4, -1.5);
-	paredfondo2.addVertex(4, 0);
-	paredfondo2.addVertex(0, 0);
+	land1.setBase(Transformation3D(0, 0, 0, X_AXIS, -PI / 2));
+	land2.setBase(Transformation3D(0, -2, 0, X_AXIS, -PI / 2));
+	land3.setBase(Transformation3D(5, -2, 0, Y_AXIS, -PI / 2));
+	land4.setBase(Transformation3D(0, 0, 2, Z_AXIS, -PI / 2));
 
-	FaceSetPart* building = new FaceSetPart;
-	building->addFace(suelo);
-	building->addFace(tablon_fino1);
-	building->addFace(tablon_fino2);
-	building->addFace(tablon_grueso);
-	building->addFace(plataforma);
-	building->addFace(paredfondo1);
-	building->addFace(paredfondo2);
+	land1.addVertex(5, 0);
+	land1.addVertex(5, -2);
+	land1.addVertex(0, -2);
+	land1.addVertex(0, 0);
+	land1.setColor(0.502, 0.251, 0.1, 1);
 
-	world += building;
+	land2.addVertex(5, 0);
+	land2.addVertex(5, -2);
+	land2.addVertex(0, -2);
+	land2.addVertex(0, 0);
+	land2.setColor(0.502, 0.251, 0.1, 1);
+
+	land3.addVertex(2, 0);
+	land3.addVertex(2, 2);
+	land3.addVertex(0, 2);
+	land3.addVertex(0, 0);
+	land3.setColor(0.502, 0.251, 0.1, 1);
+
+	land4.addVertex(2, 0);
+	land4.addVertex(2, 5);
+	land4.addVertex(0, 5);
+	land4.addVertex(0, 0);
+	land4.setColor(0.502, 0.251, 0.1, 1);
+
+	FaceSetPart* shore = new FaceSetPart;
+	shore->addFace(deep);
+	shore->addFace(land1);
+	shore->addFace(land2);
+	shore->addFace(land3);
+	shore->addFace(land4);
+
+	world += shore;
 }
+
 void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 {
 	sb->SetStatusText(wxT("Planning!"));
@@ -282,14 +309,19 @@ void MainWindow::OnRDTstar(wxCommandEvent& event)
 
 void MainWindow::OnShip(wxCommandEvent& event)
 {
-	this->the_planner = 1;
+	this->the_planner = 2;
 
 	sb->SetStatusText(wxT("Ship Ready!"));
+
+	_thrustinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 100), wxDefaultSize,
+		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
+
+	_button_sim = new wxButton(this, ID_Sim, wxT("Simulate"), wxPoint(20, 200), wxSize(100, 50));;
 
 	createShipEnvironment();
 
 	//creo el robot
-	myship = new Ship();
+	myship = new Ship(0.5, 2, 100, 0.5);
 	myship->setRelativePosition(Vector3D(2.0, 8, 0));
 	world += myship;
 	/*
@@ -301,9 +333,18 @@ void MainWindow::OnShip(wxCommandEvent& event)
 
 
 	MyGLCanvas->w = this->world;
-	MyGLCanvas->r = this->myship;//Ponle esta mierda al canvas
+	//MyGLCanvas->r = this->myship;
+	MyGLCanvas->sh = this->myship;
 	//MyGLCanvas->s = this->sampler;
 	//MyGLCanvas->p = this->planner;
 
 	MyGLCanvas->create_world();
+}
+
+void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
+{
+	float value_f = std::stof(_thrustinp->GetLineText(0).ToStdString());
+	myship->setAbsoluteT3D(Transformation3D(value_f,0,0));
+	MyGLCanvas->sh = myship;
+	MyGLCanvas->Refresh(false);
 }

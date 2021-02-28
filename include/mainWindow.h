@@ -3,7 +3,9 @@
 #include <canvas.h>
 #include <wx/sizer.h>
 
-enum id{ID_RDT = 1, ID_RDTstar = 2, ID_Plan = 3, ID_Ship = 4};
+enum id{ID_RDT = 1, ID_RDTstar = 2, ID_Plan = 3, ID_Ship = 4, ID_Sim = 5};
+
+
 
 class MainWindow : public wxFrame
 {
@@ -27,6 +29,9 @@ private:
     wxBoxSizer *box;
     wxPanel* pan;
 
+    wxButton* _button_sim;
+    wxTextCtrl* _thrustinp;
+
     int height;
     int width;
 
@@ -46,6 +51,7 @@ private:
     void OnRDT(wxCommandEvent& event);
     void OnRDTstar(wxCommandEvent& event);
     void OnShip(wxCommandEvent& event);
+    void OnSimulate(wxCommandEvent& WXUNUSED);
     void OnExit(wxCloseEvent& event);
     void OnAbout(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE()

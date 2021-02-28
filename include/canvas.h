@@ -2,14 +2,13 @@
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
 #include "rdtstar.h"
+#include "Ship.h"
 
-/////////////// DEBUG
-#include <iostream>
-
-/////////////// DEBUG
 
 using namespace mr;
 using namespace std;
+
+
 
 class canvas: public wxGLCanvas {
 
@@ -19,6 +18,7 @@ private:
 	GLScene scene;
 	World w;
 	WheeledBaseSim *r;
+	Ship* sh;
 	Sampler *s;
 	PathPlanner *p;
 	RobotPath sol;

@@ -1,38 +1,28 @@
 #ifndef __SHIP_H_
 #define __SHIP_H_
-
-#include <iostream>
-#include "gl/gltools.h"
-
-#include "base\globject.h"
-#include "base/logger.h"
-#include "C:\mrcore\include\sim\composedentity.h"
+/*
 #include "C:\mrcore\include\math\transformation2d.h"
 
 #include "C:\mrcore\include\sim\world.h"
 #include "C:\mrcore\include\sim\cylindricalpart.h"
+#include "C:\mrcore\include\sim\composedentity.h"
+*/
+#include <mrcore.h>
+
 
 namespace mr
 {
 	class Ship :public ComposedEntity
 	{
-		DECLARE_MR_OBJECT(Ship)
 	public:
-		//Serializers
-		virtual void writeToStream(Stream& stream);
-		virtual void readFromStream(Stream& stream);
-		virtual void writeToXML(XMLElement* parent);
-		virtual void readFromXML(XMLElement* parent);
-		virtual char* CreateXMLText();
-		virtual void loadFromXMLText(char* XmlText);
-
+		
 		// Constructor
-		Ship(double w=0.5, double l=5.0, double m=100.0, double c=0.5){}
+		Ship(double w, double l, double m, double c);
+		
 
 		virtual bool move(double t, double y);
 		virtual bool getPose3D(Pose3D& pose) { pose = getAbsoluteT3D(); return true; }
-		bool computeGroundedLocation(Transformation3D& p, World* w = 0);
-		bool Ship::dropShip(Transformation3D& t, World* w);
+	
 		virtual void setLocation(const Transformation3D& p)
 		{
 			setAbsoluteT3D(p);
@@ -54,15 +44,21 @@ namespace mr
 		double _speed;
 		double _rot_speed;
 
-		// Inputs
+		// State
 		double _thrust;
-		double _yaw;
+		double _yaw;//cambiar por timon
 
 		//utility bool that checks if last move was possible (not collision, not off ground)
 		bool _move_success;
 
 		
 		void computeInertia();
+
+		// Default Constructor and operators
+		Ship();
+		Ship& operator =(const Ship& s);
+		Ship(Ship&);
+
 
 
 	};
