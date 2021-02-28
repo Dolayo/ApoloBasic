@@ -30,7 +30,14 @@ private:
     wxPanel* pan;
 
     wxButton* _button_sim;
+
     wxTextCtrl* _thrustinp;
+    wxTextCtrl* _rudderinp;
+    wxTextCtrl* _timeinp;
+
+    wxStaticText* _label_thrustinp;
+    wxStaticText* _label_rudderinp;
+    wxStaticText* _label_timeinp;
 
     int height;
     int width;

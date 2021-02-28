@@ -18,7 +18,7 @@ namespace mr
 		hull->setPolygonalBase(list_bod);
 		hull->setHeight(_length);
 		hull->setRelativePosition(Vector3D(0, 0, _width / 2 + 0.001));
-		hull->setRelativeOrientation(PI/2,0,0);
+		hull->setRelativeOrientation(PI/2, 0, PI/2);
 		hull->setColor(0.4, 0.4, 0.4);
 
 		(*this) += hull;
@@ -54,8 +54,8 @@ namespace mr
 		bridge_list.push_back(Vector2D(-_width / 2, _width / 2));
 		bridge->setPolygonalBase(bridge_list);
 		bridge->setHeight(_width);
-		bridge->setRelativePosition(Vector3D(0, -_length/10, _width ));
-		bridge->setRelativeOrientation(0, 0, 0);
+		bridge->setRelativePosition(Vector3D(_length / 15, 0, _width ));
+		bridge->setRelativeOrientation(0, 0, PI/2);
 		bridge->setColor(0.4, 0.4, 0.4);
 
 		(*this) += bridge;
@@ -73,11 +73,11 @@ namespace mr
 	{
 		if (!_mass || !_I) return;
 
-		double acc = (_thrust / _mass) - _coeff * _mass * 9.18;
+		double acc = (_thrust / _mass);
 		//Pensar un metodo para que la viscosidad solo se aplique cuando la 
 		//velocidad sea distina de cero
 
-		double tor = 0.1 * _thrust * _yaw;//Factor aun por determinar
+		double tor = 0.001 * _thrust * _yaw;//Factor aun por determinar
 		double rot_acc = tor / _I;
 
 		double delta_x = _speed * delta_t + 0.5 * acc * delta_t * delta_t;
