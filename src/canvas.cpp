@@ -1,5 +1,8 @@
 
 #include "canvas.h"
+
+
+
 //#include <wx/wfstream.h>
 //#include <wx/txtstrm.h>
 BEGIN_EVENT_TABLE(canvas, wxGLCanvas)
@@ -25,6 +28,7 @@ canvas::canvas(wxFrame *parent, wxPoint pos, wxSize size):
 	p = nullptr;
 	r = nullptr;
 	s = nullptr;
+	sh = nullptr;
 	flag=false;
 }
 
@@ -42,23 +46,25 @@ void canvas::create_world()
 
 
 
-void canvas::OnPaint(wxPaintEvent& WXUNUSED(event)){
+void canvas::OnPaint(wxPaintEvent& WXUNUSED(event))
+{
 
     wxGLCanvas::SetCurrent(*m_context);
 
     wxPaintDC(this);
 
-if(flag)
-{
-	scene.Draw();
-	p->drawGL();
+	if(flag)
+	{
+		scene.Draw();
+		sh->drawGL();
+		//p->drawGL();
 
-	sol.drawGL();
-}
+		//sol.drawGL();
+	}
 	
 	
-    glFlush();
-    SwapBuffers();
+		glFlush();
+		SwapBuffers();
 }
 
 void canvas::Resized(wxSizeEvent& event)
