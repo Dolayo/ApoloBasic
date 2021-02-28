@@ -19,7 +19,12 @@ myship(nullptr),
 planner(nullptr),
 sampler(nullptr),
 _thrustinp(nullptr),
+_rudderinp(nullptr),
 _button_sim(nullptr),
+_timeinp(nullptr),
+_label_thrustinp(nullptr),
+_label_rudderinp(nullptr),
+_label_timeinp(nullptr),
 the_planner(0)
 {
 	////////////DEBUG
@@ -313,10 +318,19 @@ void MainWindow::OnShip(wxCommandEvent& event)
 
 	sb->SetStatusText(wxT("Ship Ready!"));
 
+	_label_thrustinp = new wxStaticText(this, wxID_ANY, "Thrust", wxPoint(20, 80), wxDefaultSize);
 	_thrustinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 100), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
 
-	_button_sim = new wxButton(this, ID_Sim, wxT("Simulate"), wxPoint(20, 200), wxSize(100, 50));;
+	_label_rudderinp = new wxStaticText(this, wxID_ANY, "Rudder", wxPoint(20, 140), wxDefaultSize);
+	_rudderinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 160), wxDefaultSize,
+		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
+
+	_label_timeinp = new wxStaticText(this, wxID_ANY, "Time", wxPoint(20, 200), wxDefaultSize);
+	_timeinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 220), wxDefaultSize,
+		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
+
+	_button_sim = new wxButton(this, ID_Sim, wxT("Simulate"), wxPoint(20, 260), wxSize(100, 50));
 
 	createShipEnvironment();
 
@@ -343,8 +357,11 @@ void MainWindow::OnShip(wxCommandEvent& event)
 
 void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 {
-	float value_f = std::stof(_thrustinp->GetLineText(0).ToStdString());
-	myship->setAbsoluteT3D(Transformation3D(value_f,0,0));
+	float thrust_f = std::stof(_thrustinp->GetLineText(0).ToStdString());
+	float rudder_f = std::stof(_rudderinp->GetLineText(0).ToStdString());
+	float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
+	myship->move(thrust_f, rudder_f);
+	myship->simulate(time_f);
 	MyGLCanvas->sh = myship;
 	MyGLCanvas->Refresh(false);
 }
