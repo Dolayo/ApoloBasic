@@ -15,7 +15,9 @@ namespace mr
 		
 		virtual bool move(double t, double r);
 		double coeff(const double& x, const char& fluid, const char& type);
-		double sdl(const double& x, const char& fluid, const char& type, const char& type2);
+		double sdl(const char& fluid, const char& type, const char& type2);
+		double Mfront(const char& fluid);
+		double Mback(const char& fluid);
 		virtual bool getPose3D(Pose3D& pose) { pose = getAbsoluteT3D(); return true; }
 	
 		virtual void setLocation(const Transformation3D& p)
@@ -38,6 +40,10 @@ namespace mr
 		double _mass;
 		double _J;
 		double _xp;
+		double _Sair;
+		double _Swater;
+		double _vMax;
+		double _Marm;
 
 		// --- Environment ---
 
@@ -46,7 +52,16 @@ namespace mr
 		
 		double _windSpeed;
 		double _waterSpeed;
+		double _alpha;
+
+		double _alpha_water;
+		double _alpha_air;
 		
+		double _Crs_water;
+		double _Crs_air;
+		
+		double _ro_water;
+		double _ro_air;
 
 		// --- State ---
 
