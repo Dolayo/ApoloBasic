@@ -3,12 +3,12 @@
 
 namespace mr
 {
-	Ship::Ship(double w = 0.5, double l = 2, double m = 100, double c = 0.5) :
-		_width(w),
-		_length(l),
-		_mass(m),
+	Ship::Ship() :
+		_width(3),
+		_length(10),
+		_mass(5000),
+		_alpha(0),
 		_J(0),
-		_trueFlowDirection(0),
 		_u(0),
 		_v(0),
 		_w(0),
@@ -20,6 +20,9 @@ namespace mr
 		_move_success(true)
 
 	{
+		_alpha_water = _Crs_water * _Swater * _ro_water / (_length / 2);
+		_alpha_air = _Crs_air * _Sair * _ro_air / (_length / 2);
+		
 
 		// Pintar el barquito
 		vector<Vector2D> list_bod;
@@ -79,23 +82,24 @@ namespace mr
 
 	void Ship::simulate(double delta_t)
 	{
-		Vector2D F_air_drag;
-		Vector2D F_water_drag;
-		Vector2D F_drag_propulsion(_thrust_x, 0);
+	
+		double F_air_drag = sdl('a','f','d');
+		double F_water_drag = sdl('w', 'f', 'd');
+		double F_drag_propulsion = _thrust_x;
 
-		Vector2D F_air_side;
-		Vector2D F_water_side;
-		Vector2D F_side_propulsion(0, _thrust_y);
+		double F_air_side = sdl('a', 'f', 's');
+		double F_water_side = sdl('w', 'f', 's');
+		double F_side_propulsion = _thrust_y;
 
-		double M_air;
-		double M_water;
-		double M_rot;
-		double M_prop = _thrust_y*_xp;
+		double M_air = sdl('a', 'm', 'y');
+		double M_water = sdl('w', 'm', 'y');
+		double M_rot = Mfront('a') + Mfront('w') + Mback('a') + Mback('w');
+		double M_prop = _thrust_y *_xp;
 
 
 		double ax = (1 / _mass) * (F_air_drag + F_water_drag + F_drag_propulsion);
-		double ay = (1 / _mass) * ();
-		double aw = (1 / _J) * ();
+		double ay = (1 / _mass) * (F_air_side + F_water_side + F_side_propulsion);
+		double aw = (1 / _J) * (M_air + M_water + M_rot + M_prop);
 
 		// MRUA
 		double delta_x = _x + _u * delta_t + 0.5 * ax * delta_t * delta_t;
@@ -237,7 +241,7 @@ namespace mr
 		}
 	}
 
-	double Ship::sdl(const double& x, const char& fluid, const char& type, const char& type2)
+	double Ship::sdl(const char& fluid, const char& type, const char& type2)
 	{
 		// Square Drag Law
 		// x is apparent flow angle in radians [-PI, PI]
@@ -251,13 +255,19 @@ namespace mr
 			+ pow(_windSpeed * sin(_trueWindDirection - _yaw + PI / 2) - _v, 2));
 			if (type == 'f')
 			{
-				return (0.5 * coeff(x, fluid, type2) * 15 * 1.228 * vr * vr);
+				return (0.5 * coeff(
+					atan((_windSpeed*sin(_trueWindDirection - _yaw + PI / 2) - _v)/
+						(_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u)),
+					fluid, type2) * 15 * 1.228 * vr * vr);
 			}
 			else
 			{
 				if (type == 'm')
 				{
-					return (0.5 * coeff(x, fluid, type2) * 1 * 15 * 1.228 * vr * vr);
+					return (0.5 * coeff(
+						atan((_windSpeed * sin(_trueWindDirection - _yaw + PI / 2) - _v) /
+						(_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u)),
+						 fluid, type2) * 1 * 15 * 1.228 * vr * vr);
 				}
 				else
 				{
@@ -275,7 +285,10 @@ namespace mr
 					+ pow(_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v, 2));
 				if (type == 'f')
 				{
-					return (0.5 * coeff(x, fluid, type2) * 15 * 1.228 * vr * vr);
+					return (0.5 * coeff(
+						atan((_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v) /
+							(_waterSpeed * cos(_trueWaterDirection - _yaw + PI / 2) - _u)),
+						fluid, type2) * 15 * 1.228 * vr * vr);
 				}
 				else
 				{
@@ -299,5 +312,55 @@ namespace mr
 
 	}
 
+	double Ship::Mfront(const char& fluid)
+	{
+		// fluid is either air(a) or water(w)
+
+		double alpha_aux;
+		if (fluid == 'a')
+		{
+			alpha_aux = _alpha_air;
+		}
+		else
+		{
+			if (fluid == 'w')
+			{
+				alpha_aux = _alpha_water;
+			}
+			else
+			{
+				// wrong fluid input
+				return -2;
+			}
+		}
+		return ((_length*_length*alpha_aux / 192) * 
+			(3*_length* _length*_w*_w + 16*_length*_w*_v + 24*_v*_v));
+	}
+
+	double Ship::Mback(const char& fluid)
+	{
+		// fluid is either air(a) or water(w)
+
+		double alpha_aux;
+		if (fluid == 'a')
+		{
+			alpha_aux = _alpha_air;
+		}
+		else
+		{
+			if (fluid == 'w')
+			{
+				alpha_aux = _alpha_water;
+			}
+			else
+			{
+				// wrong fluid input
+				return -2;
+			}
+		}
+		return (_v > (_w*_length/2)) ? 
+			(-_length* _length* alpha_aux/192*(3*_length*_length*_w*_w - 16*_length*_w*_v+24*_v*_v)):
+			(alpha_aux/(192*_w*_w)*((_length*_w - 2*_v)*(_length * _w - 2 * _v)*(_length * _w - 2 * _v)*(3*_length*_w + 2*_v)-16*_v*_v*_v*_v));
+	}
 
 }
