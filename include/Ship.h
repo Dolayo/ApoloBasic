@@ -11,7 +11,7 @@ namespace mr
 	public:
 		
 		// Constructor
-		Ship(double w, double l, double m, double c);
+		Ship();
 		
 		virtual bool move(double t, double r);
 		double coeff(const double& x, const char& fluid, const char& type);
@@ -28,9 +28,15 @@ namespace mr
 		virtual void drawGL();
 		bool getMoveSuccess() { return _move_success; }
 		// Setters & Getters
-
+		void setU(const double& u) { _u = u; }
+		const double getU() { return _u; }
+		void setV(const double& v) { _v = v; }
+		const double getV() { return _v; }
+		void setW(const double& w) { _w = w; }
+		const double getW() { return _w; }
 		// Destructor
 		virtual ~Ship(){}
+
 	protected:
 
 		// --- Ship attributes ---
@@ -89,7 +95,6 @@ namespace mr
 
 	private:
 
-		Ship();
 		Ship& operator =(const Ship& s);
 		Ship(Ship&);
 
