@@ -31,12 +31,12 @@ private:
 
     wxButton* _button_sim;
 
-    wxTextCtrl* _thrustinp;
-    wxTextCtrl* _rudderinp;
+    wxTextCtrl* _thrustXinp;
+    wxTextCtrl* _thrustYinp;
     wxTextCtrl* _timeinp;
 
-    wxStaticText* _label_thrustinp;
-    wxStaticText* _label_rudderinp;
+    wxStaticText* _label_thrustXinp;
+    wxStaticText* _label_thrustYinp;
     wxStaticText* _label_timeinp;
 
     int height;

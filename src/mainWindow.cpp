@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <chrono>
 
 
 
@@ -18,12 +19,12 @@ myrobot(nullptr),
 myship(nullptr),
 planner(nullptr),
 sampler(nullptr),
-_thrustinp(nullptr),
-_rudderinp(nullptr),
+_thrustXinp(nullptr),
+_thrustYinp(nullptr),
 _button_sim(nullptr),
 _timeinp(nullptr),
-_label_thrustinp(nullptr),
-_label_rudderinp(nullptr),
+_label_thrustXinp(nullptr),
+_label_thrustYinp(nullptr),
 _label_timeinp(nullptr),
 the_planner(0)
 {
@@ -318,12 +319,12 @@ void MainWindow::OnShip(wxCommandEvent& event)
 
 	sb->SetStatusText(wxT("Ship Ready!"));
 
-	_label_thrustinp = new wxStaticText(this, wxID_ANY, "Thrust", wxPoint(20, 80), wxDefaultSize);
-	_thrustinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 100), wxDefaultSize,
+	_label_thrustXinp = new wxStaticText(this, wxID_ANY, "Thrust x", wxPoint(20, 80), wxDefaultSize);
+	_thrustXinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 100), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
 
-	_label_rudderinp = new wxStaticText(this, wxID_ANY, "Rudder", wxPoint(20, 140), wxDefaultSize);
-	_rudderinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 160), wxDefaultSize,
+	_label_thrustYinp = new wxStaticText(this, wxID_ANY, "Thrust y", wxPoint(20, 140), wxDefaultSize);
+	_thrustYinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 160), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
 
 	_label_timeinp = new wxStaticText(this, wxID_ANY, "Time", wxPoint(20, 200), wxDefaultSize);
@@ -335,7 +336,7 @@ void MainWindow::OnShip(wxCommandEvent& event)
 	createShipEnvironment();
 
 	//creo el robot
-	myship = new Ship(0.5, 2, 100, 0.5);
+	myship = new Ship();
 	myship->setRelativePosition(Vector3D(2.0, 8, 0));
 	world += myship;
 	/*
@@ -357,11 +358,36 @@ void MainWindow::OnShip(wxCommandEvent& event)
 
 void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 {
-	float thrust_f = std::stof(_thrustinp->GetLineText(0).ToStdString());
-	float rudder_f = std::stof(_rudderinp->GetLineText(0).ToStdString());
+	float thrustX_f = std::stof(_thrustXinp->GetLineText(0).ToStdString());
+	float thrustY_f = std::stof(_thrustYinp->GetLineText(0).ToStdString());
 	float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
-	myship->move(thrust_f, rudder_f);
-	myship->simulate(time_f);
-	MyGLCanvas->sh = myship;
-	MyGLCanvas->Refresh(false);
+
+	auto start = std::chrono::system_clock::now();
+	auto now = std::chrono::system_clock::now();
+
+	std::chrono::duration<float, std::milli> thrust_t(time_f*1000);
+	std::chrono::duration<float, std::milli> step(500);
+
+	myship->move(thrustX_f, thrustY_f);
+	myship->simulate(0.5);
+
+	while (abs(myship->getU()) > 0.001 )
+	{
+		if ((std::chrono::system_clock::now() - now)>step)
+		{
+			myship->simulate(0.5);
+
+			MyGLCanvas->sh = myship;
+			MyGLCanvas->Refresh(false);
+
+			now = std::chrono::system_clock::now();
+		}
+
+		if ((std::chrono::system_clock::now() - start) > thrust_t)
+		{
+			myship->move(0, 0);
+		}
+
+	}
+	//duration.count()	
 }

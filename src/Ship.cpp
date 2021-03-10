@@ -3,12 +3,28 @@
 
 namespace mr
 {
+
 	Ship::Ship() :
 		_width(3),
 		_length(10),
 		_mass(5000),
+		_J(23000),
+		_xp(5),
+		_Sair(15),
+		_Swater(2.5),
+		_vMax(2.7),
+		_Marm(1),
+		_trueWindDirection(0),
+		_trueWaterDirection(0),
+		_windSpeed(0),
+		_waterSpeed(0),
 		_alpha(0),
-		_J(0),
+		_alpha_water(0),
+		_alpha_air(0),
+		_Crs_water(0),
+		_Crs_air(0),
+		_ro_water(1000),
+		_ro_air(1.225),
 		_u(0),
 		_v(0),
 		_w(0),
@@ -27,14 +43,15 @@ namespace mr
 		// Pintar el barquito
 		vector<Vector2D> list_bod;
 		PrismaticPart* hull = new PrismaticPart;
-
-		list_bod.push_back(Vector2D(_width / 2, _width / 2));
-		list_bod.push_back(Vector2D(_width / 4, -_width / 2));
-		list_bod.push_back(Vector2D(-_width / 4, -_width / 2));
-		list_bod.push_back(Vector2D(-_width / 2, _width / 2));
+		double aux_width = _width / 5;
+		double aux_length = _length / 5;
+		list_bod.push_back(Vector2D(aux_width / 2, aux_width / 2));
+		list_bod.push_back(Vector2D(aux_width / 4, -aux_width / 2));
+		list_bod.push_back(Vector2D(-aux_width / 4, -aux_width / 2));
+		list_bod.push_back(Vector2D(-aux_width / 2, aux_width / 2));
 		hull->setPolygonalBase(list_bod);
-		hull->setHeight(_length);
-		hull->setRelativePosition(Vector3D(0, 0, _width / 2 + 0.001));
+		hull->setHeight(aux_length);
+		hull->setRelativePosition(Vector3D(0, 0, aux_width / 2 + 0.001));
 		hull->setRelativeOrientation(PI / 2, 0, PI / 2);
 		hull->setColor(0.4, 0.4, 0.4);
 
@@ -65,13 +82,13 @@ namespace mr
 		vector<Vector2D> bridge_list;
 		PrismaticPart* bridge = new PrismaticPart;
 
-		bridge_list.push_back(Vector2D(_width / 2, _width / 2));
-		bridge_list.push_back(Vector2D(_width / 4, -_width / 2));
-		bridge_list.push_back(Vector2D(-_width / 4, -_width / 2));
-		bridge_list.push_back(Vector2D(-_width / 2, _width / 2));
+		bridge_list.push_back(Vector2D(aux_width / 2, aux_width / 2));
+		bridge_list.push_back(Vector2D(aux_width / 4, -aux_width / 2));
+		bridge_list.push_back(Vector2D(-aux_width / 4, -aux_width / 2));
+		bridge_list.push_back(Vector2D(-aux_width / 2, aux_width / 2));
 		bridge->setPolygonalBase(bridge_list);
-		bridge->setHeight(_width);
-		bridge->setRelativePosition(Vector3D(_length / 15, 0, _width));
+		bridge->setHeight(aux_width);
+		bridge->setRelativePosition(Vector3D(aux_length / 15, 0, aux_width));
 		bridge->setRelativeOrientation(0, 0, PI / 2);
 		bridge->setColor(0.4, 0.4, 0.4);
 
@@ -108,6 +125,10 @@ namespace mr
 		// MCUA
 		double delta_th = _yaw + _w * delta_t + 0.5 * aw * delta_t * delta_t;;
 		_move_success = false;
+
+		_u += ax * delta_t;
+		_v += ay * delta_t;
+		_w += aw * delta_t;
 
 		Transformation3D position = getAbsoluteT3D();
 		Transformation3D delta(delta_x * cos(delta_th), delta_x * sin(delta_th), 0, 0, 0, delta_th);
@@ -175,8 +196,7 @@ namespace mr
 				}
 				else
 				{
-					double sgn = (x > 0) ? 1 : -1;
-					return (sgn * (12.3722 - 15.453 * std::abs(x) + 6.0261 * std::abs(x) -
+					return (((x > 0) ? 1 : -1) * (12.3722 - 15.453 * std::abs(x) + 6.0261 * std::abs(x) -
 						0.532325 * std::abs(x) * std::abs(x) * std::abs(x))
 						* sin(std::abs(x)) *
 						exp(-1.68668 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
@@ -185,8 +205,7 @@ namespace mr
 
 
 			case 'y':
-				double sgn = (x > 0) ? 1 : -1;
-				return (sgn * (0.710204 - 0.297196 * std::abs(x) +
+				return (((x > 0) ? 1 : -1) * (0.710204 - 0.297196 * std::abs(x) +
 					0.0857296 * std::abs(x) * std::abs(x)) *
 					sin(2 * PI * pow(std::abs(x) / PI, 1.05)));
 				break;
@@ -203,34 +222,43 @@ namespace mr
 			{
 				switch (type)
 				{
-				case 'd':
-					return (0.245219 - 0.93044 * std::abs(x) + 0.745752 * std::abs(x) *
-						std::abs(x) - 0.15915 * std::abs(x) * std::abs(x) *
-						std::abs(x) + 2.79188 * sin(2 * std::abs(x)) *
-						exp(-1.05667 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
-					break;
-
-				case 's':
-					double sgn = (x > 0) ? 1 : -1;
-					return (sgn * (0.115554 + 3.09423 * std::abs(x) - 0.984923 * std::abs(x) *
-						std::abs(x)) * sin(std::abs(x)));
-					break;
-
-				case 'y':
-					if (x == PI / 2)
+					case 'd':
 					{
-						return 2.545759;
+						return (0.245219 - 0.93044 * std::abs(x) + 0.745752 * std::abs(x) *
+							std::abs(x) - 0.15915 * std::abs(x) * std::abs(x) *
+							std::abs(x) + 2.79188 * sin(2 * std::abs(x)) *
+							exp(-1.05667 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
 						break;
 					}
-					double sgn = (x > 0) ? 1 : -1;
-					return (sgn * (0.322986 + 0.317964 * std::abs(x) - 0.1021844 * std::abs(x)
-						* std::abs(x)) * sin(2 * std::abs(x)));
-					break;
+					
 
-				default:
-					// wrong type input
-					return -1;
-					break;
+					case 's':
+					{
+						return (((x > 0) ? 1 : -1) * (0.115554 + 3.09423 * std::abs(x) - 0.984923 * std::abs(x) *
+							std::abs(x)) * sin(std::abs(x)));
+						break;
+					}
+					
+					case 'y':
+					{
+						if (x == PI / 2)
+						{
+							return 2.545759;
+							break;
+						}
+						return (((x > 0) ? 1 : -1) * (0.322986 + 0.317964 * std::abs(x) - 0.1021844 * std::abs(x)
+							* std::abs(x)) * sin(2 * std::abs(x)));
+						break;
+					}
+					
+
+					default:
+					{
+						// wrong type input
+						return -1;
+						break;
+					}
+					
 				}
 			}
 			else
@@ -294,7 +322,9 @@ namespace mr
 				{
 					if (type == 'm')
 					{
-						return (0.5 * coeff(x, fluid, type2) * 1 * 15 * 1.228 * vr * vr);
+						return (0.5 * coeff(atan((_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v) /
+							(_waterSpeed * cos(_trueWaterDirection - _yaw + PI / 2) - _u)),
+							fluid, type2) * 1 * 15 * 1.228 * vr * vr);
 					}
 					else
 					{
