@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <wx/txtstrm.h>
 
 
 
@@ -366,16 +367,16 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 	auto now = std::chrono::system_clock::now();
 
 	std::chrono::duration<float, std::milli> thrust_t(time_f*1000);
-	std::chrono::duration<float, std::milli> step(500);
+	std::chrono::duration<float, std::milli> step(100);
 
 	myship->move(thrustX_f, thrustY_f);
-	myship->simulate(0.5);
+	myship->simulate(0.1);
 
-	while (abs(myship->getU()) > 0.001 )
+	while ((std::chrono::system_clock::now() - start) < thrust_t)
 	{
 		if ((std::chrono::system_clock::now() - now)>step)
 		{
-			myship->simulate(0.5);
+			myship->simulate(0.1);
 
 			MyGLCanvas->sh = myship;
 			MyGLCanvas->Refresh(false);
@@ -383,7 +384,7 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 			now = std::chrono::system_clock::now();
 		}
 
-		if ((std::chrono::system_clock::now() - start) > thrust_t)
+		if ((std::chrono::system_clock::now() - start) > thrust_t/2)
 		{
 			myship->move(0, 0);
 		}

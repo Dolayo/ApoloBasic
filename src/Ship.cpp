@@ -16,20 +16,17 @@ namespace mr
 		_Marm(1),
 		_trueWindDirection(0),
 		_trueWaterDirection(0),
-		_windSpeed(0),
-		_waterSpeed(0),
-		_alpha(0),
-		_alpha_water(0),
-		_alpha_air(0),
-		_Crs_water(0),
-		_Crs_air(0),
+		_windSpeed(20),
+		_waterSpeed(2),
+		_Crs_water(2.545759),
+		_Crs_air(0.904313),
 		_ro_water(1000),
 		_ro_air(1.225),
 		_u(0),
 		_v(0),
 		_w(0),
-		_x(0),
-		_y(0),
+		_x(2),
+		_y(8),
 		_yaw(0),
 		_thrust_x(0),
 		_thrust_y(0),
@@ -100,7 +97,7 @@ namespace mr
 	void Ship::simulate(double delta_t)
 	{
 	
-		double F_air_drag = sdl('a','f','d');
+		double F_air_drag = sdl('a','f','d');// Valores demasiado altos
 		double F_water_drag = sdl('w', 'f', 'd');
 		double F_drag_propulsion = _thrust_x;
 
@@ -119,11 +116,11 @@ namespace mr
 		double aw = (1 / _J) * (M_air + M_water + M_rot + M_prop);
 
 		// MRUA
-		double delta_x = _x + _u * delta_t + 0.5 * ax * delta_t * delta_t;
-		double delta_y = _y + _u * delta_t + 0.5 * ay * delta_t * delta_t;
+		double delta_x = _u * delta_t + 0.5 * ax * delta_t * delta_t;
+		double delta_y = _v * delta_t + 0.5 * ay * delta_t * delta_t;
 
 		// MCUA
-		double delta_th = _yaw + _w * delta_t + 0.5 * aw * delta_t * delta_t;;
+		double delta_th = _w * delta_t + 0.5 * aw * delta_t * delta_t;;
 		_move_success = false;
 
 		_u += ax * delta_t;
@@ -161,10 +158,10 @@ namespace mr
 	{
 		_thrust_x = x;
 		_thrust_y = y;
-		if (_thrust_x > 10.0)_thrust_x = 10.0;
-		if (_thrust_x < 0.0)_thrust_x = 0.0;
-		if (_thrust_y > 10.0)_thrust_y = 10;
-		if (_thrust_y < 0.0)_thrust_y = 0.0;
+		//if (_thrust_x > 10.0)_thrust_x = 10.0;
+		//if (_thrust_x < 0.0)_thrust_x = 0.0;
+		//if (_thrust_y > 10.0)_thrust_y = 10;
+		//if (_thrust_y < 0.0)_thrust_y = 0.0;
 
 		return true;
 	}
@@ -181,7 +178,7 @@ namespace mr
 			{
 			case 'd':
 				//drag
-				return (0.195738 + 0.518615 * std::abs(x) - 0.496029 * x * x +
+				return (0.195738 + 0.518615 * std::abs(x) - 0.496029 * std::abs(x) * std::abs(x) +
 					0.0941925 * std::abs(x) * std::abs(x) * std::abs(x) +
 					1.86427 * sin(2 * PI * pow(std::abs(x) / PI, 1.05)) *
 					exp(-2.17281 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
@@ -189,14 +186,15 @@ namespace mr
 
 			case 's':
 				// side
-				if (x == PI / 2)
+				if ((x < ((PI / 2)+0.1))&&(x > ((PI / 2) - 0.1)))
 				{
-					return 0.904313;
+					return _Crs_air;
 					break;
 				}
 				else
 				{
-					return (((x > 0) ? 1 : -1) * (12.3722 - 15.453 * std::abs(x) + 6.0261 * std::abs(x) -
+					double sgn = ((x > 0) ? 1 : -1);
+					return (sgn * (12.3722 - 15.453 * std::abs(x) + 6.0261 * std::abs(x) -
 						0.532325 * std::abs(x) * std::abs(x) * std::abs(x))
 						* sin(std::abs(x)) *
 						exp(-1.68668 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
@@ -205,10 +203,14 @@ namespace mr
 
 
 			case 'y':
-				return (((x > 0) ? 1 : -1) * (0.710204 - 0.297196 * std::abs(x) +
+			{
+				double sgn = ((x > 0) ? 1 : -1);
+				return (sgn * (0.710204 - 0.297196 * std::abs(x) +
 					0.0857296 * std::abs(x) * std::abs(x)) *
 					sin(2 * PI * pow(std::abs(x) / PI, 1.05)));
 				break;
+			}
+				
 
 			default:
 				// wrong type input
@@ -234,19 +236,21 @@ namespace mr
 
 					case 's':
 					{
-						return (((x > 0) ? 1 : -1) * (0.115554 + 3.09423 * std::abs(x) - 0.984923 * std::abs(x) *
+						if ((x < ((PI / 2) + 0.1)) && (x > ((PI / 2) - 0.1)))
+						{
+							return _Crs_water;
+							break;
+						}
+						double sgn = ((x > 0) ? 1 : -1);
+						return (sgn * (0.115554 + 3.09423 * std::abs(x) - 0.984923 * std::abs(x) *
 							std::abs(x)) * sin(std::abs(x)));
 						break;
 					}
 					
 					case 'y':
 					{
-						if (x == PI / 2)
-						{
-							return 2.545759;
-							break;
-						}
-						return (((x > 0) ? 1 : -1) * (0.322986 + 0.317964 * std::abs(x) - 0.1021844 * std::abs(x)
+						double sgn = ((x > 0) ? 1 : -1);
+						return (sgn * (0.322986 + 0.317964 * std::abs(x) - 0.1021844 * std::abs(x)
 							* std::abs(x)) * sin(2 * std::abs(x)));
 						break;
 					}
@@ -281,21 +285,29 @@ namespace mr
 		{
 			double vr = sqrt(pow(_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u, 2)
 			+ pow(_windSpeed * sin(_trueWindDirection - _yaw + PI / 2) - _v, 2));
+
 			if (type == 'f')
 			{
-				return (0.5 * coeff(
-					atan((_windSpeed*sin(_trueWindDirection - _yaw + PI / 2) - _v)/
-						(_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u)),
-					fluid, type2) * 15 * 1.228 * vr * vr);
+				// Algo raro pasa ocn el coeficiente del agua que no devuelve <1 y el angulo real deberia ser 45 grados cuando el denominador aux_phi es proximo a 0
+				// sin embargo salen como 88 grados
+				double aux_phi = (_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u);
+				if (aux_phi == 0)
+					aux_phi = PI / 2;// OJO que en realidad esto deberia ser x, el angulo que se pasa a coeff x = PI /2
+
+				double aux_coeff = coeff(atan((_windSpeed * sin(_trueWindDirection - _yaw + PI / 2) - _v) /
+					aux_phi), fluid, type2);
+				return (0.5 * aux_coeff * _Sair * _ro_air * vr * vr);
 			}
 			else
 			{
 				if (type == 'm')
 				{
-					return (0.5 * coeff(
-						atan((_windSpeed * sin(_trueWindDirection - _yaw + PI / 2) - _v) /
-						(_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u)),
-						 fluid, type2) * 1 * 15 * 1.228 * vr * vr);
+					double aux_phi = (_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u);
+					if (aux_phi == 0)
+						aux_phi = PI / 2;
+					double aux_coeff = coeff(atan((_windSpeed * sin(_trueWindDirection - _yaw + PI / 2) - _v) /
+						aux_phi), fluid, type2);
+					return (0.5 * aux_coeff * _Marm * _Sair * _ro_air * vr * vr);
 				}
 				else
 				{
@@ -313,18 +325,26 @@ namespace mr
 					+ pow(_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v, 2));
 				if (type == 'f')
 				{
-					return (0.5 * coeff(
-						atan((_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v) /
-							(_waterSpeed * cos(_trueWaterDirection - _yaw + PI / 2) - _u)),
-						fluid, type2) * 15 * 1.228 * vr * vr);
+					// El coeficiente esta mal, sale mas que 1
+					double aux_phi = (_waterSpeed * cos(_trueWaterDirection - _yaw + PI / 2) - _u);
+					if (aux_phi == 0)
+						aux_phi = PI / 2;
+
+					double aux_coeff = coeff(atan((_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v) /
+						aux_phi), fluid, type2);
+					return (0.5 * aux_coeff * _Swater * _ro_water * vr * vr);
 				}
 				else
 				{
 					if (type == 'm')
 					{
-						return (0.5 * coeff(atan((_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v) /
-							(_waterSpeed * cos(_trueWaterDirection - _yaw + PI / 2) - _u)),
-							fluid, type2) * 1 * 15 * 1.228 * vr * vr);
+						double aux_phi = (_waterSpeed * cos(_trueWaterDirection - _yaw + PI / 2) - _u);
+						if (aux_phi == 0)
+							aux_phi = PI / 2;
+
+						double aux_coeff = coeff(atan((_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v) /
+							aux_phi), fluid, type2);
+						return (0.5 * aux_coeff * _Marm * _Swater * _ro_water * vr * vr);
 					}
 					else
 					{
@@ -363,8 +383,8 @@ namespace mr
 				return -2;
 			}
 		}
-		return ((_length*_length*alpha_aux / 192) * 
-			(3*_length* _length*_w*_w + 16*_length*_w*_v + 24*_v*_v));
+		double aux = ((_length * _length * alpha_aux / 192) * (3 * _length * _length * _w * _w + 16 * _length * _w * _v + 24 * _v * _v));
+		return aux;
 	}
 
 	double Ship::Mback(const char& fluid)
@@ -388,9 +408,20 @@ namespace mr
 				return -2;
 			}
 		}
-		return (_v > (_w*_length/2)) ? 
-			(-_length* _length* alpha_aux/192*(3*_length*_length*_w*_w - 16*_length*_w*_v+24*_v*_v)):
-			(alpha_aux/(192*_w*_w)*((_length*_w - 2*_v)*(_length * _w - 2 * _v)*(_length * _w - 2 * _v)*(3*_length*_w + 2*_v)-16*_v*_v*_v*_v));
+	
+		if(_v > (_w * _length / 2))
+		{
+			double aux = ((-1 * _length * _length * alpha_aux / 192) * (3 * _length * _length * _w * _w - 16 * _length * _w * _v + 24 * _v * _v));
+			return aux;
+		}
+		else
+		{
+			double _w_aux = _w;
+			if (_w_aux == 0)
+				_w_aux = 0.001;
+			double aux = (alpha_aux / (192 * _w_aux * _w_aux) * ((_length * _w_aux - 2 * _v) * (_length * _w_aux - 2 * _v) * (_length * _w_aux - 2 * _v) * (3 * _length * _w_aux + 2 * _v) - 16 * _v * _v * _v * _v));
+			return aux;
+		}
 	}
 
 }
