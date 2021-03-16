@@ -12,7 +12,7 @@ namespace mr
 		
 		// Constructor
 		Ship();
-		
+		void setState(double x, double y, double yaw, double u, double v, double w);
 		virtual bool move(double t, double r);
 		double coeff(const double& x, const char& fluid, const char& type);
 		double sdl(const char& fluid, const char& type, const char& type2);

@@ -37,7 +37,7 @@ the_planner(0)
     menuPlanners = new wxMenu;
 	menuPlanners->Append(ID_RDT, wxT("&RDT...\tCtrl-J"), wxT("Example of an RDT planner"));
 	menuPlanners->Append(ID_RDTstar, wxT("&RDT*...\tCtrl-K"), wxT("Example of an RDT star planner"));
-	menuPlanners->Append(ID_Ship, wxT("&SHip*...\tCtrl-L"), wxT("Da Ship"));
+	menuPlanners->Append(ID_Ship, wxT("&Ship...\tCtrl-L"), wxT("Da Ship"));
     //menuFile->AppendSeparator();
     //menuFile->Append(wxID_EXIT);
 
@@ -339,6 +339,7 @@ void MainWindow::OnShip(wxCommandEvent& event)
 	//creo el robot
 	myship = new Ship();
 	myship->setRelativePosition(Vector3D(2.0, 8, 0));
+	myship->setState(2, 8, 0, 0, 0, 0);
 	world += myship;
 	/*
 		//creo un planificador y su sistema de muestreo
@@ -359,36 +360,44 @@ void MainWindow::OnShip(wxCommandEvent& event)
 
 void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 {
+	/*myship->setRelativePosition(Vector3D(2.0, 8, 0));
+	myship->setU(0);
+	myship->setV(0);
+	myship->setW(0);*/
+
 	float thrustX_f = std::stof(_thrustXinp->GetLineText(0).ToStdString());
 	float thrustY_f = std::stof(_thrustYinp->GetLineText(0).ToStdString());
 	float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
 
-	auto start = std::chrono::system_clock::now();
-	auto now = std::chrono::system_clock::now();
+	auto start = std::chrono::steady_clock::now();
+	auto now = std::chrono::steady_clock::now();
 
-	std::chrono::duration<float, std::milli> thrust_t(time_f*1000);
-	std::chrono::duration<float, std::milli> step(100);
+	std::chrono::duration<float, std::nano> sim_t(time_f*1000000);
+	std::chrono::duration<float, std::nano> step(100000);
 
 	myship->move(thrustX_f, thrustY_f);
 	myship->simulate(0.1);
 
-	while ((std::chrono::system_clock::now() - start) < thrust_t)
+	/*while (((std::chrono::steady_clock::now() - start)) < sim_t)
 	{
-		if ((std::chrono::system_clock::now() - now)>step)
+		if ((std::chrono::steady_clock::now() - now)>step)
 		{
 			myship->simulate(0.1);
-
-			MyGLCanvas->sh = myship;
-			MyGLCanvas->Refresh(false);
-
-			now = std::chrono::system_clock::now();
+			now = std::chrono::steady_clock::now();
 		}
 
-		if ((std::chrono::system_clock::now() - start) > thrust_t/2)
+		if ((std::chrono::steady_clock::now() - start) > sim_t/2)
 		{
 			myship->move(0, 0);
 		}
 
-	}
-	//duration.count()	
+		MyGLCanvas->sh = myship;
+		MyGLCanvas->Refresh(true);
+	}*/
+
+	MyGLCanvas->sh = myship;
+	MyGLCanvas->Refresh(true);
+
+
+
 }
