@@ -14,10 +14,10 @@ namespace mr
 		_Swater(2.5),
 		_vMax(2.7),
 		_Marm(1),
-		_trueWindDirection(0),
+		_trueWindDirection(PI),
 		_trueWaterDirection(0),
-		_windSpeed(20),
-		_waterSpeed(2),
+		_windSpeed(20),//20
+		_waterSpeed(0),//2
 		_Crs_water(2.545759),
 		_Crs_air(0.904313),
 		_ro_water(1000),
@@ -25,8 +25,8 @@ namespace mr
 		_u(0),
 		_v(0),
 		_w(0),
-		_x(2),
-		_y(8),
+		_x(0),
+		_y(0),
 		_yaw(0),
 		_thrust_x(0),
 		_thrust_y(0),
@@ -92,6 +92,17 @@ namespace mr
 		(*this) += bridge;
 	}
 
+	void Ship::setState(double x=0, double y=0, double yaw=0, double u=0, double v=0, double w=0)
+	{
+		_x = x;
+		_y = y;
+		_yaw = yaw;
+
+		_u = u;
+		_v = v;
+		_w = w;
+	}
+
 
 
 	void Ship::simulate(double delta_t)
@@ -113,7 +124,7 @@ namespace mr
 
 		double ax = (1 / _mass) * (F_air_drag + F_water_drag + F_drag_propulsion);
 		double ay = (1 / _mass) * (F_air_side + F_water_side + F_side_propulsion);
-		double aw = (1 / _J) * (M_air + M_water + M_rot + M_prop);
+		double aw = (1 / _J) * (M_air + M_water + /*M_rot +*/ M_prop);
 
 		// MRUA
 		double delta_x = _u * delta_t + 0.5 * ax * delta_t * delta_t;
@@ -128,7 +139,7 @@ namespace mr
 		_w += aw * delta_t;
 
 		Transformation3D position = getAbsoluteT3D();
-		Transformation3D delta(delta_x * cos(delta_th), delta_x * sin(delta_th), 0, 0, 0, delta_th);
+		Transformation3D delta(delta_x/* * cos(delta_th)*/, delta_y/* * sin(delta_th)*/, 0, 0, 0, delta_th);
 
 		Transformation3D newposition = position * delta;
 		//_speed = acc * delta_t;
@@ -236,7 +247,7 @@ namespace mr
 
 					case 's':
 					{
-						if ((x < ((PI / 2) + 0.1)) && (x > ((PI / 2) - 0.1)))
+						if ((x < ((PI / 2) + 0.01)) && (x > ((PI / 2) - 0.01)))
 						{
 							return _Crs_water;
 							break;
@@ -283,30 +294,51 @@ namespace mr
 
 		if (fluid == 'a')
 		{
-			double vr = sqrt(pow(_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u, 2)
-			+ pow(_windSpeed * sin(_trueWindDirection - _yaw + PI / 2) - _v, 2));
+			double vr = sqrt(pow(_windSpeed * cos(_trueWindDirection - _yaw /*+ PI / 2*/) - _u, 2)     
+			+ pow(_windSpeed * sin(_trueWindDirection - _yaw /*+ PI / 2*/) - _v, 2));
 
 			if (type == 'f')
 			{
-				// Algo raro pasa ocn el coeficiente del agua que no devuelve <1 y el angulo real deberia ser 45 grados cuando el denominador aux_phi es proximo a 0
-				// sin embargo salen como 88 grados
-				double aux_phi = (_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u);
-				if (aux_phi == 0)
-					aux_phi = PI / 2;// OJO que en realidad esto deberia ser x, el angulo que se pasa a coeff x = PI /2
 
-				double aux_coeff = coeff(atan((_windSpeed * sin(_trueWindDirection - _yaw + PI / 2) - _v) /
-					aux_phi), fluid, type2);
-				return (0.5 * aux_coeff * _Sair * _ro_air * vr * vr);
+				double apparent_dir = _trueWindDirection - _yaw;//+ PI / 2
+
+				double aux_phi = atan((_windSpeed * sin(apparent_dir) -_v / (_windSpeed * cos(apparent_dir) - _u)));
+
+				if ((_windSpeed * cos(apparent_dir) - _u) == 0)
+					aux_phi = PI / 2.0;
+
+				double sgn = 1;
+				if(type2=='d')
+				{
+					if ((apparent_dir > (PI / 2.0)) && (apparent_dir < ((3.0/2.0) * PI)))
+						sgn = -1.0;
+				}
+				else
+				{
+					if (type2 == 's')
+					{
+						if ((apparent_dir > (PI/2.0)) && (apparent_dir < (2.0 * PI)))
+							sgn = -1.0;
+					}
+				}
+				
+				double aux_coeff = coeff(aux_phi, fluid, type2);
+				return (sgn * 0.5 * aux_coeff * _Sair * _ro_air * vr * vr);
+
 			}
 			else
 			{
 				if (type == 'm')
 				{
-					double aux_phi = (_windSpeed * cos(_trueWindDirection - _yaw + PI / 2) - _u);
-					if (aux_phi == 0)
-						aux_phi = PI / 2;
-					double aux_coeff = coeff(atan((_windSpeed * sin(_trueWindDirection - _yaw + PI / 2) - _v) /
-						aux_phi), fluid, type2);
+					double apparent_dir = _trueWindDirection - _yaw;//+ PI / 2
+
+					double aux_phi = atan((_windSpeed * sin(apparent_dir) - _v / (_windSpeed * cos(apparent_dir) - _u)));
+
+					if ((_windSpeed * cos(apparent_dir) - _u) == 0)
+						aux_phi = PI / 2.0;
+
+					double aux_coeff = coeff(aux_phi, fluid, type2);
+
 					return (0.5 * aux_coeff * _Marm * _Sair * _ro_air * vr * vr);
 				}
 				else
@@ -321,29 +353,65 @@ namespace mr
 		{
 			if (fluid == 'w')
 			{
-				double vr = sqrt(pow(_waterSpeed * cos(_trueWaterDirection - _yaw + PI / 2) - _u, 2)
-					+ pow(_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v, 2));
+				double vr = sqrt(pow(_waterSpeed * cos(_trueWaterDirection - _yaw /*+ PI / 2*/) - _u, 2)
+					+ pow(_waterSpeed * sin(_trueWaterDirection - _yaw /*+ PI / 2*/) - _v, 2));
+
 				if (type == 'f')
 				{
-					// El coeficiente esta mal, sale mas que 1
-					double aux_phi = (_waterSpeed * cos(_trueWaterDirection - _yaw + PI / 2) - _u);
-					if (aux_phi == 0)
-						aux_phi = PI / 2;
 
-					double aux_coeff = coeff(atan((_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v) /
-						aux_phi), fluid, type2);
+					// DEBUGGING
+					double apparent_dir = _trueWaterDirection - _yaw;//+ PI / 2
+
+					double aux_phi = atan((_waterSpeed * sin(apparent_dir) - _v) / (_waterSpeed * cos(apparent_dir) - _u));
+
+					if ((_waterSpeed * cos(apparent_dir) - _u) == 0)
+						aux_phi = PI / 2.0;
+
+					double sgn = 1.0;
+					if (type2 == 'd')
+					{
+						if ((apparent_dir > (PI / 2.0)) && (apparent_dir < (3.0 * PI / 4.0)))
+							sgn = -1.0;
+					}
+					else
+					{
+						if (type2 == 's')
+						{
+							if ((apparent_dir > (PI / 2.0)) && (apparent_dir < (2.0 * PI)))
+								sgn = -1.0;
+						}
+					}
+
+					double aux_coeff = coeff(aux_phi, fluid, type2);
+
 					return (0.5 * aux_coeff * _Swater * _ro_water * vr * vr);
 				}
 				else
 				{
 					if (type == 'm')
 					{
-						double aux_phi = (_waterSpeed * cos(_trueWaterDirection - _yaw + PI / 2) - _u);
-						if (aux_phi == 0)
-							aux_phi = PI / 2;
+						double apparent_dir = _trueWaterDirection - _yaw ;//+ PI / 2
 
-						double aux_coeff = coeff(atan((_waterSpeed * sin(_trueWaterDirection - _yaw + PI / 2) - _v) /
-							aux_phi), fluid, type2);
+						double aux_phi = atan((_waterSpeed * sin(apparent_dir) - _v) / (_waterSpeed * cos(apparent_dir) - _u));
+						if ((_waterSpeed * cos(apparent_dir) - _u) == 0)
+							aux_phi = PI / 2.0;
+
+						/*double sgn = 1;
+						if (type2 == 'd')
+						{
+							if ((aux_phi > PI / 2) && (aux_phi < 3 * PI / 4))
+								sgn = -1;
+						}
+						else
+						{
+							if (type2 == 's')
+							{
+								if ((aux_phi > PI / 2) && (aux_phi < 2 * PI))
+									sgn = -1;
+							}
+						}*/
+
+						double aux_coeff = coeff(aux_phi, fluid, type2);
 						return (0.5 * aux_coeff * _Marm * _Swater * _ro_water * vr * vr);
 					}
 					else
