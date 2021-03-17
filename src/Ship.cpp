@@ -14,7 +14,7 @@ namespace mr
 		_Swater(2.5),
 		_vMax(2.7),
 		_Marm(1),
-		_trueWindDirection(PI),
+		_trueWindDirection(3*PI/2),
 		_trueWaterDirection(0),
 		_windSpeed(20),//20
 		_waterSpeed(0),//2
@@ -317,7 +317,7 @@ namespace mr
 				{
 					if (type2 == 's')
 					{
-						if ((apparent_dir > (PI/2.0)) && (apparent_dir < (2.0 * PI)))
+						if ((apparent_dir > PI) && (apparent_dir < (2.0 * PI)))
 							sgn = -1.0;
 					}
 				}
@@ -337,9 +337,15 @@ namespace mr
 					if ((_windSpeed * cos(apparent_dir) - _u) == 0)
 						aux_phi = PI / 2.0;
 
+					double sgn = 1;
+			
+					if ((apparent_dir > PI) && (apparent_dir < (2.0 * PI)))
+						sgn = -1.0;
+		
+
 					double aux_coeff = coeff(aux_phi, fluid, type2);
 
-					return (0.5 * aux_coeff * _Marm * _Sair * _ro_air * vr * vr);
+					return (sgn * 0.5 * aux_coeff * _Marm * _Sair * _ro_air * vr * vr);
 				}
 				else
 				{
@@ -393,26 +399,17 @@ namespace mr
 						double apparent_dir = _trueWaterDirection - _yaw ;//+ PI / 2
 
 						double aux_phi = atan((_waterSpeed * sin(apparent_dir) - _v) / (_waterSpeed * cos(apparent_dir) - _u));
+
 						if ((_waterSpeed * cos(apparent_dir) - _u) == 0)
 							aux_phi = PI / 2.0;
 
-						/*double sgn = 1;
-						if (type2 == 'd')
-						{
-							if ((aux_phi > PI / 2) && (aux_phi < 3 * PI / 4))
-								sgn = -1;
-						}
-						else
-						{
-							if (type2 == 's')
-							{
-								if ((aux_phi > PI / 2) && (aux_phi < 2 * PI))
-									sgn = -1;
-							}
-						}*/
+						double sgn = 1;
+
+						if ((apparent_dir > PI) && (apparent_dir < (2.0 * PI)))
+							sgn = -1.0;
 
 						double aux_coeff = coeff(aux_phi, fluid, type2);
-						return (0.5 * aux_coeff * _Marm * _Swater * _ro_water * vr * vr);
+						return (sgn * 0.5 * aux_coeff * _Marm * _Swater * _ro_water * vr * vr);
 					}
 					else
 					{
