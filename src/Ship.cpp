@@ -13,10 +13,11 @@ namespace mr
 		_Sair(15),
 		_Swater(2.5),
 		_vMax(2.7),
+		_aMax(0.3857),
 		_Marm(1),
-		_trueWindDirection(3*PI/2),
-		_trueWaterDirection(0),
-		_windSpeed(20),//20
+		_trueWindDirection(PI),
+		_trueWaterDirection(PI),
+		_windSpeed(0),//20
 		_waterSpeed(0),//2
 		_Crs_water(2.545759),
 		_Crs_air(0.904313),
@@ -30,6 +31,13 @@ namespace mr
 		_yaw(0),
 		_thrust_x(0),
 		_thrust_y(0),
+		_Wind_Force_Drag(0),
+		_Water_Force_Drag(0),
+		_Wind_Force_Side(0),
+		_Water_Force_Side(0),
+		_Wind_Moment(0),
+		_Water_Moment(0),
+		_Rotational_Moment(0),
 		_move_success(true)
 
 	{
@@ -108,23 +116,29 @@ namespace mr
 	void Ship::simulate(double delta_t)
 	{
 	
-		double F_air_drag = sdl('a','f','d');// Valores demasiado altos
-		double F_water_drag = sdl('w', 'f', 'd');
-		double F_drag_propulsion = _thrust_x;
+		_Wind_Force_Drag = sdl('a','f','d');// Valores demasiado altos
+		_Water_Force_Drag = sdl('w', 'f', 'd');
 
-		double F_air_side = sdl('a', 'f', 's');
-		double F_water_side = sdl('w', 'f', 's');
-		double F_side_propulsion = _thrust_y;
+		_Wind_Force_Side = sdl('a', 'f', 's');
+		_Water_Force_Side = sdl('w', 'f', 's');
 
-		double M_air = sdl('a', 'm', 'y');
-		double M_water = sdl('w', 'm', 'y');
-		double M_rot = Mfront('a') + Mfront('w') + Mback('a') + Mback('w');
-		double M_prop = _thrust_y *_xp;
+		_Wind_Moment = sdl('a', 'm', 'y');
+		_Water_Moment = sdl('w', 'm', 'y');
+		_Rotational_Moment = Mfront('a') + Mfront('w') + Mback('a') + Mback('w');
 
+		double ax = (1 / _mass) * (_Wind_Force_Drag + _Water_Force_Drag + _thrust_x);
+		double ay = (1 / _mass) * (_Wind_Force_Side + _Water_Force_Side + _thrust_y);
+		double aw = (1 / _J) * (_Wind_Moment + _Water_Moment + _Rotational_Moment + _thrust_y * _xp);
+		
+		if (std::abs(ax) > _aMax)
+			ax = _aMax * (ax / std::abs(ax));
 
-		double ax = (1 / _mass) * (F_air_drag + F_water_drag + F_drag_propulsion);
-		double ay = (1 / _mass) * (F_air_side + F_water_side + F_side_propulsion);
-		double aw = (1 / _J) * (M_air + M_water + /*M_rot +*/ M_prop);
+		if (std::abs(ay) > _aMax)
+			ay = _aMax * (ay / std::abs(ay));
+
+		if (std::abs(aw) > _aMax)
+			aw = _aMax * (aw / std::abs(aw));
+		
 
 		// MRUA
 		double delta_x = _u * delta_t + 0.5 * ax * delta_t * delta_t;
@@ -135,15 +149,24 @@ namespace mr
 		_move_success = false;
 
 		_u += ax * delta_t;
+
+		if (std::abs(_u) > _vMax)
+			_u = _vMax * (_u/std::abs(_u));
+
 		_v += ay * delta_t;
+
+		if (std::abs(_v) > _vMax)
+			_v = _vMax * (_v / std::abs(_v));
+
 		_w += aw * delta_t;
 
+		if (std::abs(_w) > _vMax)
+			_w = _vMax * (_w / std::abs(_w));
+
 		Transformation3D position = getAbsoluteT3D();
-		Transformation3D delta(delta_x/* * cos(delta_th)*/, delta_y/* * sin(delta_th)*/, 0, 0, 0, delta_th);
+		Transformation3D delta(delta_x, delta_y, 0, 0, 0, delta_th);
 
 		Transformation3D newposition = position * delta;
-		//_speed = acc * delta_t;
-		//_rot_speed = rot_acc * delta_t;
 
 		setAbsoluteT3D(newposition);
 
@@ -376,7 +399,7 @@ namespace mr
 					double sgn = 1.0;
 					if (type2 == 'd')
 					{
-						if ((apparent_dir > (PI / 2.0)) && (apparent_dir < (3.0 * PI / 4.0)))
+						if ((apparent_dir > (PI / 2.0)) && (apparent_dir < (3.0 * PI / 2.0)))
 							sgn = -1.0;
 					}
 					else
@@ -390,7 +413,7 @@ namespace mr
 
 					double aux_coeff = coeff(aux_phi, fluid, type2);
 
-					return (0.5 * aux_coeff * _Swater * _ro_water * vr * vr);
+					return (sgn * 0.5 * aux_coeff * _Swater * _ro_water * vr * vr);
 				}
 				else
 				{

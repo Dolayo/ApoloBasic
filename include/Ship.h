@@ -34,6 +34,14 @@ namespace mr
 		const double getV() { return _v; }
 		void setW(const double& w) { _w = w; }
 		const double getW() { return _w; }
+		const double getWind_Force_Drag() { return _Wind_Force_Drag; }
+		const double getWater_Force_Drag() { return _Water_Force_Drag; }
+		const double getWind_Force_Side() { return _Wind_Force_Side; }
+		const double getWater_Force_Side() { return _Water_Force_Side; }
+		const double getWind_Moment() { return _Wind_Moment; }
+		const double getWater_Moment() { return _Water_Moment; }
+		const double getRotational_Moment() { return _Rotational_Moment; }
+
 		// Destructor
 		virtual ~Ship(){}
 
@@ -49,6 +57,7 @@ namespace mr
 		double _Sair;
 		double _Swater;
 		double _vMax;
+		double _aMax;
 		double _Marm;
 
 		// --- Environment ---
@@ -58,7 +67,6 @@ namespace mr
 		
 		double _windSpeed;
 		double _waterSpeed;
-		double _alpha;
 
 		double _alpha_water;
 		double _alpha_air;
@@ -86,6 +94,15 @@ namespace mr
 		// Inputs
 		double _thrust_x;
 		double _thrust_y;
+
+		// Store the actions to show 
+		double _Wind_Force_Drag;
+		double _Water_Force_Drag;
+		double _Wind_Force_Side;
+		double _Water_Force_Side;
+		double _Wind_Moment;
+		double _Water_Moment;
+		double _Rotational_Moment;
 	
 
 		//utility bool that checks if last move was possible (not collision, not off ground)
