@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <string>
-#include <chrono>
+#include <wx/timer.h>
 #include <wx/txtstrm.h>
 
 
@@ -11,13 +11,14 @@
 BEGIN_EVENT_TABLE(MainWindow, wxFrame)
 EVT_BUTTON(ID_Plan, MainWindow::OnPlan)
 EVT_BUTTON(ID_Sim, MainWindow::OnSimulate)
+EVT_BUTTON(ID_Stop, MainWindow::OnStop)
 EVT_SIZE(MainWindow::Resize)
 END_EVENT_TABLE()
 
 
 MainWindow::MainWindow(const wxString& title) : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800), wxDEFAULT_FRAME_STYLE | wxHSCROLL | wxVSCROLL),
 myrobot(nullptr),
-myship(nullptr),
+_myship(nullptr),
 planner(nullptr),
 sampler(nullptr),
 _thrustXinp(nullptr),
@@ -58,6 +59,8 @@ the_planner(0)
     Bind(wxEVT_MENU, &MainWindow::OnRDTstar, this, ID_RDTstar);
     Bind(wxEVT_MENU, &MainWindow::OnAbout, this, wxID_ABOUT);
 	Bind(wxEVT_MENU, &MainWindow::OnShip, this, ID_Ship);
+	_mytimer = new wxTimer;
+	_mytimer->Bind(wxEVT_TIMER, &MainWindow::OnTimer, this);
     //Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
 	
 
@@ -328,19 +331,29 @@ void MainWindow::OnShip(wxCommandEvent& event)
 	_thrustYinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 160), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
 
-	_label_timeinp = new wxStaticText(this, wxID_ANY, "Time", wxPoint(20, 200), wxDefaultSize);
+	/*
+		_label_timeinp = new wxStaticText(this, wxID_ANY, "Time", wxPoint(20, 200), wxDefaultSize);
 	_timeinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 220), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
+	*/
 
-	_button_sim = new wxButton(this, ID_Sim, wxT("Simulate"), wxPoint(20, 260), wxSize(100, 50));
+	_label_Wind_Force_Drag = new wxStaticText(this, wxID_ANY, "Wind Force drag", wxPoint(140, 80), wxDefaultSize);
+	_Wind_Force_Drag = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(140, 100), wxDefaultSize,
+		wxTE_RIGHT | wxTE_READONLY, wxDefaultValidator, wxTextCtrlNameStr);
+
+
+
+	_button_sim = new wxButton(this, ID_Sim, wxT("Start"), wxPoint(140, 20), wxSize(60, 30));
+
+	_button_stop = new wxButton(this, ID_Stop, wxT("Stop"), wxPoint(140, 50), wxSize(60, 30));
 
 	createShipEnvironment();
 
 	//creo el robot
-	myship = new Ship();
-	myship->setRelativePosition(Vector3D(2.0, 8, 0));
-	myship->setState(2, 8, 0, 0, 0, 0);
-	world += myship;
+	_myship = new Ship();
+	_myship->setRelativePosition(Vector3D(2.0, 8, 0));
+	_myship->setState(2, 8, 0, 0, 0, 0);
+	world += _myship;
 	/*
 		//creo un planificador y su sistema de muestreo
 	sampler = new RandomSampler(&world);
@@ -351,11 +364,26 @@ void MainWindow::OnShip(wxCommandEvent& event)
 
 	MyGLCanvas->w = this->world;
 	//MyGLCanvas->r = this->myship;
-	MyGLCanvas->sh = this->myship;
+	MyGLCanvas->sh = this->_myship;
 	//MyGLCanvas->s = this->sampler;
 	//MyGLCanvas->p = this->planner;
 
 	MyGLCanvas->create_world();
+}
+void MainWindow::OnTimer(wxTimerEvent& event)
+{
+
+	_myship->simulate(0.1);
+
+	(*_Wind_Force_Drag).WriteText(to_string(round(_myship->getWind_Force_Drag())));
+	
+	MyGLCanvas->sh = _myship;
+	MyGLCanvas->Refresh(true);
+}
+
+void MainWindow::OnStop(wxCommandEvent& WXUNUSED(event))
+{
+	_myship->move(0, 0);
 }
 
 void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
@@ -367,22 +395,18 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 
 	float thrustX_f = std::stof(_thrustXinp->GetLineText(0).ToStdString());
 	float thrustY_f = std::stof(_thrustYinp->GetLineText(0).ToStdString());
-	float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
+	//float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
 
-	auto start = std::chrono::steady_clock::now();
-	auto now = std::chrono::steady_clock::now();
+	_myship->move(thrustX_f, thrustY_f);
+	//myship->simulate(0.1);
 
-	std::chrono::duration<float, std::nano> sim_t(time_f*1000000);
-	std::chrono::duration<float, std::nano> step(100000);
-
-	myship->move(thrustX_f, thrustY_f);
-	myship->simulate(0.1);
+	_mytimer->Start(100);	
 
 	/*while (((std::chrono::steady_clock::now() - start)) < sim_t)
 	{
 		if ((std::chrono::steady_clock::now() - now)>step)
 		{
-			myship->simulate(0.1);
+			
 			now = std::chrono::steady_clock::now();
 		}
 
@@ -394,10 +418,4 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 		MyGLCanvas->sh = myship;
 		MyGLCanvas->Refresh(true);
 	}*/
-
-	MyGLCanvas->sh = myship;
-	MyGLCanvas->Refresh(true);
-
-
-
 }
