@@ -129,7 +129,7 @@ namespace mr
 		double ax = (1 / _mass) * (_Wind_Force_Drag + _Water_Force_Drag + _thrust_x);
 		double ay = (1 / _mass) * (_Wind_Force_Side + _Water_Force_Side + _thrust_y);
 		double aw = (1 / _J) * (_Wind_Moment + _Water_Moment + /*_Rotational_Moment +*/ _thrust_y * _xp);
-		
+		// Hola mundo
 		if (std::abs(ax) > _aMax)
 			ax = _aMax * (ax / std::abs(ax));
 
