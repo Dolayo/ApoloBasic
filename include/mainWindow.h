@@ -3,7 +3,8 @@
 #include <canvas.h>
 #include <wx/sizer.h>
 
-enum id{ID_RDT = 1, ID_RDTstar = 2, ID_Plan = 3, ID_Ship = 4, ID_Sim = 5, ID_Stop};
+enum id{ID_RDT = 1, ID_RDTstar = 2, ID_Plan = 3, ID_Ship = 4, ID_Sim = 5, ID_Stop = 6, ID_EGK = 7
+};
 
 
 
@@ -86,6 +87,7 @@ private:
     void OnTimer(wxTimerEvent& event);
     void OnStop(wxCommandEvent& WXUNUSED);
     void OnSimulate(wxCommandEvent& WXUNUSED);
+    void OnEGK(wxCommandEvent& event);
     void OnExit(wxCloseEvent& event);
     void OnAbout(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE()

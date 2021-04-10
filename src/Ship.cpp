@@ -113,7 +113,7 @@ namespace mr
 
 
 
-	void Ship::simulate(double delta_t)
+	bool Ship::dynamicsSim(double delta_t)
 	{
 	
 		_Wind_Force_Drag = sdl('a','f','d');// Valores demasiado altos
@@ -174,11 +174,11 @@ namespace mr
 		if (world) {
 			if (world->checkCollisionWith(*this)) {
 				setAbsoluteT3D(position); //no muevo el robot
-				return;
+				return false;
 			}
 		}
 
-		_move_success = true; //se pudo realizar el movimiento
+		return true; //se pudo realizar el movimiento
 	}
 
 	void Ship::drawGL()
@@ -188,7 +188,7 @@ namespace mr
 		return;
 	}
 
-	bool Ship::move(double x, double y)
+	bool Ship::setThrusts(double x, double y)
 	{
 		_thrust_x = x;
 		_thrust_y = y;

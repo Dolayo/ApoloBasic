@@ -43,17 +43,17 @@ class WBStar: public WBState
 {
 	protected:
 
-		double cost;
+		double _cost;
 	public:
 
-		WBStar(WheeledBaseSim* r, World* w, double c):WBState(r, w),cost(c){}
+		WBStar(WheeledBaseSim* r, World* w, double c):WBState(r, w),_cost(c){}
 
 		const WBStar& operator=(const WBStar& n) {
 			sectors = n.sectors;
 			pose = n.pose;
 			world = n.world;
 			robot = n.robot;
-			cost = n.cost;
+			_cost = n._cost;
 			return *this;
 		}
 
@@ -66,8 +66,8 @@ class WBStar: public WBState
 		WBStar* createStateFromPoint3D(double x, double y, double z);
 		RobotState* WBStar::createStateFromCurrentRobotState();
 
-		virtual double getCost() { return cost; }
-		virtual void setCost(double c) { cost = c; }
+		virtual double getCost() { return _cost; }
+		virtual void setCost(double c) { _cost = c; }
 
 		virtual RobotState* clone();
 		virtual ~WBStar();
@@ -79,70 +79,72 @@ class RDTstar: public SBPathPlanner
 protected:
   class RDTtree //an internal class for the tree
 	{
+	protected:
+
 		class PathSegment{ //internal class for a segment of tree
 			public:
 			
-			vector<RobotState *> inter; //the path segment does not own the nodes
-			RobotState *init;
-			RobotState *end;
-			PathSegment *parent;
+			vector<RobotState *> _inter; //the path segment does not own the nodes
+			RobotState *_init;
+			RobotState *_end;
+			PathSegment *_parent;
 			const PathSegment &operator=(const PathSegment &n){
-				init=n.init;
-				end=n.end;
-				inter=n.inter;
-				parent=n.parent;
+				_init=n._init;
+				_end=n._end;
+				_inter=n._inter;
+				_parent=n._parent;
 			}
-			RobotState *operator[](int i){return inter[i];}
-			int size(){return (int)inter.size();} 
-			PathSegment() { init = 0; end = 0; parent = 0; }
+			RobotState* operator[](int i){return _inter[i];}
+			int size(){return (int)_inter.size();} 
+			PathSegment() { _init = nullptr; _end = nullptr; _parent = nullptr; }
 			PathSegment (const PathSegment &n){
 				(*this)=n;
 			}
-			void drawGL();
+			virtual void drawGL();
 			
 		};
 	public:
 		//returns the end added node or cero if none
 		
-		RobotState *root;
-		vector<PathSegment *> paths;
-		vector<RobotState *> nodes; 
+		RobotState *_root;
+		vector<PathSegment *> _paths;
+		vector<RobotState *> _nodes; 
 
-		RDTtree() { root = 0; radius = 30; divided = false; }
-		int getNumNodes(){return (int)nodes.size();}
-		bool rootTree(RobotState *rot);
-		double distance(RobotState *p, PathSegment *path, RobotState **mnode=0);
-		PathSegment *getClosestPathSegment(RobotState *n,RobotState **minstate);
-		RobotState *addNode(RobotState *n);
-		RobotPath getPathFromRoot(RobotState *n);
-		void Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew);
-		PathSegment* findPath4Node( RobotState* node);
-		void getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei);
-		PathSegment* getBest(vector<RobotState*>& v_nei, RobotState **best);
+		RDTtree() { _root = 0; _radius = 30; _divided = false; }
+		int getNumNodes(){return (int)_nodes.size();}
+		virtual bool rootTree(RobotState *rot);
+		virtual double distance(RobotState *p, PathSegment *path, RobotState **mnode=0);
+		virtual PathSegment *getClosestPathSegment(RobotState *n,RobotState **minstate);
+		virtual RobotState *addNode(RobotState *n);
+		virtual RobotPath getPathFromRoot(RobotState *n);
+		virtual void Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew);
+		virtual PathSegment* findPath4Node( RobotState* node);
+		virtual void getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei);
+		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState **best);
 		void drawGL();
 	private:
-		double radius;
-		bool divided;
+		double _radius;
+		bool _divided;
 		void add(RobotState *n)
 		{
-			for(int i=0;i<(int)nodes.size();i++)if(nodes[i]==n)return;
-				nodes.push_back(n);
+			for(int i=0;i<(int)_nodes.size();i++)if(_nodes[i]==n)return;
+				_nodes.push_back(n);
 		}
 	};
 
-	  RDTtree treeStart;
-	  RDTtree treeGoal;
-	  RDTtree *treeA;
-	  RDTtree *treeB;
+	  RDTtree _treeStart;
+	  RDTtree _treeGoal;
+	  RDTtree *_treeA;
+	  RDTtree *_treeB;
 public:
-	RDTstar():SBPathPlanner(),treeStart(),treeGoal()
+	RDTstar():SBPathPlanner(),_treeStart(),_treeGoal()
 	{
-		treeA=&treeStart;
-		treeB=&treeGoal;
+		_treeA=&_treeStart;
+		_treeB=&_treeGoal;
 	}
-  bool computePlan(int maxiterations);
+  virtual bool computePlan(int maxiterations);
   virtual bool setStartAndGoalStates(RobotState *start_, RobotState *goal_);
-  int getNumNodes(){return treeStart.getNumNodes()+treeGoal.getNumNodes();}
+  int getNumNodes(){return _treeStart.getNumNodes()+_treeGoal.getNumNodes();}
   virtual void drawGL();
 };
 

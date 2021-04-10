@@ -5,7 +5,7 @@
 #include <string>
 #include <wx/timer.h>
 #include <wx/txtstrm.h>
-
+#include <ShipState.h>
 
 
 BEGIN_EVENT_TABLE(MainWindow, wxFrame)
@@ -39,6 +39,7 @@ the_planner(0)
 	menuPlanners->Append(ID_RDT, wxT("&RDT...\tCtrl-J"), wxT("Example of an RDT planner"));
 	menuPlanners->Append(ID_RDTstar, wxT("&RDT*...\tCtrl-K"), wxT("Example of an RDT star planner"));
 	menuPlanners->Append(ID_Ship, wxT("&Ship...\tCtrl-L"), wxT("Da Ship"));
+	menuPlanners->Append(ID_EGK, wxT("&EGK...\tCtrl-L"), wxT("EGK-RRT"));
     //menuFile->AppendSeparator();
     //menuFile->Append(wxID_EXIT);
 
@@ -59,6 +60,8 @@ the_planner(0)
     Bind(wxEVT_MENU, &MainWindow::OnRDTstar, this, ID_RDTstar);
     Bind(wxEVT_MENU, &MainWindow::OnAbout, this, wxID_ABOUT);
 	Bind(wxEVT_MENU, &MainWindow::OnShip, this, ID_Ship);
+	Bind(wxEVT_MENU, &MainWindow::OnEGK, this, ID_EGK);
+	
 	_mytimer = new wxTimer;
 	_mytimer->Bind(wxEVT_TIMER, &MainWindow::OnTimer, this);
     //Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
@@ -189,7 +192,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 
 	switch (this->the_planner)
 	{
-		case 0:
+		case 0:// RRT
 		{
 			WBState gen(myrobot, &world);
 			WBState* start = gen.createStateFromPoint3D(2.0, -8, 0);
@@ -204,7 +207,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			MyGLCanvas->Refresh(false);
 			break; 
 		}
-		case 1:
+		case 1:// RRT*
 		{
 			WBStar gen(myrobot, &world, 0);
 			WBStar* start = gen.createStateFromPoint3D(2.0, -8, 0);
@@ -218,6 +221,21 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			MyGLCanvas->sol = this->solution;
 			MyGLCanvas->Refresh(false);
 			break;
+		}
+		case 2: //EGK
+		{
+			ShipState gen(_myship, &world);
+			ShipState* start = gen.createStateFromPoint3D(2.0, 8.0, 0);
+			ShipState* goal = gen.createStateFromPoint3D(2.0, -8.0);
+
+			solution.path.clear();
+			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
+			delete start;
+			delete goal;
+			if (planner->computePlan(3000))solution.path = (planner->getPlan())->path;//3000
+			MyGLCanvas->p = this->planner;
+			MyGLCanvas->sol = this->solution;
+			MyGLCanvas->Refresh(false);
 		}
 		
 		default:
@@ -370,6 +388,7 @@ void MainWindow::OnShip(wxCommandEvent& event)
 
 	MyGLCanvas->create_world();
 }
+
 void MainWindow::OnTimer(wxTimerEvent& event)
 {
 
@@ -418,4 +437,32 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 		MyGLCanvas->sh = myship;
 		MyGLCanvas->Refresh(true);
 	}*/
+}
+
+void MainWindow::OnEGK(wxCommandEvent& event)
+{
+	this->the_planner = 2;
+
+	sb->SetStatusText(wxT("EGK-RRT Ready!"));
+
+	createShipEnvironment();
+
+	_myship = new Ship();
+	_myship->setRelativePosition(Vector3D(2.0, 8, 0));
+	_myship->setState(2, 8, 0, 0, 0, 0);
+	world += _myship;
+	
+	//creo un planificador y su sistema de muestreo
+	sampler = new RandomSampler(&world);
+	//planner = new EGKRRT;
+	(dynamic_cast<SBPathPlanner*>(planner))->setSampler(sampler); //solo especifico de los basados en muestreo
+	
+
+
+	MyGLCanvas->w = this->world;
+	MyGLCanvas->sh = this->_myship;
+	MyGLCanvas->s = this->sampler;
+	MyGLCanvas->p = this->planner;
+
+	MyGLCanvas->create_world();
 }
