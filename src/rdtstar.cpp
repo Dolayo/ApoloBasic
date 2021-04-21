@@ -195,7 +195,6 @@ double RDTstar::RDTtree::distance(RobotState *p, PathSegment *path, RobotState *
 			mn=path->_inter[i];
 			minimal=val;
 		}
-
 	}
 	
 	if(mnode)*mnode=mn;

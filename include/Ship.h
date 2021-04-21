@@ -12,9 +12,13 @@ namespace mr
 		
 		// Constructor
 		Ship();
+		Ship& operator =(const Ship& s) = delete;
+		Ship(Ship&) = delete;
+
 		void setState(double x, double y, double yaw, double u, double v, double w);
-		virtual bool setThrusts(double t, double r);
-		virtual bool move(double t, double r);
+		Vector3D simpleAccs();
+		bool simpleDynamicsSim(double delta_t);
+		virtual bool setThrusts(double t = 0.0, double r = 0.0, double w = 0.0);
 		double coeff(const double& x, const char& fluid, const char& type);
 		double sdl(const char& fluid, const char& type, const char& type2);
 		double Mfront(const char& fluid);
@@ -26,18 +30,17 @@ namespace mr
 			setAbsoluteT3D(p);
 		}
 		virtual bool dynamicsSim(double delta_t);//time inteval in seconds
-		virtual void simulate(double delta_t);
 		virtual void drawGL();
 		bool getMoveSuccess() { return _move_success; }
 
 		// Setters & Getters
 
 		void setX(const double& x) { _x = x; }
-		double getX() { return _x; } const
-			void setY(const double& y) { _y = y; }
-		double getY() { return _y; } const
-			void setYaw(const double& yaw) { _yaw = yaw; }
-		double getYaw() { return _yaw; } const
+		const double getX() { return _x; }
+		void setY(const double& y) { _y = y; }
+		const double getY() { return _y; }
+		void setYaw(const double& yaw) { _yaw = yaw; }
+		const double getYaw() { return _yaw; }
 		void setPos(Vector3D V)
 		{
 			_x = V.x;
@@ -47,11 +50,11 @@ namespace mr
 		Vector3D getPos() { return Vector3D(_x, _y, _yaw); }
 
 		void setU(const double& u) { _u = u; }
-		double getU() { return _u; } const
+		const double getU() { return _u; }
 		void setV(const double& v) { _v = v; }
-		double getV() { return _v; } const
+		const double getV() { return _v; }
 		void setW(const double& w) { _w = w; }
-		double getW() { return _w; } const
+		const double getW() { return _w; }
 
 		void setVels(Vector3D V)
 		{
@@ -121,6 +124,7 @@ namespace mr
 		// Inputs
 		double _thrust_x;
 		double _thrust_y;
+		double _thrust_w;//Just for simple
 
 		// Store the actions to show 
 		double _Wind_Force_Drag;
@@ -134,15 +138,6 @@ namespace mr
 
 		//utility bool that checks if last move was possible (not collision, not off ground)
 		bool _move_success;
-
-		// Default Constructor and operators
-
-	private:
-
-		Ship& operator =(const Ship& s);
-		Ship(Ship&);
-
-
 
 	};
 }

@@ -1,28 +1,29 @@
 #include "Ship.h"
 #include <math.h>
+#include "defines.h"
 
 namespace mr
 {
 
 	Ship::Ship() :
-		_width(3),
-		_length(10),
-		_mass(5000),
-		_J(23000),
-		_xp(5),
-		_Sair(15),
-		_Swater(2.5),
-		_vMax(2.7),
-		_aMax(0.3857),
-		_Marm(1),
-		_trueWindDirection(PI),
-		_trueWaterDirection(PI),
-		_windSpeed(0),//20
-		_waterSpeed(0),//2
-		_Crs_water(2.545759),
-		_Crs_air(0.904313),
-		_ro_water(1000),
-		_ro_air(1.225),
+		_width(WIDTH),
+		_length(LENGTH),
+		_mass(MASS),
+		_J(J),
+		_xp(XP),
+		_Sair(S_AIR),
+		_Swater(S_WATER),
+		_vMax(V_MAX),
+		_aMax(A_MAX),
+		_Marm(M_ARM),
+		_trueWindDirection(TRUE_WIND_DIR),
+		_trueWaterDirection(TRUE_WATER_DIR),
+		_windSpeed(WIND_SPEED),//20
+		_waterSpeed(WATER_SPEED),//2
+		_Crs_water(CRS_WATER),
+		_Crs_air(CRS_AIR),
+		_ro_water(RO_WATER),
+		_ro_air(RO_AIR),
 		_u(0),
 		_v(0),
 		_w(0),
@@ -111,7 +112,128 @@ namespace mr
 		_w = w;
 	}
 
+	Vector3D Ship::simpleAccs()
+	{
+		double ax = 0.0;
+		double ay = 0.0;
+		double aw = 0.0;
 
+		double F_roz_x = 0.0;
+		double F_roz_y = 0.0;
+		double M_roz_w = 0.0;
+
+		if ((_u > 0.001) || (_u < -0.001))
+		{
+			double sgn_vx = _u / std::abs(_u);
+			F_roz_x = 0.6 * _mass * 9.18 * -sgn_vx;
+
+		}
+
+		if ((_v > 0.001) || (_v < -0.001))
+		{
+			double sgn_vy = _v / std::abs(_v);
+			F_roz_y = 0.6 * _mass * 9.18 * -sgn_vy;
+
+		}
+
+		if ((_w > 0.001) || (_w < -0.001))
+		{
+			double sgn_w = _w / std::abs(_w);
+			M_roz_w = 0.8 * _J * 9.18 * -sgn_w;
+	
+		}
+		
+		ax = F_roz_x/_mass;
+		ay = F_roz_y / _mass;
+		aw = M_roz_w / _J;
+
+		return Vector3D(ax, ay, aw);
+	}
+
+	bool Ship::simpleDynamicsSim(double delta_t)
+	{
+		double ax = 0.0;
+		double ay = 0.0;
+		double aw = 0.0;
+
+		double F_roz_x = 0.0;
+		double F_roz_y = 0.0;
+		double M_roz_w = 0.0;
+
+		if ((_u > 0.001) || (_u < -0.001))
+		{
+			double sgn_vx = _u / std::abs(_u);
+			F_roz_x = 0.6 * _mass * 9.18 * -sgn_vx;
+
+		}
+
+		if ((_v > 0.001) || (_v < -0.001))
+		{
+			double sgn_vy = _v / std::abs(_v);
+			F_roz_y = 0.6 * _mass * 9.18 * -sgn_vy;
+
+		}
+
+		if ((_w > 0.001) || (_w < -0.001))
+		{
+			double sgn_w = _w / std::abs(_w);
+			M_roz_w = 0.8 * _J * 9.18 * -sgn_w;
+
+		}
+
+		ax = (_thrust_x + F_roz_x) / _mass;
+		ay = (_thrust_y + F_roz_y) / _mass;
+		aw = (_thrust_w+ M_roz_w) / _J;
+
+		if (std::abs(ax) > _aMax)
+			ax = _aMax * (ax / std::abs(ax));
+
+		if (std::abs(ay) > _aMax)
+			ay = _aMax * (ay / std::abs(ay));
+
+		if (std::abs(aw) > _aMax)
+			aw = _aMax * (aw / std::abs(aw));
+
+		// MRUA
+		double delta_x = _u * delta_t + 0.5 * ax * delta_t * delta_t;
+		double delta_y = _v * delta_t + 0.5 * ay * delta_t * delta_t;
+
+		// MCUA
+		double delta_th = _w * delta_t + 0.5 * aw * delta_t * delta_t;;
+		_move_success = false;
+
+		_u += ax * delta_t;
+
+		if (std::abs(_u) > _vMax)
+			_u = _vMax * (_u / std::abs(_u));
+
+		_v += ay * delta_t;
+
+		if (std::abs(_v) > _vMax)
+			_v = _vMax * (_v / std::abs(_v));
+
+		_w += aw * delta_t;
+
+		if (std::abs(_w) > _vMax)
+			_w = _vMax * (_w / std::abs(_w));
+
+		Transformation3D position = getAbsoluteT3D();
+		Transformation3D delta(delta_x, delta_y, 0, 0, 0, delta_th);
+
+		Transformation3D newposition = position * delta;
+
+		setAbsoluteT3D(newposition);
+
+		World* world = getWorld();
+		if (world) {
+			if (world->checkCollisionWith(*this)) {
+				setAbsoluteT3D(position); //no muevo el robot
+				return false;
+			}
+		}
+
+		return true; //se pudo realizar el movimiento
+	}
 
 	bool Ship::dynamicsSim(double delta_t)
 	{
@@ -188,10 +310,11 @@ namespace mr
 		return;
 	}
 
-	bool Ship::setThrusts(double x, double y)
+	bool Ship::setThrusts(double x, double y, double w)
 	{
 		_thrust_x = x;
 		_thrust_y = y;
+		_thrust_w = w;
 		//if (_thrust_x > 10.0)_thrust_x = 10.0;
 		//if (_thrust_x < 0.0)_thrust_x = 0.0;
 		//if (_thrust_y > 10.0)_thrust_y = 10;

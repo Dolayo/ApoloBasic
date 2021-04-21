@@ -1,8 +1,6 @@
 #include "ShipState.h"
+#include "defines.h"
 
-//Eventually this will go in its own file of macros
-constexpr auto POSE_TOL = 1.0;
-constexpr auto VEL_TOL = 1.0;
 
 bool ShipState::isEqual(RobotState* n)
 {
@@ -28,13 +26,18 @@ double ShipState::distanceTo(RobotState* p)
 	if (!naux)return 10000.0;
 
 	Vector3D dif_pos = naux->_pose - _pose;
-	Vector3D dif_vel = naux->_vel - _vel;
 	
-	/*std::map<string, double> dist;
-	dist.insert(std::make_pair<string, double>("pos", dif_pos.module()));
-	dist.insert(std::make_pair<string, double>("vel", dif_vel.module()));*/
+	double val = dif_pos.module();
 
-	return dif_pos.module();
+	Segment3D segm = Segment3D(Vector3D(_pose.x, _pose.y,0), Vector3D(naux->_pose.x, naux->_pose.y, 0));
+
+	_ship->setIntersectable(false);
+
+	//penalties the intersection
+	if (_world->segmentIntersection(segm, 0))
+		val *= 1.5;
+
+	return val;
 }
 
 bool ShipState::isEqualToCurrentRobotState()
@@ -92,7 +95,7 @@ RobotState* ShipState::createStateFromSample(vector<double> values)
 		[3]: yaw
 		[4]: Vx
 		[5]: Vy
-		[6]: W
+		[6]: Vw
 	*/
 
 	//valid conditions: there is a robt and a world defined
@@ -103,7 +106,7 @@ RobotState* ShipState::createStateFromSample(vector<double> values)
 	Ship* s = _ship;
 	ShipState aux(s, _world);
 	aux._pose = Vector3D(values[0], values[1], values[2]);//x,y,z
-	aux._vel = Vector3D(values[4], values[5], values[6]);//Vx,Vy,Vz
+	aux._vel = Vector3D(values[4], values[5], values[6]);//Vx,Vy,Vw
 
 	return new ShipState(aux);
 }
@@ -155,7 +158,7 @@ void ShipState::placeRobotTowards(RobotState* target)
 
 }
 
-RobotState* ShipState::clone()
+ShipState* ShipState::clone()
 {
 	return new ShipState(*this);
 }

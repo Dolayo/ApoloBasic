@@ -63,12 +63,19 @@ namespace mr
 
 			virtual double getCost() { return _cost; }
 			virtual void setCost(double c) { _cost = c; }
+			virtual Vector3D getVels() { return _vel; }
+			virtual Vector3D getAccs()
+			{
+				return this->_ship->simpleAccs();
+			}
 
 			//Draw a RobotState representation
 			virtual void drawGL();
 
-			virtual RobotState* clone();
+			virtual ShipState* clone();
 
+			const Vector3D getPose(){ return _pose;}
+			void setPose(Vector3D p) { _pose = p; }
 	
 			virtual ~ShipState()
 			{

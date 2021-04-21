@@ -103,6 +103,15 @@ protected:
 			virtual void drawGL();
 			
 		};
+
+		double _radius;
+		bool _divided;
+		void add(RobotState *n)
+		{
+			for(int i=0;i<(int)_nodes.size();i++)if(_nodes[i]==n)return;
+				_nodes.push_back(n);
+		}
+
 	public:
 		//returns the end added node or cero if none
 		
@@ -122,14 +131,6 @@ protected:
 		virtual void getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei);
 		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState **best);
 		void drawGL();
-	private:
-		double _radius;
-		bool _divided;
-		void add(RobotState *n)
-		{
-			for(int i=0;i<(int)_nodes.size();i++)if(_nodes[i]==n)return;
-				_nodes.push_back(n);
-		}
 	};
 
 	  RDTtree _treeStart;

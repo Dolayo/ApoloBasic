@@ -30,14 +30,16 @@
  * PURPOSE.  
  **********************************************************************/
 
-#ifndef __EGKRRT__H
-#define __EGKRRT__H
+#ifndef __EGKRRT__H_
+#define __EGKRRT__H_
 
 #include <mrcore.h>
 #include "rdtstar.h"
 
 namespace mr{
 	
+class ShipState;
+
 class EGKRRT: public RDTstar
 {
 protected:
@@ -68,14 +70,13 @@ protected:
 					_inter = n._inter;
 					_parent = n._parent;
 				}
-				EGKpath(const EGKpath& n)
-				{
-					(*this) = n;
-				}
-				void appendState(RobotState* p_aux){_inter.push_back(p_aux);}
+				EGKpath(const EGKpath& n){(*this) = n;}
+				RobotState* last(){ return _inter.back(); }
+				virtual void appendState(RobotState* p_aux){_inter.push_back(p_aux);}
 				void appendCtrlAct(std::vector<double> v_aux) { _sequence.push_back(v_aux); }
 				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter);
-				std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState);
+				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState);
+				bool isGhostThere(ShipState* donkey, ShipState* carrot);
 		};
 
 	public:
@@ -108,8 +109,10 @@ protected:
 		*/
 		EGKtree() : RDTtree(){}
 		//virtual double distance(RobotState* p, PathSegment* path, RobotState** mnode = 0) override;
-		virtual RobotState* addNode(RobotState* n) override;
+		virtual RobotState* addNode(RobotState* node) override;
 		virtual void Reconnect(vector<RobotState*>& v_nei, RobotState* Xnew) override;
+		virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
+		virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
 	};
 
 public:

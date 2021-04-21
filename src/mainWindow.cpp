@@ -6,6 +6,7 @@
 #include <wx/timer.h>
 #include <wx/txtstrm.h>
 #include <ShipState.h>
+#include "EGKRRT.h"
 
 
 BEGIN_EVENT_TABLE(MainWindow, wxFrame)
@@ -189,14 +190,13 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 {
 	sb->SetStatusText(wxT("Planning!"));
 
-
 	switch (this->the_planner)
 	{
 		case 0:// RRT
 		{
 			WBState gen(myrobot, &world);
-			WBState* start = gen.createStateFromPoint3D(2.0, -8, 0);
-			WBState* goal = gen.createStateFromPoint3D(8.0, 1.5, 2);
+			WBState* start = gen.createStateFromPoint3D(2.0, 8.0, 0);
+			WBState* goal = gen.createStateFromPoint3D(2.0, -8.0, 0);
 			solution.path.clear();
 			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
 			delete start;
@@ -211,7 +211,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 		{
 			WBStar gen(myrobot, &world, 0);
 			WBStar* start = gen.createStateFromPoint3D(2.0, -8, 0);
-			WBStar* goal = gen.createStateFromPoint3D(8.0, 1.5, 2);
+			WBStar* goal = gen.createStateFromPoint3D(8.0, 1.5, 0);
 			solution.path.clear();
 			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
 			delete start;
@@ -225,8 +225,8 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 		case 2: //EGK
 		{
 			ShipState gen(_myship, &world);
-			ShipState* start = gen.createStateFromPoint3D(2.0, 8.0, 0);
-			ShipState* goal = gen.createStateFromPoint3D(2.0, -8.0);
+			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, 8.0, 0));
+			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, -8.0));
 
 			solution.path.clear();
 			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
@@ -402,7 +402,7 @@ void MainWindow::OnTimer(wxTimerEvent& event)
 
 void MainWindow::OnStop(wxCommandEvent& WXUNUSED(event))
 {
-	_myship->move(0, 0);
+	_myship->setThrusts(0, 0);
 }
 
 void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
@@ -416,7 +416,7 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 	float thrustY_f = std::stof(_thrustYinp->GetLineText(0).ToStdString());
 	//float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
 
-	_myship->move(thrustX_f, thrustY_f);
+	_myship->setThrusts(thrustX_f, thrustY_f);
 	//myship->simulate(0.1);
 
 	_mytimer->Start(100);	
@@ -454,11 +454,9 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 	
 	//creo un planificador y su sistema de muestreo
 	sampler = new RandomSampler(&world);
-	//planner = new EGKRRT;
+	planner = new EGKRRT;
 	(dynamic_cast<SBPathPlanner*>(planner))->setSampler(sampler); //solo especifico de los basados en muestreo
 	
-
-
 	MyGLCanvas->w = this->world;
 	MyGLCanvas->sh = this->_myship;
 	MyGLCanvas->s = this->sampler;

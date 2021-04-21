@@ -1,6 +1,6 @@
 #include "mrcore.h"
 #include <wx/wx.h>
-#include <canvas.h>
+#include "canvas.h"
 #include <wx/sizer.h>
 
 enum id{ID_RDT = 1, ID_RDTstar = 2, ID_Plan = 3, ID_Ship = 4, ID_Sim = 5, ID_Stop = 6, ID_EGK = 7
