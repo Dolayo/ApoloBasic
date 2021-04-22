@@ -14,12 +14,12 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	RobotState* in = dynamic_cast<ShipState*>(node);
 	if (!in)
 		return nullptr;
-	// primer nodo del segmento que tratamos de crear al añadir el nodo in
+	// primer nodo del segmento que tratamos de crear al aÃ±adir el nodo in
 	RobotState* initNode;
 	RobotState* n = in->clone();
 
 	// tomo el punto de conexion: estado y segmento
-	// aux es el segmento del arbol mas cercano al nodo que tratamos de añadir(in/n)
+	// aux es el segmento del arbol mas cercano al nodo que tratamos de aÃ±adir(in/n)
 	// initNode almacena el nodo de dicho segmento que esta mas cerca de n
 	PathSegment* aux = getClosestPathSegment(n, &initNode);
 
@@ -46,8 +46,8 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 		aux = getBest(neighbors, &initNode);
 	}
 
-	// El segmento mas cercano aux queda dividido en dos por el nuevo segmento a añadir, por lo que
-	// se añade un nuevo segmento newPathA que va antes de initNode
+	// El segmento mas cercano aux queda dividido en dos por el nuevo segmento a aÃ±adir, por lo que
+	// se aÃ±ade un nuevo segmento newPathA que va antes de initNode
 
 	// newPathA es el segmento que va desde el principio de aux(antiguo) a initNode
 	// Aux se cambia para que empiece en initNode pero mantenga su nodo final
@@ -127,7 +127,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	else 
 		delete n; 
 
-	// añado al nuevo segmento hasta donde ha sido posible llegar
+	// aÃ±ado al nuevo segmento hasta donde ha sido posible llegar
 	newPath->_end = newPath->last();
 
 	// Establezco los costes para cada nodo
@@ -139,7 +139,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 		add(i);
 	}
 
-	// añado el nuevo path al arbol
+	// aÃ±ado el nuevo path al arbol
 	_paths.push_back(newPath);
 
 	if ((_paths.size() != 0) && (neighbors.size() != 0))
@@ -147,7 +147,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 		Reconnect(neighbors, newPath->_end);
 	}
 
-	// devuelvo el extremo del nuevo segmento añadido
+	// devuelvo el extremo del nuevo segmento aÃ±adido
 	return newPath->_end;
 
 }
@@ -356,6 +356,11 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 		// Obtain the control action
 		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState);
 		if(p_newPath->isGhostThere(p_initState, p_finalState))
+		{
+			v_ctrlAct[0]=0.0;
+			v_ctrlAct[1]=0.0;
+			v_ctrlAct[2]=0.0;//Just for simple dynamics
+		
 		// Propagate the control action
 		b_success = p_initState->propagate(v_ctrlAct, DELTA_T, p_newState);
 
@@ -382,6 +387,10 @@ bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot
 	double w = donkey->getVels().z;
 	double t_stop = (-1.0 * vx * (accs.x/accs.y) - vy) / (accs.y * (1 + (accs.x * accs.x)/(accs.y*accs.y)));
 	// Falta propagar la accion de control vacia con es ese tiempo y ver si el estado es igual a la zanahoria
+	std::vec<double> empty_ctrlAct {0,0};
+	ShipState* p_auxState = nullptr;
+	bool b_success = donkey->propagate(empty_ctrlAct, t_stop, p_auxState);
+	b_ret = b_success && carrot->isEqual(p_auxState);
 	return b_ret;
 }
 
