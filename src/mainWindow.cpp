@@ -392,8 +392,8 @@ void MainWindow::OnShip(wxCommandEvent& event)
 void MainWindow::OnTimer(wxTimerEvent& event)
 {
 
-	_myship->simulate(0.1);
-
+	//_myship->simpleSim(0.1);
+	_myship->simpleDynamicsSim(0.1);
 	(*_Wind_Force_Drag).WriteText(to_string(round(_myship->getWind_Force_Drag())));
 	
 	MyGLCanvas->sh = _myship;
@@ -416,7 +416,7 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 	float thrustY_f = std::stof(_thrustYinp->GetLineText(0).ToStdString());
 	//float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
 
-	_myship->setThrusts(thrustX_f, thrustY_f);
+	_myship->setThrusts(thrustX_f, thrustY_f, 180000);
 	//myship->simulate(0.1);
 
 	_mytimer->Start(100);	

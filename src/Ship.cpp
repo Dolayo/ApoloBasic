@@ -156,34 +156,86 @@ namespace mr
 		double ay = 0.0;
 		double aw = 0.0;
 
-		double F_roz_x = 0.0;
-		double F_roz_y = 0.0;
-		double M_roz_w = 0.0;
+		double F_roz_x = 0.6 * _mass * 9.18;
+		double F_roz_y = 0.6 * _mass * 9.18;
+		double M_roz_w = 0.8 * _J * 9.18;
 
 		if ((_u > 0.001) || (_u < -0.001))
 		{
 			double sgn_vx = _u / std::abs(_u);
-			F_roz_x = 0.6 * _mass * 9.18 * -sgn_vx;
-
+			F_roz_x = F_roz_x * -sgn_vx;
 		}
 
 		if ((_v > 0.001) || (_v < -0.001))
 		{
 			double sgn_vy = _v / std::abs(_v);
-			F_roz_y = 0.6 * _mass * 9.18 * -sgn_vy;
+			F_roz_y = F_roz_y * -sgn_vy;
 
 		}
 
 		if ((_w > 0.001) || (_w < -0.001))
 		{
 			double sgn_w = _w / std::abs(_w);
-			M_roz_w = 0.8 * _J * 9.18 * -sgn_w;
+			M_roz_w = M_roz_w * -sgn_w;
 
 		}
 
-		ax = (_thrust_x + F_roz_x) / _mass;
-		ay = (_thrust_y + F_roz_y) / _mass;
-		aw = (_thrust_w+ M_roz_w) / _J;
+
+		double thrust_x_sum = 0.0;
+		double thrust_y_sum = 0.0;
+		double thrust_w_sum = 0.0;
+
+		if ((_u > 0.001) || (_u < -0.001))
+		{
+			thrust_x_sum = _thrust_x + F_roz_x;
+		}
+		else
+		{
+			if (std::abs(_thrust_x) > std::abs(F_roz_x))
+			{
+				if(_thrust_x>0.0)
+					thrust_x_sum = _thrust_x - F_roz_x;
+				if(_thrust_x < 0.0)
+					thrust_x_sum = _thrust_x + F_roz_x;
+			}
+				
+		}
+
+		if ((_v > 0.001) || (_v < -0.001))
+		{
+			thrust_y_sum = _thrust_y + F_roz_y;
+		}
+		else
+		{
+			if (std::abs(_thrust_y) > std::abs(F_roz_y))
+			{
+				if (_thrust_y > 0.0)
+					thrust_y_sum = _thrust_y - F_roz_y;
+				if (_thrust_y < 0.0)
+					thrust_y_sum = _thrust_y + F_roz_y;
+			}
+
+		}
+
+		if ((_w > 0.001) || (_w < -0.001))
+		{
+			thrust_w_sum = _thrust_w + M_roz_w;
+		}
+		else
+		{
+			if (std::abs(_thrust_w) > std::abs(M_roz_w))
+			{
+				if (_thrust_w > 0.0)
+					thrust_w_sum = _thrust_w - M_roz_w;
+				if (_thrust_w < 0.0)
+					thrust_w_sum = _thrust_w + M_roz_w;
+			}
+
+		}
+
+		ax = (thrust_x_sum) / _mass;
+		ay = (thrust_y_sum) / _mass;
+		aw = (thrust_w_sum) / _J;
 
 		if (std::abs(ax) > _aMax)
 			ax = _aMax * (ax / std::abs(ax));

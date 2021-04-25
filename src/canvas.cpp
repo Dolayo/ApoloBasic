@@ -56,10 +56,10 @@ void canvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	if(flag)
 	{
 		scene.Draw();
-		//sh->drawGL();
-		p->drawGL();
+		sh->drawGL();
+		//p->drawGL();
 
-		sol.drawGL();
+		//sol.drawGL();
 	}
 	
 	

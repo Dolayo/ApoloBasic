@@ -70,11 +70,13 @@ protected:
 					_inter = n._inter;
 					_parent = n._parent;
 				}
+				RobotState* operator[](int i) { return _inter[i]; }
+				double getLength();
 				EGKpath(const EGKpath& n){(*this) = n;}
 				RobotState* last(){ return _inter.back(); }
 				virtual void appendState(RobotState* p_aux){_inter.push_back(p_aux);}
 				void appendCtrlAct(std::vector<double> v_aux) { _sequence.push_back(v_aux); }
-				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter);
+				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter = 500);
 				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState);
 				bool isGhostThere(ShipState* donkey, ShipState* carrot);
 		};
@@ -113,15 +115,27 @@ protected:
 		virtual void Reconnect(vector<RobotState*>& v_nei, RobotState* Xnew) override;
 		virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
 		virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
+		//virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;
 	};
 
 public:
+	
+	/*RDTstar() :SBPathPlanner(), _treeStart(), _treeGoal()
+	{
+		_treeA = &_treeStart;
+		_treeB = &_treeGoal;
+	}
+	virtual bool computePlan(int maxiterations);
+	virtual bool setStartAndGoalStates(RobotState* start_, RobotState* goal_);
+	int getNumNodes() { return _treeStart.getNumNodes() + _treeGoal.getNumNodes(); }*/
+
+	virtual bool computePlan(int maxiterations) override;
 	EGKRRT():RDTstar()
 	{
 	}
-  //virtual bool computePlan(int maxiterations);
-  //virtual bool setStartAndGoalStates(RobotState *start_, RobotState *goal_);
-  //virtual void drawGL();
+
+protected:
+	EGKtree* _tree{nullptr};
 };
 
 

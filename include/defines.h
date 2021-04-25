@@ -7,8 +7,9 @@
 #define THETA3 PI/6 // 15º
 #define DIST1 10
 #define DIST2 30
-#define THRUSTX 1000
-#define THRUSTY 500
+#define THRUSTX 30000
+#define THRUSTY 30000
+#define THRUSTW 170000
 #define N_ITER 500
 #define WIDTH 3
 #define LENGTH 10

@@ -120,7 +120,7 @@ bool ShipState::propagate(std::vector<double> v_auxCtrlAct, double delta_t, Ship
 {
 	bool b_success;
 
-	_ship->setThrusts(v_auxCtrlAct[0], v_auxCtrlAct[1]);
+	_ship->setThrusts(v_auxCtrlAct[0], v_auxCtrlAct[1], v_auxCtrlAct[2]);
 
 	b_success = _ship->dynamicsSim(delta_t);
 

@@ -180,8 +180,8 @@ bool RDTstar::computePlan(int maxiterations)
 	}
 	return false;
 }
-// Computa la distancia del estado p al segmento path, y almacena el nodo de ese path en mnode(inout)
 
+// Computa la distancia del estado p al segmento path, y almacena el nodo de ese path en mnode(inout)
 double RDTstar::RDTtree::distance(RobotState *p, PathSegment *path, RobotState **mnode)
 {
 	RobotState *mn=path->_init;
@@ -476,7 +476,8 @@ void RDTstar::RDTtree::getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei
 RDTstar::RDTtree::PathSegment* RDTstar::RDTtree::getBest(vector<RobotState*>& v_nei, RobotState **best)
 {
 
-	if(v_nei.size()==0)return nullptr;
+	if(v_nei.size()==0)
+		return nullptr;
 
 	*best= v_nei[0];
 
