@@ -129,10 +129,13 @@ public:
 	virtual bool setStartAndGoalStates(RobotState* start_, RobotState* goal_);
 	int getNumNodes() { return _treeStart.getNumNodes() + _treeGoal.getNumNodes(); }*/
 
+	virtual bool setStartAndGoalStates(RobotState* start_, RobotState* goal_) override;
 	virtual bool computePlan(int maxiterations) override;
 	EGKRRT():RDTstar()
 	{
+		_tree = new EGKtree;
 	}
+
 
 protected:
 	EGKtree* _tree{nullptr};

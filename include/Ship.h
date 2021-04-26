@@ -11,9 +11,53 @@ namespace mr
 	public:
 		
 		// Constructor
-		Ship();
-		Ship& operator =(const Ship& s) = delete;
-		Ship(Ship&) = delete;
+		Ship(double x=0.0, double y=0.0, double u=0.0, double v=0.0, double w=0.0);
+		//Ship& operator =(const Ship& s) = delete;
+		//Ship(Ship&) = delete;
+
+		//copy constructor and operador = 
+		const Ship& operator =(const Ship& s)
+		{
+			_width = s._width;
+			_length = s._length;
+			_mass = s._mass;
+			_J = s._J;
+			_xp = s._xp;
+			_Sair = s._Sair;
+			_Swater = s._Swater;
+			_vMax = s._vMax;
+			_aMax = s._aMax;
+			_Marm = s._Marm;
+			_trueWindDirection = s._trueWindDirection;
+			_trueWaterDirection = s._trueWaterDirection;
+			_windSpeed = s._windSpeed;
+			_waterSpeed = _waterSpeed;
+			_Crs_water = s._Crs_water;
+			_Crs_air = s._Crs_air;
+			_ro_water = s._ro_water;
+			_ro_air = s._ro_air;
+			_u = s._u;
+			_v = s._v;
+			_w = s._w;
+			_x = s._x;
+			_y = s._y;
+			_yaw = s._yaw;
+			_thrust_x = s._thrust_x;
+			_thrust_y = s._thrust_y;
+			_Wind_Force_Drag = s._Wind_Force_Drag;
+			_Water_Force_Drag = s._Water_Force_Drag;
+			_Wind_Force_Side = s._Wind_Force_Side;
+			_Water_Force_Side = s._Water_Force_Side;
+			_Wind_Moment = s._Wind_Moment;
+			_Water_Moment = s._Water_Moment;
+			_Rotational_Moment = s._Rotational_Moment;
+			_move_success = s._move_success;
+
+			_alpha_water = _Crs_water * _Swater * _ro_water / (_length / 2);
+			_alpha_air = _Crs_air * _Sair * _ro_air / (_length / 2);
+			return *this;
+		}
+		Ship(const Ship& s) { (*this) = s; }
 
 		void setState(double x, double y, double yaw, double u, double v, double w);
 		Vector3D simpleAccs();

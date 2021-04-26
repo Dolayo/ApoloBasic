@@ -5,7 +5,7 @@
 namespace mr
 {
 
-	Ship::Ship() :
+	Ship::Ship(double x, double y, double u, double v, double w) :
 		_width(WIDTH),
 		_length(LENGTH),
 		_mass(MASS),

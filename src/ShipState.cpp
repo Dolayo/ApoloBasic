@@ -77,11 +77,10 @@ RobotState* ShipState::createStateFromCurrentRobotState()
 	return aux;
 }
 
-RobotState* ShipState::createStateFromPoint3D(double x, double y, double z, double yaw, double Vx, double Vy, double W)
+RobotState* ShipState::createStateFromPoint3D(double x, double y, double yaw)
 {
-	vector<double> aux(7);
-	aux[0] = x; aux[1] = y; aux[2] = z; aux[3] = yaw;
-	aux[4] = Vx; aux[5] = Vy; aux[6] = W;
+	vector<double> aux(3);
+	aux[0] = x; aux[1] = y; aux[2] = yaw;
 	return (ShipState*)createStateFromSample(aux);
 }
 
@@ -101,12 +100,12 @@ RobotState* ShipState::createStateFromSample(vector<double> values)
 	//valid conditions: there is a robt and a world defined
 	if (!_world)return 0;
 	if (!_ship)return 0;
-	if (values.size() < 7)return 0;
+	if (values.size() < 3)return 0;
 
 	Ship* s = _ship;
 	ShipState aux(s, _world);
-	aux._pose = Vector3D(values[0], values[1], values[2]);//x,y,z
-	aux._vel = Vector3D(values[4], values[5], values[6]);//Vx,Vy,Vw
+	aux._pose = Vector3D(values[0], values[1], 0.0);//x,y,z
+	aux._yaw = values[2];
 
 	return new ShipState(aux);
 }
@@ -122,7 +121,7 @@ bool ShipState::propagate(std::vector<double> v_auxCtrlAct, double delta_t, Ship
 
 	_ship->setThrusts(v_auxCtrlAct[0], v_auxCtrlAct[1], v_auxCtrlAct[2]);
 
-	b_success = _ship->dynamicsSim(delta_t);
+	b_success = _ship->simpleDynamicsSim(delta_t);
 
 	if(dynamic_cast<ShipState*>(createStateFromCurrentRobotState()));
 		p_retState =  dynamic_cast<ShipState*>(createStateFromCurrentRobotState());

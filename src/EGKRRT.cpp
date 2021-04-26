@@ -9,6 +9,16 @@
 //
 //} en un principio SI HACE FALTA reescribir la funcion distancia, llamando a create path para ver la distancia real
 
+bool EGKRRT::setStartAndGoalStates(RobotState* start_, RobotState* goal_)
+{
+	if (SBPathPlanner::setStartAndGoalStates(start_, goal_))
+	{
+		_tree->rootTree(start_);
+		return true;
+	}
+	return false;
+}
+
 bool EGKRRT::computePlan(int maxiterations)
 {
 	if (solved)return true;
@@ -19,16 +29,16 @@ bool EGKRRT::computePlan(int maxiterations)
 
 		if (!node)continue;
 
-		RobotState* addedNodeA = _treeA->addNode(node);
+		RobotState* addedNode = _tree->addNode(node);
 
-		if (addedNodeA) 
+		if (addedNode) 
 		{
-			if (addedNodeA->isEqual(goal))
+			if (addedNode->isEqual(goal))
 			{
 				solved = true;
 
 				//retrive each path
-				RobotPath pathA = _treeA->getPathFromRoot(addedNodeA);
+				RobotPath pathA = _tree->getPathFromRoot(addedNode);
 
 				//rearrange the states
 				delete path;

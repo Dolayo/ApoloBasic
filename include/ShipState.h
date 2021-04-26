@@ -42,7 +42,7 @@ namespace mr
 			virtual RobotState* createStateFromSample(vector<double> values);
 			
 			//creates a ship at x,y,z and with Vx, Vy, W speed(0 default)
-			RobotState* createStateFromPoint3D(double x=0, double y=0, double z=0, double yaw = 0, double Vx=0, double Vy=0, double W=0);
+			RobotState* createStateFromPoint3D(double x=0, double y=0, double yaw=0);
 			
 			virtual bool propagate(std::vector<double> v_auxCtrlAct, double delta_t, ShipState* p_retState);
 
@@ -85,9 +85,9 @@ namespace mr
 			Ship* _ship;
 			World* _world;
 			// Third value corresponds to orientation 
-			Vector3D _pose; //medium value
-			double _yaw;
-			Vector3D _vel; //medium value
+			Vector3D _pose{ 0.0, 0.0, 0.0 }; //medium value
+			double _yaw{0};
+			Vector3D _vel{0.0, 0.0, 0.0}; //medium value
 
 			double _cost;
 	};

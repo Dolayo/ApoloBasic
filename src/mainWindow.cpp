@@ -236,6 +236,8 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			MyGLCanvas->p = this->planner;
 			MyGLCanvas->sol = this->solution;
 			MyGLCanvas->Refresh(false);
+			sb->SetStatusText(wxT("EGK done"));
+			break;
 		}
 		
 		default:
