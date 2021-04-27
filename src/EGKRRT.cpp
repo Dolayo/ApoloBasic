@@ -266,13 +266,17 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	
 	double distance = p_ShipInitState->distanceTo(p_ShipFinalState);
 
-	double angAbsFinalState = std::atan(p_ShipFinalState->getPose().y / p_ShipFinalState->getPose().x);
+	// OLD
+	/*double angAbsFinalState = std::atan(p_ShipFinalState->getPose().y / p_ShipFinalState->getPose().x);
+	double angle = angAbsFinalState - p_ShipInitState->getPose().z;*/
 
-	double angle = angAbsFinalState - p_ShipInitState->getPose().z;
+	double x_Rel = p_ShipFinalState->getPose().x - p_ShipInitState->getPose().x;
+	double y_Rel = p_ShipFinalState->getPose().y - p_ShipInitState->getPose().y;
+	double angle = PI - std::atan(y_Rel/x_Rel);
 
 	ZoneType zone = ZoneType::right;
 
-	if (angle > 0)
+	if (angle < 0)
 		zone = ZoneType::left;
 
 	if ((distance < DIST1) && (std::abs(angle) < THETA1))
@@ -352,12 +356,14 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 			v_ctrlAct[0] = 0.0;
 			v_ctrlAct[1] = 0.0;
 			v_ctrlAct[2] = 0.0;//Just for simple dynamics
+		}
 
 		// Propagate the control action
-			b_success = p_initState->propagate(v_ctrlAct, DELTA_T, p_newState);
-		}
+		b_success = p_initState->propagate(v_ctrlAct, DELTA_T, p_newState);
+
 		if (b_success)
 		{
+			//ShipState* auxtemp = new ShipState();
 			p_newState->setCost(p_newState->distanceTo(p_initState) + p_initState->getCost());
 
 			
@@ -384,7 +390,7 @@ bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot
 	double w = donkey->getVels().z;
 	double t_stop = (-1.0 * vx * (accs.x/accs.y) - vy) / (accs.y * (1 + (accs.x * accs.x)/(accs.y*accs.y)));
 	// Falta propagar la accion de control vacia con es ese tiempo y ver si el estado es igual a la zanahoria
-	std::vector<double> empty_ctrlAct {0,0};
+	std::vector<double> empty_ctrlAct {0, 0, 0};
 	ShipState* p_auxState = nullptr;
 	bool b_success = donkey->propagate(empty_ctrlAct, t_stop, p_auxState);
 	b_ret = b_success && carrot->isEqual(p_auxState);

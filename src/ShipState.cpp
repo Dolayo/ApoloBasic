@@ -58,21 +58,16 @@ RobotState* ShipState::createStateFromCurrentRobotState()
 {
 	if (!_world)return 0;
 	if (!_ship)return 0;
-	vector<double> v(7);
-	Transformation3D t = _ship->getAbsoluteT3D();
-	double r, p, y;
+	vector<double> v(3);
+	Vector3D t = _ship->getPos();
 
-	v[0] = t.position.x;
-	v[1] = t.position.y;
-	// Warning: Z is included
-	v[2] = t.position.z;
+	//v[0] = t.position.x;
+	//v[1] = t.position.y;
 
-	t.orientation.getRPY(r, p, y);
-	v[3] = y;
+	v[0] = t.x;
+	v[1] = t.y;
+	v[2] = t.z;
 
-	v[4] = _ship->getU();
-	v[5] = _ship->getV();
-	v[6] = _ship->getW();
 	ShipState* aux = dynamic_cast<ShipState*>(createStateFromSample(v));
 	return aux;
 }
