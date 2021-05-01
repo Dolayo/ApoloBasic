@@ -26,6 +26,8 @@ namespace mr
 			ShipState(const ShipState& s) { (*this) = s; }
 
 			virtual bool isEqual(RobotState* n) override;
+
+			bool isSamePos(RobotState* n);
 			
 			//metric used to evaluate de distances: it could be any measure, but
 			//the less the better
@@ -63,7 +65,7 @@ namespace mr
 
 			virtual double getCost() { return _cost; }
 			virtual void setCost(double c) { _cost = c; }
-			virtual Vector3D getVels() { return _vel; }
+
 			virtual Vector3D getAccs()
 			{
 				return this->_ship->simpleAccs();
@@ -76,6 +78,10 @@ namespace mr
 
 			const Vector3D getPose(){ return _pose;}
 			void setPose(Vector3D p) { _pose = p; }
+
+			const Vector3D getVels() { return _vel; }
+			void setVels(Vector3D v) { _vel = v; }
+
 	
 			virtual ~ShipState()
 			{

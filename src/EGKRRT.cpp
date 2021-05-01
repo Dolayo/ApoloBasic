@@ -343,7 +343,7 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 
 	for (int n = 0; n < niter; ++n)
 	{
-		if (p_initState->isEqual(p_finalState))
+		if (p_initState->isSamePos(p_finalState))
 		{
 			b_success = true;
 			return p_newPath;
@@ -369,7 +369,7 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 			
 			p_newPath->appendState(p_newState);
 			p_newPath->_end = p_newState;
-			//p_newPath->appendCtrlAct(v_ctrlAct);
+			p_newPath->appendCtrlAct(v_ctrlAct);
 
 			p_initState = p_newState;
 		}
@@ -385,15 +385,18 @@ bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot
 	bool b_ret = false;
 
 	Vector3D accs = donkey->getAccs();
+	
 	double vx = donkey->getVels().x;
 	double vy = donkey->getVels().y;
-	double w = donkey->getVels().z;
+
+	if (!(accs.x) && !(accs.y));
+
 	double t_stop = (-1.0 * vx * (accs.x/accs.y) - vy) / (accs.y * (1 + (accs.x * accs.x)/(accs.y*accs.y)));
-	// Falta propagar la accion de control vacia con es ese tiempo y ver si el estado es igual a la zanahoria
+
 	std::vector<double> empty_ctrlAct {0, 0, 0};
 	ShipState* p_auxState = nullptr;
 	bool b_success = donkey->propagate(empty_ctrlAct, t_stop, p_auxState);
-	b_ret = b_success && carrot->isEqual(p_auxState);
+	b_ret = b_success && carrot->isSamePos(p_auxState);
 	return b_ret;
 }
 

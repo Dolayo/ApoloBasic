@@ -17,6 +17,23 @@ bool ShipState::isEqual(RobotState* n)
 	else return false;
 }
 
+bool ShipState::isSamePos(RobotState* n)
+{
+	//Equal if compatible
+	// For now, compatible if less than a constant
+	ShipState* naux = dynamic_cast<ShipState*>(n);
+	if (!naux)return false;
+	if (_ship == 0)return false;
+
+	Vector3D dif_pose = naux->_pose - _pose;
+	dif_pose.z = 0.0;
+	if ((dif_pose.module() < POSE_TOL))
+		return true;
+	else return false;
+}
+
+
+
 //For now, we will use just the differences between vectors of speed and position
 
 double ShipState::distanceTo(RobotState* p)
@@ -42,16 +59,11 @@ double ShipState::distanceTo(RobotState* p)
 
 bool ShipState::isEqualToCurrentRobotState()
 {
-	//Transformation3D t=robot->getAbsoluteT3D(); 
-	//return
-	Transformation3D t = _ship->getAbsoluteT3D();
-
-	Vector3D dif_pose = t.position - _pose;
+	Vector3D dif_pose = _ship->getPos()- _pose;
 	Vector3D dif_vel = _ship->getVels() - _vel;
 	if ((dif_pose.module() < POSE_TOL) && (dif_vel.module() < VEL_TOL))
 		return true;
 	else return false;
-
 }
 
 RobotState* ShipState::createStateFromCurrentRobotState()
@@ -68,7 +80,8 @@ RobotState* ShipState::createStateFromCurrentRobotState()
 	v[1] = t.y;
 	v[2] = t.z;
 
-	ShipState* aux = dynamic_cast<ShipState*>(createStateFromSample(v));
+	RobotState* aux = createStateFromSample(v);
+	dynamic_cast<ShipState*>(aux)->setVels(_ship->getVels());
 	return aux;
 }
 
@@ -118,26 +131,20 @@ bool ShipState::propagate(std::vector<double> v_auxCtrlAct, double delta_t, Ship
 
 	b_success = _ship->simpleDynamicsSim(delta_t);
 
-	if(dynamic_cast<ShipState*>(createStateFromCurrentRobotState()));
-		p_retState =  dynamic_cast<ShipState*>(createStateFromCurrentRobotState());
+	RobotState* aux_state = createStateFromCurrentRobotState();
+
+	if (dynamic_cast<ShipState*>(aux_state))
+		p_retState = dynamic_cast<ShipState*>(aux_state);
+	else b_success = false;
 	
 	return b_success;
 }
 
-bool ShipState::moveRobotCloser(double stepSize)
-{
-	Transformation3D t = _ship->getAbsoluteT3D();
-	Vector3D ux = t.orientation.getVectorU();
-	Vector3D dif = _pose - t.position;
-
-	//if the robot is in this node... doesn´t move
-	if (isEqualToCurrentRobotState())return false;
-}
-
 void ShipState::placeRobot()
 {
-	Transformation3D t(_pose.x, _pose.y, _pose.z, Z_AXIS, _yaw);
+	Transformation3D t(_pose.x, _pose.y, 0, Z_AXIS, _pose.z);
 	_ship->setRelativeT3D(t);
+	_ship->setPos(Vector3D(_pose.x, _pose.y, _pose.z));
 }
 
 void ShipState::placeRobotTowards(RobotState* target)
@@ -152,6 +159,12 @@ void ShipState::placeRobotTowards(RobotState* target)
 
 }
 
+bool ShipState::moveRobotCloser(double stepSize)
+{
+	//No se necesita esta mierda pero es para que la clase no quede abstracta
+	return true;
+}
+
 ShipState* ShipState::clone()
 {
 	return new ShipState(*this);
@@ -163,7 +176,7 @@ void ShipState::drawGL()
 	glPointSize(2);
 	glColor3f(1, 1, 0);
 	glBegin(GL_POINTS);
-	glVertex3f(_pose.x, _pose.y, _pose.z);
+	glVertex3f(_pose.x, _pose.y, 0);
 	glEnd();
 	glColor3f(0, 0, 1);
 }

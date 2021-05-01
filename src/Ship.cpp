@@ -274,6 +274,10 @@ namespace mr
 
 		Transformation3D newposition = position * delta;
 
+		_x = _x + delta_x;
+		_y = _y + delta_y;
+		_yaw = _yaw + delta_th;
+
 		setAbsoluteT3D(newposition);
 
 		World* world = getWorld();

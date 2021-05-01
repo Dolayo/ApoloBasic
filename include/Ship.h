@@ -154,16 +154,16 @@ namespace mr
 		// --- State ---
 
 		// Velocities
-		double _u;
-		double _v;
-		double _w;
+		double _u{ 0 };
+		double _v{ 0 };
+		double _w{ 0 };
 
 		// Position
-		double _x;
-		double _y;
+		double _x{ 0 };
+		double _y{ 0 };
 
 		// Orientation
-		double _yaw;
+		double _yaw{ 0 };
 
 		// Inputs
 		double _thrust_x;
