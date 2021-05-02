@@ -451,7 +451,8 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 
 	_myship = new Ship();
 	_myship->setRelativePosition(Vector3D(2.0, 8, 0));
-	_myship->setState(2, 8, 0, 0, 0, 0);
+
+	_myship->setState(2.0, 8.0);
 	world += _myship;
 	
 	//creo un planificador y su sistema de muestreo

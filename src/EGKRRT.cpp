@@ -106,6 +106,9 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 		PathSegment* newPathA = EGKpath::createPath(aux->_init, initNode, b_aux);
 
+		for (RobotState* i : newPathA->_inter)
+			addNode(i);
+
 		newPathA->_init = aux->_init;
 		aux->_init = initNode;
 
@@ -115,8 +118,12 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 		newPathA->_end = aux->_init;
 
 		PathSegment* aux_path = EGKpath::createPath(aux->_init, aux->_end, b_aux);
+		
 
 		aux->_inter.assign(aux_path->_inter.begin(), aux_path->_inter.end());
+
+		for (RobotState* i : aux->_inter)
+			addNode(i);
 
 		_paths.push_back(newPathA);	
 	}
@@ -126,7 +133,10 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// este segmento sera el que una al nuevo nodo con el segmento que contiene al nodo de 
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success, N_ITER);
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success);
+
+	for (RobotState* i : newPath->_inter)
+		addNode(i);
 
 	// Si el nuevo segmento esta vacio, eliminamos todo 
 	if (newPath->size() == 0) 
@@ -329,6 +339,8 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 	ShipState* p_initState = dynamic_cast<ShipState*>(p_init);
 	ShipState* p_finalState = dynamic_cast<ShipState*>(p_end);
 
+	p_newPath->appendState(p_initState);
+
 	p_newPath->_init = p_initState;
 
 	if (!p_initState || !p_finalState)
@@ -337,15 +349,16 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 	p_initState->placeRobot();
 
 	ShipState* p_newState = nullptr;/* , * p_prevState = p_init;*/
-	double dist, antdist;
+
 	b_success = false; //solo se pone a true is se logra la solucion
-	dist = p_finalState->distanceTo(p_initState);//para que sirve esta mierda?
 
 	for (int n = 0; n < niter; ++n)
 	{
 		if (p_initState->isSamePos(p_finalState))
 		{
 			b_success = true;
+			p_newPath->appendState(p_finalState);
+			p_newPath->_end = p_newState;
 			return p_newPath;
 		}
 		
@@ -359,7 +372,7 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 		}
 
 		// Propagate the control action
-		b_success = p_initState->propagate(v_ctrlAct, DELTA_T, p_newState);
+		b_success = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
 
 		if (b_success)
 		{
@@ -389,13 +402,21 @@ bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot
 	double vx = donkey->getVels().x;
 	double vy = donkey->getVels().y;
 
-	if (!(accs.x) && !(accs.y));
+	double t_stop = 0.0;
 
-	double t_stop = (-1.0 * vx * (accs.x/accs.y) - vy) / (accs.y * (1 + (accs.x * accs.x)/(accs.y*accs.y)));
+	if ((vx != 0.0) && (vy != 0.0) && (accs.x!=0.0) && (accs.y!=0.0))
+		t_stop = (-1.0 * vx * (accs.x / accs.y) - vy) / (accs.y * (1 + (accs.x * accs.x) / (accs.y * accs.y)));
+
+	else
+		if (vx != 0.0 && accs.x != 0.0)
+			t_stop = vx / accs.x;
+		else
+			if((vy != 0.0) && (accs.y != 0.0))
+				t_stop = vy / accs.y;
 
 	std::vector<double> empty_ctrlAct {0, 0, 0};
 	ShipState* p_auxState = nullptr;
-	bool b_success = donkey->propagate(empty_ctrlAct, t_stop, p_auxState);
+	bool b_success = donkey->propagate(empty_ctrlAct, t_stop, &p_auxState);
 	b_ret = b_success && carrot->isSamePos(p_auxState);
 	return b_ret;
 }
@@ -404,8 +425,9 @@ double EGKRRT::EGKtree::EGKpath::getLength()
 {
 	double ret = 0.0;
 
-	for (size_t i = 0; i < (this->_inter.size() - 1); ++i)
-		ret += this->_inter[i]->distanceTo(this->_inter[i + 1]);
+	if(!(this->_inter.empty()))
+		for (size_t i = 0; i < (this->_inter.size() - 1); ++i)
+			ret += this->_inter[i]->distanceTo(this->_inter[i + 1]);
 
 	return ret;
 }
@@ -419,7 +441,7 @@ double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState**
 
 	bool b_aux = false;
 
-	EGKpath* path_aux = EGKpath::createPath(path->_init, p, b_aux, 500);
+	EGKpath* path_aux = EGKpath::createPath(path->_init, p, b_aux);
 
 	double minimal = path_aux->getLength();
 
@@ -433,7 +455,7 @@ double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState**
 		ShipState* i_aux = dynamic_cast<ShipState*>(i);
 		if (i_aux)
 		{
-			path_aux = EGKpath::createPath(i_aux, p, b_aux, 500);
+			path_aux = EGKpath::createPath(i_aux, p, b_aux);
 
 			double val = path_aux->getLength();
 

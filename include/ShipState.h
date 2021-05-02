@@ -20,7 +20,7 @@ namespace mr
 				_ship = s._ship;
 				_world = s._world;
 				_pose = s._pose;
-				_vel = s._pose;
+				_vel = s._vel;
 				return *this;
 			}
 			ShipState(const ShipState& s) { (*this) = s; }
@@ -46,7 +46,7 @@ namespace mr
 			//creates a ship at x,y,z and with Vx, Vy, W speed(0 default)
 			RobotState* createStateFromPoint3D(double x=0, double y=0, double yaw=0);
 			
-			virtual bool propagate(std::vector<double> v_auxCtrlAct, double delta_t, ShipState* p_retState);
+			virtual bool propagate(std::vector<double> v_auxCtrlAct, double delta_t, ShipState** p_retState);
 
 			//moves the Ship one step from the current position towards
 			//the state. Local planner

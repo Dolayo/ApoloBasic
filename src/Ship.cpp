@@ -101,7 +101,7 @@ namespace mr
 		(*this) += bridge;
 	}
 
-	void Ship::setState(double x=0, double y=0, double yaw=0, double u=0, double v=0, double w=0)
+	void Ship::setState(double x, double y, double yaw, double u, double v, double w)
 	{
 		_x = x;
 		_y = y;

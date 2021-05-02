@@ -59,7 +59,7 @@ namespace mr
 		}
 		Ship(const Ship& s) { (*this) = s; }
 
-		void setState(double x, double y, double yaw, double u, double v, double w);
+		void setState(double x = 0.0, double y = 0.0, double yaw = 0.0, double u = 0.0, double v = 0.0, double w = 0.0);
 		Vector3D simpleAccs();
 		bool simpleDynamicsSim(double delta_t);
 		virtual bool setThrusts(double t = 0.0, double r = 0.0, double w = 0.0);

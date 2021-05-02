@@ -10,7 +10,7 @@
 #define THRUSTX 30000
 #define THRUSTY 30000
 #define THRUSTW 170000
-#define N_ITER 500
+#define N_ITER 100
 #define WIDTH 3
 #define LENGTH 10
 #define MASS 5000

@@ -81,7 +81,6 @@ RobotState* ShipState::createStateFromCurrentRobotState()
 	v[2] = t.z;
 
 	RobotState* aux = createStateFromSample(v);
-	dynamic_cast<ShipState*>(aux)->setVels(_ship->getVels());
 	return aux;
 }
 
@@ -112,8 +111,9 @@ RobotState* ShipState::createStateFromSample(vector<double> values)
 
 	Ship* s = _ship;
 	ShipState aux(s, _world);
-	aux._pose = Vector3D(values[0], values[1], 0.0);//x,y,z
+	aux._pose = Vector3D(values[0], values[1], values[2]);//x,y,yaw
 	aux._yaw = values[2];
+	aux.setVels(_ship->getVels());
 
 	return new ShipState(aux);
 }
@@ -123,18 +123,26 @@ vector<double> ShipState::getSample()
 	return vector<double>{_pose.x, _pose.y, _pose.z, _vel.x, _vel.y, _vel.z/*W*/};
 }
 
-bool ShipState::propagate(std::vector<double> v_auxCtrlAct, double delta_t, ShipState* p_retState)
+bool ShipState::propagate(std::vector<double> v_auxCtrlAct, double delta_t, ShipState** p_retState)
 {
+	// Booleano para comprobar que no se ha chocado con nada
 	bool b_success;
 
+	// Establecemos la accion de control a emplear
 	_ship->setThrusts(v_auxCtrlAct[0], v_auxCtrlAct[1], v_auxCtrlAct[2]);
 
+	//Simulamos al robot durante delta_t segundos con la accion de control v_auxCtrlAct
 	b_success = _ship->simpleDynamicsSim(delta_t);
 
+	// Creamos el nuevo estado a partir de como queda el robot despues de aplicar la accion de control
 	RobotState* aux_state = createStateFromCurrentRobotState();
 
+	//Dejamos al robot del estado como estaba antes
+	_ship->setPos(_pose);
+	_ship->setVels(_vel);
+
 	if (dynamic_cast<ShipState*>(aux_state))
-		p_retState = dynamic_cast<ShipState*>(aux_state);
+		*p_retState = dynamic_cast<ShipState*>(aux_state);
 	else b_success = false;
 	
 	return b_success;
