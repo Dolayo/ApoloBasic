@@ -2,6 +2,7 @@
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
 #include "rdtstar.h"
+#include "EGKRRT.h"
 #include "Ship.h"
 
 
@@ -21,7 +22,7 @@ private:
 	Ship* sh;
 	Sampler *s;
 	PathPlanner *p;
-	RobotPath sol;
+	EGKRobotPath sol;
 
 	bool flag;
 

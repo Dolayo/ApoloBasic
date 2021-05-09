@@ -115,7 +115,7 @@ protected:
 		virtual void Reconnect(vector<RobotState*>& v_nei, RobotState* Xnew) override;
 		virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
 		virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
-		//virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;
+		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;
 	};
 
 public:
@@ -131,6 +131,7 @@ public:
 
 	virtual bool setStartAndGoalStates(RobotState* start_, RobotState* goal_) override;
 	virtual bool computePlan(int maxiterations) override;
+	bool testingPlan();
 	EGKRRT():RDTstar()
 	{
 		_tree = new EGKtree;
@@ -143,4 +144,13 @@ protected:
 
 
 }
+
+class EGKRobotPath : public RobotPath
+{
+public:
+
+	EGKRobotPath():RobotPath(){}
+	virtual void drawGL() override;
+};
+
 #endif  //__EGKRRT__H

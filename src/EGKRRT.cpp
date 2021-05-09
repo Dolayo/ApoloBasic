@@ -14,8 +14,31 @@ bool EGKRRT::setStartAndGoalStates(RobotState* start_, RobotState* goal_)
 	if (SBPathPlanner::setStartAndGoalStates(start_, goal_))
 	{
 		_tree->rootTree(start_);
+		*goal = *goal_;
 		return true;
 	}
+	return false;
+}
+
+
+bool EGKRRT::testingPlan()
+{
+	RobotState* addedNode = _tree->addNode(goal);
+	if (addedNode)
+		//if (dynamic_cast<ShipState*>(addedNode)->isSamePos(goal))
+		{	
+			solved = true;
+			//retrive path
+			RobotPath pathA = _tree->getPathFromRoot(addedNode);
+
+			//rearrange the states
+			delete path;
+
+			path = new RobotPath(pathA);
+
+			path->filterLoops(); //clean loops if any 
+			return true;
+		}
 	return false;
 }
 
@@ -99,33 +122,35 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// La division en dos segmentos solo tiene sentido si el nodo mas cercano es parte intermedia de un segmento
 	// si es el principio o final de un segmento no habra division en dos segmentos
 
-
-	if (_paths.size() != 0 && !(aux->_init->isEqual(initNode)) && !(aux->_end->isEqual(initNode)))
+	if (aux != nullptr)
 	{
-		bool b_aux = false;
+		if (_paths.size() != 0 && !(aux->_init->isEqual(initNode)) && !(aux->_end->isEqual(initNode)))
+		{
+			bool b_aux = false;
 
-		PathSegment* newPathA = EGKpath::createPath(aux->_init, initNode, b_aux);
+			PathSegment* newPathA = EGKpath::createPath(aux->_init, initNode, b_aux);
 
-		for (RobotState* i : newPathA->_inter)
-			addNode(i);
+			for (RobotState* i : newPathA->_inter)
+				add(i);
 
-		newPathA->_init = aux->_init;
-		aux->_init = initNode;
+			newPathA->_init = aux->_init;
+			aux->_init = initNode;
 
-		newPathA->_parent = aux->_parent;
-		aux->_parent = newPathA;
+			newPathA->_parent = aux->_parent;
+			aux->_parent = newPathA;
 
-		newPathA->_end = aux->_init;
+			newPathA->_end = aux->_init;
 
-		PathSegment* aux_path = EGKpath::createPath(aux->_init, aux->_end, b_aux);
+			PathSegment* aux_path = EGKpath::createPath(aux->_init, aux->_end, b_aux);
 		
 
-		aux->_inter.assign(aux_path->_inter.begin(), aux_path->_inter.end());
+			aux->_inter.assign(aux_path->_inter.begin(), aux_path->_inter.end());
 
-		for (RobotState* i : aux->_inter)
-			addNode(i);
+			for (RobotState* i : aux->_inter)
+				add(i);
 
-		_paths.push_back(newPathA);	
+			_paths.push_back(newPathA);	
+		}
 	}
 
 	bool success;
@@ -133,10 +158,10 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// este segmento sera el que una al nuevo nodo con el segmento que contiene al nodo de 
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success);
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success);// por que cojones aqui me he encontrado con que initNode y n estan en la misma puta posicion?
 
 	for (RobotState* i : newPath->_inter)
-		addNode(i);
+		add(i);
 
 	// Si el nuevo segmento esta vacio, eliminamos todo 
 	if (newPath->size() == 0) 
@@ -282,11 +307,59 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 
 	double x_Rel = p_ShipFinalState->getPose().x - p_ShipInitState->getPose().x;
 	double y_Rel = p_ShipFinalState->getPose().y - p_ShipInitState->getPose().y;
-	double angle = PI - std::atan(y_Rel/x_Rel);
+	//double angle = PI - std::atan(y_Rel/x_Rel);
+	// 
+	//Debemos distinguir en que cuadrante esta el goal respecto a init
+	Quadrant quad = Quadrant::first;
+
+	if (x_Rel < 0.0 && y_Rel >= 0.0)
+	{
+		quad = Quadrant::second;
+	}
+
+	else
+		if(x_Rel >= 0.0 && y_Rel < 0.0)
+		{
+			quad = Quadrant::fourth;
+		}
+		else
+			if (x_Rel < 0.0 && y_Rel < 0.0)
+			{
+				quad = Quadrant::third;
+			}
+
+	double angle = 0.0;
+
+	switch(quad)
+	{
+		case Quadrant::first:
+		{
+			angle = std::atan(y_Rel / x_Rel);
+			break;
+		}
+		case Quadrant::second:
+		{
+			angle = std::atan(y_Rel / x_Rel);
+			angle = PI + angle;
+			break;
+		}
+		case Quadrant::third:
+		{
+			angle = std::atan(y_Rel / x_Rel);
+			angle = angle - PI;
+			break;
+		}
+		case Quadrant::fourth:
+		{
+			angle = std::atan(y_Rel / x_Rel);
+			break;
+		}
+
+	}
 
 	ZoneType zone = ZoneType::right;
 
-	if (angle < 0)
+	if (angle > 0)
 		zone = ZoneType::left;
 
 	if ((distance < DIST1) && (std::abs(angle) < THETA1))
@@ -308,7 +381,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	{
 	case ZoneType::right:
 		{
-			v_auxCtrlAct.push_back(0.);
+			v_auxCtrlAct.push_back(THRUSTX);
 			v_auxCtrlAct.push_back(0.);
 			v_auxCtrlAct.push_back(-THRUSTW);
 			break;
@@ -322,7 +395,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 		}
 	case ZoneType::left:
 		{
-			v_auxCtrlAct.push_back(0.);
+			v_auxCtrlAct.push_back(THRUSTX);
 			v_auxCtrlAct.push_back(0.);
 			v_auxCtrlAct.push_back(THRUSTW);
 			break;
@@ -352,7 +425,7 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 
 	b_success = false; //solo se pone a true is se logra la solucion
 
-	for (int n = 0; n < niter; ++n)
+	for (int n = 0; n < 1000; ++n)
 	{
 		if (p_initState->isSamePos(p_finalState))
 		{
@@ -508,4 +581,58 @@ RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getClosestPathSegment(RobotState
 		}
 	}
 	return minPath;
+}
+
+RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_nei, RobotState** best)
+{
+
+	if (v_nei.size() == 0)
+		return nullptr;
+
+	*best = v_nei[0];
+
+	double min_cost = 0;
+
+	if (dynamic_cast<ShipState*>(v_nei[0]))
+		min_cost = dynamic_cast<ShipState*>(v_nei[0])->getCost();
+
+
+
+	PathSegment* bestPath = _paths[0];
+
+	for (unsigned int i = 1; i < v_nei.size(); i++)
+	{
+		double cost_i;
+		if (dynamic_cast<ShipState*>(v_nei[i]))
+		{
+			cost_i = dynamic_cast<ShipState*>(v_nei[i])->getCost();
+
+			if (cost_i < min_cost)
+			{
+				min_cost = cost_i;
+				*best = v_nei[i];
+			}
+		}
+	}
+
+	bestPath = findPath4Node(*best);
+
+	if (bestPath) return bestPath;
+	else return nullptr;
+}
+
+void EGKRobotPath::drawGL()
+{
+	if (path.size() < 2)return;
+
+	glLineWidth(3);
+	glColor3f(1, 0.2F, 0.2F);
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINE_STRIP);
+	for (RobotState* i: path)
+		glVertex3f(dynamic_cast<ShipState*>(i)->getPose().x, dynamic_cast<ShipState*>(i)->getPose().y, 0.0);
+	
+
+	glEnd();
+	glEnable(GL_LIGHTING);
 }

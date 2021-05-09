@@ -141,7 +141,8 @@ void MainWindow::createShipEnvironment()
 {
 	//Intializing test environment Faces included in a FacePart
 	Face deep(Transformation3D(0, 0, 0), 0, -10, 10, 10);
-	deep.setColor(0.1451, 0.1569, 0.3137,1);
+	//deep.setColor(0.1451, 0.1569, 0.3137,1);
+
 	Face land1;
 	Face land2;
 	Face land3;
@@ -224,15 +225,35 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 		}
 		case 2: //EGK
 		{
+			//ShipState gen(_myship, &world);
+			//ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, 8.0, 0));
+			//ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, -8.0));
+
+			//solution.path.clear();
+			//planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
+			//delete start;
+			//delete goal;
+			//if (planner->computePlan(50))solution.path = (planner->getPlan())->path;//3000
+			//MyGLCanvas->p = this->planner;
+			//MyGLCanvas->sol = this->solution;
+			//MyGLCanvas->Refresh(false);
+			//sb->SetStatusText(wxT("EGK done"));
+			//break;
+
+			// Testing purposes
 			ShipState gen(_myship, &world);
-			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, 8.0, 0));
-			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, -8.0));
+			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, -8.0, 0));
+			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(6.0, 0.0, 0));
 
 			solution.path.clear();
 			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
 			delete start;
 			delete goal;
-			if (planner->computePlan(3000))solution.path = (planner->getPlan())->path;//3000
+
+			if(dynamic_cast<EGKRRT*>(planner))
+				if (dynamic_cast<EGKRRT*>(planner)->testingPlan())
+					solution.path = (planner->getPlan())->path;//3000
+
 			MyGLCanvas->p = this->planner;
 			MyGLCanvas->sol = this->solution;
 			MyGLCanvas->Refresh(false);
@@ -351,15 +372,19 @@ void MainWindow::OnShip(wxCommandEvent& event)
 	_thrustYinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 160), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
 
+	_label_thrustWinp = new wxStaticText(this, wxID_ANY, "Thrust Rot", wxPoint(20, 200), wxDefaultSize);
+	_thrustWinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 220), wxDefaultSize,
+		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
+
 	/*
 		_label_timeinp = new wxStaticText(this, wxID_ANY, "Time", wxPoint(20, 200), wxDefaultSize);
 	_timeinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 220), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
 	*/
 
-	_label_Wind_Force_Drag = new wxStaticText(this, wxID_ANY, "Wind Force drag", wxPoint(140, 80), wxDefaultSize);
+	/*_label_Wind_Force_Drag = new wxStaticText(this, wxID_ANY, "Wind Force drag", wxPoint(140, 80), wxDefaultSize);
 	_Wind_Force_Drag = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(140, 100), wxDefaultSize,
-		wxTE_RIGHT | wxTE_READONLY, wxDefaultValidator, wxTextCtrlNameStr);
+		wxTE_RIGHT | wxTE_READONLY, wxDefaultValidator, wxTextCtrlNameStr);*/
 
 
 
@@ -396,7 +421,7 @@ void MainWindow::OnTimer(wxTimerEvent& event)
 
 	//_myship->simpleSim(0.1);
 	_myship->simpleDynamicsSim(0.1);
-	(*_Wind_Force_Drag).WriteText(to_string(round(_myship->getWind_Force_Drag())));
+	//(*_Wind_Force_Drag).WriteText(to_string(round(_myship->getWind_Force_Drag())));
 	
 	MyGLCanvas->sh = _myship;
 	MyGLCanvas->Refresh(true);
@@ -416,9 +441,10 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 
 	float thrustX_f = std::stof(_thrustXinp->GetLineText(0).ToStdString());
 	float thrustY_f = std::stof(_thrustYinp->GetLineText(0).ToStdString());
+	float thrustW_M = std::stof(_thrustWinp->GetLineText(0).ToStdString());
 	//float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
 
-	_myship->setThrusts(thrustX_f, thrustY_f, 180000);
+	_myship->setThrusts(thrustX_f, thrustY_f, thrustW_M);
 	//myship->simulate(0.1);
 
 	_mytimer->Start(100);	

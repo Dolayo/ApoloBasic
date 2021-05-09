@@ -21,6 +21,7 @@ namespace mr
 				_world = s._world;
 				_pose = s._pose;
 				_vel = s._vel;
+				_yaw = s._yaw;
 				return *this;
 			}
 			ShipState(const ShipState& s) { (*this) = s; }

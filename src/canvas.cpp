@@ -56,8 +56,12 @@ void canvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	if(flag)
 	{
 		scene.Draw();
-		//sh->drawGL();
-		p->drawGL();
+
+		if(sh!=nullptr)
+			sh->drawGL();
+
+		if (p != nullptr)
+			p->drawGL();
 
 		sol.drawGL();
 	}

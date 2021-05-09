@@ -40,13 +40,14 @@ double ShipState::distanceTo(RobotState* p)
 {
 
 	ShipState* naux = dynamic_cast<ShipState*>(p);
-	if (!naux)return 10000.0;
-
-	Vector3D dif_pos = naux->_pose - _pose;
+	//if (!naux)return 10000.0;
+	Vector3D thisPos(_pose.x, _pose.y, 0.0);
+	Vector3D nauxPos(naux->_pose.x, naux->_pose.y, 0.0);
+	Vector3D dif_pos = nauxPos - thisPos;
 	
 	double val = dif_pos.module();
 
-	Segment3D segm = Segment3D(Vector3D(_pose.x, _pose.y,0), Vector3D(naux->_pose.x, naux->_pose.y, 0));
+	Segment3D segm = Segment3D(Vector3D(_pose.x, _pose.y, 1.0), Vector3D(naux->_pose.x, naux->_pose.y, 1.0));
 
 	_ship->setIntersectable(false);
 
@@ -97,11 +98,7 @@ RobotState* ShipState::createStateFromSample(vector<double> values)
 	/*Values: 
 		[0]: x
 		[1]: y
-		[2]: z not used
-		[3]: yaw
-		[4]: Vx
-		[5]: Vy
-		[6]: Vw
+		[2]: yaw
 	*/
 
 	//valid conditions: there is a robt and a world defined

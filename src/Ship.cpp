@@ -251,7 +251,7 @@ namespace mr
 		double delta_y = _v * delta_t + 0.5 * ay * delta_t * delta_t;
 
 		// MCUA
-		double delta_th = _w * delta_t + 0.5 * aw * delta_t * delta_t;;
+		double delta_th = _w * delta_t + 0.5 * aw * delta_t * delta_t;
 		_move_success = false;
 
 		_u += ax * delta_t;
@@ -269,14 +269,18 @@ namespace mr
 		if (std::abs(_w) > _vMax)
 			_w = _vMax * (_w / std::abs(_w));
 
-		Transformation3D position = getAbsoluteT3D();
+		//Transformation3D position = getAbsoluteT3D();
+		Transformation3D position(_x, _y, 0.0, 0.0, 0.0, _yaw);
 		Transformation3D delta(delta_x, delta_y, 0, 0, 0, delta_th);
 
 		Transformation3D newposition = position * delta;
 
-		_x = _x + delta_x;
-		_y = _y + delta_y;
-		_yaw = _yaw + delta_th;
+		_x = newposition.position.x;
+		_y = newposition.position.y;
+
+		double roll, pitch, yaw;
+		newposition.orientation.getRPY(roll, pitch, yaw);
+		_yaw = yaw;
 
 		setAbsoluteT3D(newposition);
 

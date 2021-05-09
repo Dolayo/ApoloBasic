@@ -37,6 +37,7 @@ private:
 
     wxTextCtrl* _thrustXinp;
     wxTextCtrl* _thrustYinp;
+    wxTextCtrl* _thrustWinp;
     wxTextCtrl* _timeinp;
 
     wxTextCtrl* _Wind_Force_Drag;
@@ -61,6 +62,7 @@ private:
 
     wxStaticText* _label_thrustXinp;
     wxStaticText* _label_thrustYinp;
+    wxStaticText* _label_thrustWinp;
     wxStaticText* _label_timeinp;
 
     wxTimer* _mytimer;
@@ -74,7 +76,7 @@ private:
     Ship* _myship;
 	Sampler *sampler;
 	PathPlanner *planner;
-	RobotPath solution;
+	EGKRobotPath solution;
 
     void createEnvironment();
     void createShipEnvironment();
