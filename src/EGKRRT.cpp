@@ -328,6 +328,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 				quad = Quadrant::third;
 			}
 
+	// Angulo en coordenadas absolutas entre el punto final y el estado inicial, sin considerar la orientacion del robot
 	double angle = 0.0;
 
 	switch(quad)
@@ -357,6 +358,18 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 
 	}
 
+	// Angulo en coordenadas relativas al robot teniendo en cuenta la orientacion
+	angle = angle - p_ShipInitState->getYaw();
+
+	if (std::abs(angle) > PI)
+	{
+		if (angle > 0.0)
+			angle = angle - 2 * PI;
+		else
+			angle = 2 * PI + angle;
+	}
+
+	// Determinamos en que zona se encuentra el destino respecto al sistema de referencia del robot
 	ZoneType zone = ZoneType::right;
 
 	if (angle > 0)
@@ -419,7 +432,7 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 	if (!p_initState || !p_finalState)
 		return nullptr;
 	
-	p_initState->placeRobot();
+	
 
 	ShipState* p_newState = nullptr;/* , * p_prevState = p_init;*/
 
@@ -434,7 +447,9 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 			p_newPath->_end = p_newState;
 			return p_newPath;
 		}
-		
+
+		p_initState->placeRobot();
+
 		// Obtain the control action
 		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState);
 		if (p_newPath->isGhostThere(p_initState, p_finalState))

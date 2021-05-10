@@ -242,8 +242,8 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 
 			// Testing purposes
 			ShipState gen(_myship, &world);
-			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, -8.0, 0));
-			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(6.0, 0.0, 0));
+			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, 8.0, 0));
+			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(8.0, 0.0, 0));
 
 			solution.path.clear();
 			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
@@ -477,6 +477,7 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 
 	_myship = new Ship();
 	_myship->setRelativePosition(Vector3D(2.0, 8, 0));
+	_myship->setRelativeOrientation(0,0,PI/2);
 
 	_myship->setState(2.0, 8.0);
 	world += _myship;

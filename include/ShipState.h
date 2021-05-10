@@ -83,6 +83,13 @@ namespace mr
 			const Vector3D getVels() { return _vel; }
 			void setVels(Vector3D v) { _vel = v; }
 
+			const double getYaw() { return _yaw; }
+			void setYaw(double y)
+			{
+				_yaw = y;
+				_pose.z = y;
+			}
+
 	
 			virtual ~ShipState()
 			{

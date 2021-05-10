@@ -30,7 +30,7 @@
 #define RO_WATER 1000
 #define RO_AIR 1.225
 
-constexpr auto POSE_TOL = 0.1;
+constexpr auto POSE_TOL = 0.2;
 constexpr auto VEL_TOL = 1.0;
 
 enum class ZoneType { central, left, right };

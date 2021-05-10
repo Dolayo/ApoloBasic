@@ -82,6 +82,7 @@ RobotState* ShipState::createStateFromCurrentRobotState()
 	v[2] = t.z;
 
 	RobotState* aux = createStateFromSample(v);
+	dynamic_cast<ShipState*>(aux)->setVels(_ship->getVels());
 	return aux;
 }
 
@@ -150,6 +151,7 @@ void ShipState::placeRobot()
 	Transformation3D t(_pose.x, _pose.y, 0, Z_AXIS, _pose.z);
 	_ship->setRelativeT3D(t);
 	_ship->setPos(Vector3D(_pose.x, _pose.y, _pose.z));
+	_ship->setVels(Vector3D(_vel.x, _vel.y, _vel.z));
 }
 
 void ShipState::placeRobotTowards(RobotState* target)
