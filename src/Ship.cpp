@@ -112,6 +112,17 @@ namespace mr
 		_w = w;
 	}
 
+	void Ship::setState(Vector3D pos, Vector3D vel)
+	{
+		_x = pos.x;
+		_y = pos.y;
+		_yaw = pos.z;
+
+		_u = vel.x;
+		_v = vel.y;
+		_w = vel.z;
+	}
+
 	Vector3D Ship::simpleAccs()
 	{
 		double ax = 0.0;
@@ -158,7 +169,7 @@ namespace mr
 
 		double F_roz_x = 0.6 * _mass * 9.18;
 		double F_roz_y = 0.6 * _mass * 9.18;
-		double M_roz_w = 0.8 * _J * 9.18;
+		double M_roz_w = 0.9 * _J * 9.18;
 
 		if ((_u > 0.001) || (_u < -0.001))
 		{
@@ -271,7 +282,7 @@ namespace mr
 
 		//Transformation3D position = getAbsoluteT3D();
 		Transformation3D position(_x, _y, 0.0, 0.0, 0.0, _yaw);
-		Transformation3D delta(delta_x, delta_y, 0, 0, 0, delta_th);
+		Transformation3D delta(delta_x*cos(delta_th), delta_y*sin(delta_th), 0, 0, 0, delta_th);
 
 		Transformation3D newposition = position * delta;
 

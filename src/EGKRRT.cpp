@@ -438,7 +438,7 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 
 	b_success = false; //solo se pone a true is se logra la solucion
 
-	for (int n = 0; n < 1000; ++n)
+	for (int n = 0; n < 100; ++n)
 	{
 		if (p_initState->isSamePos(p_finalState))
 		{
@@ -489,7 +489,8 @@ bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot
 	
 	double vx = donkey->getVels().x;
 	double vy = donkey->getVels().y;
-
+	vx = std::abs(vx);
+	vy = std::abs(vy);
 	double t_stop = 0.0;
 
 	if ((vx != 0.0) && (vy != 0.0) && (accs.x!=0.0) && (accs.y!=0.0))
@@ -497,7 +498,7 @@ bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot
 
 	else
 		if (vx != 0.0 && accs.x != 0.0)
-			t_stop = vx / accs.x;
+			t_stop = vx / std::abs(accs.x);
 		else
 			if((vy != 0.0) && (accs.y != 0.0))
 				t_stop = vy / accs.y;

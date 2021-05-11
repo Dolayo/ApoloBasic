@@ -2,14 +2,14 @@
 #define __DEFINES_
 
 #define DELTA_T 0.1 //seconds
-#define THETA1 PI/12 // 15º
-#define THETA2 PI/6 // 30º
-#define THETA3 PI/4 // 45º
+#define THETA1 PI/18 // 10º
+#define THETA2 PI/9 // 20º
+#define THETA3 PI/6 // 30º
 #define DIST1 4
 #define DIST2 10
-#define THRUSTX 30000
-#define THRUSTY 30000
-#define THRUSTW 195000
+#define THRUSTX 28000
+#define THRUSTY 28000
+#define THRUSTW 192000
 #define N_ITER 100
 #define WIDTH 3
 #define LENGTH 10
