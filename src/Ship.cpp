@@ -158,6 +158,15 @@ namespace mr
 		ay = F_roz_y / _mass;
 		aw = M_roz_w / _J;
 
+		if (std::abs(ax) > _aMax)
+			ax = _aMax * (ax / std::abs(ax));
+
+		if (std::abs(ay) > _aMax)
+			ay = _aMax * (ay / std::abs(ay));
+
+		if (std::abs(aw) > _aMax)
+			aw = _aMax * (aw / std::abs(aw));
+
 		return Vector3D(ax, ay, aw);
 	}
 

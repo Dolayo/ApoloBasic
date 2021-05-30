@@ -29,6 +29,8 @@ namespace mr
 			virtual bool isEqual(RobotState* n) override;
 
 			bool isSamePos(RobotState* n);
+
+			bool isSamePos(Vector3D p);
 			
 			//metric used to evaluate de distances: it could be any measure, but
 			//the less the better

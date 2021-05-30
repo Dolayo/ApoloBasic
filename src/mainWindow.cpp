@@ -242,8 +242,14 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 
 			// Testing purposes
 			ShipState gen(_myship, &world);
+
+			_myship->setRelativePosition(Vector3D(2.0, 8, 0));
+			//_myship->setRelativeOrientation(0,0,-PI/2);
+
+			_myship->setState(2.0, 8.0, 0/*-PI / 2*/);
+
 			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, 8.0, 0));
-			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(8.0, 8.0, 0));
+			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(8.0, 2.0, 0));
 
 			solution.path.clear();
 			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
@@ -251,8 +257,9 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			delete goal;
 
 			if(dynamic_cast<EGKRRT*>(planner))
-				if (dynamic_cast<EGKRRT*>(planner)->computePlan(3000))
-					solution.path = (planner->getPlan())->path;//3000
+				//if (dynamic_cast<EGKRRT*>(planner)->testingPlan())
+				if (dynamic_cast<EGKRRT*>(planner)->computePlan(30))
+					solution.path = (planner->getPlan())->path;
 
 			MyGLCanvas->p = this->planner;
 			MyGLCanvas->sol = this->solution;

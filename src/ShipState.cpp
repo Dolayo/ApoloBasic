@@ -32,6 +32,18 @@ bool ShipState::isSamePos(RobotState* n)
 	else return false;
 }
 
+bool ShipState::isSamePos(Vector3D p)
+{
+	//Equal if compatible
+	// For now, compatible if less than a constant
+
+	Vector3D dif_pose = p - _pose;
+	dif_pose.z = 0.0;
+	if ((dif_pose.module() < POSE_TOL))
+		return true;
+	else return false;
+}
+
 
 
 //For now, we will use just the differences between vectors of speed and position
@@ -126,18 +138,20 @@ bool ShipState::propagate(std::vector<double> v_auxCtrlAct, double delta_t, Ship
 	// Booleano para comprobar que no se ha chocado con nada
 	bool b_success;
 
+	this->placeRobot();
+
 	// Establecemos la accion de control a emplear
-	_ship->setThrusts(v_auxCtrlAct[0], v_auxCtrlAct[1], v_auxCtrlAct[2]);
+	this->_ship->setThrusts(v_auxCtrlAct[0], v_auxCtrlAct[1], v_auxCtrlAct[2]);
 
 	//Simulamos al robot durante delta_t segundos con la accion de control v_auxCtrlAct
-	b_success = _ship->simpleDynamicsSim(delta_t);
+	b_success = this->_ship->simpleDynamicsSim(delta_t);
 
 	// Creamos el nuevo estado a partir de como queda el robot despues de aplicar la accion de control
 	RobotState* aux_state = createStateFromCurrentRobotState();
 
 	//Dejamos al robot del estado como estaba antes
-	_ship->setPos(_pose);
-	_ship->setVels(_vel);
+	/*this->_ship->setPos(this->_pose);
+	this->_ship->setVels(this->_vel);*/
 
 	if (dynamic_cast<ShipState*>(aux_state))
 		*p_retState = dynamic_cast<ShipState*>(aux_state);

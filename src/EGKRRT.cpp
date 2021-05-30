@@ -36,7 +36,7 @@ bool EGKRRT::testingPlan()
 
 			path = new RobotPath(pathA);
 
-			path->filterLoops(); //clean loops if any 
+			//path->filterLoops(); //clean loops if any 
 			return true;
 		}
 	return false;
@@ -68,7 +68,7 @@ bool EGKRRT::computePlan(int maxiterations)
 
 				path = new RobotPath(pathA);
 
-				path->filterLoops(); //clean loops if any 
+				//path->filterLoops(); //clean loops if any 
 			}
 			
 		}
@@ -158,7 +158,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// este segmento sera el que una al nuevo nodo con el segmento que contiene al nodo de 
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success);// por que cojones aqui me he encontrado con que initNode y n estan en la misma puta posicion?
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success);
 
 	for (RobotState* i : newPath->_inter)
 		add(i);
@@ -432,23 +432,23 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 	if (!p_initState || !p_finalState)
 		return nullptr;
 	
-	
+	p_initState->placeRobot();
 
 	ShipState* p_newState = nullptr;/* , * p_prevState = p_init;*/
 
-	b_success = false; //solo se pone a true is se logra la solucion
+	b_success = false; //solo se pone a true si se logra la solucion
 
-	for (int n = 0; n < 100; ++n)
+	for (int n = 0; n < 1800; ++n)
 	{
 		if (p_initState->isSamePos(p_finalState))
 		{
 			b_success = true;
-			p_newPath->appendState(p_finalState);
+			p_newPath->appendState(p_initState);
 			p_newPath->_end = p_newState;
 			return p_newPath;
 		}
 
-		p_initState->placeRobot();
+		
 
 		// Obtain the control action
 		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState);
@@ -460,9 +460,9 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 		}
 
 		// Propagate the control action
-		b_success = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
+		bool b_success_prop = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
 
-		if (b_success)
+		if (b_success_prop)
 		{
 			//ShipState* auxtemp = new ShipState();
 			p_newState->setCost(p_newState->distanceTo(p_initState) + p_initState->getCost());
@@ -486,11 +486,15 @@ bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot
 	bool b_ret = false;
 
 	Vector3D accs = donkey->getAccs();
-	
-	double vx = donkey->getVels().x;
-	double vy = donkey->getVels().y;
+	Vector3D vels = donkey->getVels();
+	Vector3D pos = donkey->getPose();
+
+	double vx = vels.x;
+	double vy = vels.y;
+
 	vx = std::abs(vx);
 	vy = std::abs(vy);
+
 	double t_stop = 0.0;
 
 	if ((vx != 0.0) && (vy != 0.0) && (accs.x!=0.0) && (accs.y!=0.0))
@@ -503,10 +507,26 @@ bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot
 			if((vy != 0.0) && (accs.y != 0.0))
 				t_stop = vy / accs.y;
 
-	std::vector<double> empty_ctrlAct {0, 0, 0};
-	ShipState* p_auxState = nullptr;
-	bool b_success = donkey->propagate(empty_ctrlAct, t_stop, &p_auxState);
-	b_ret = b_success && carrot->isSamePos(p_auxState);
+	// Transformar las velocidades relativas a absolutas
+	double vabs_x = donkey->getVels().x * cos(donkey->getYaw());
+	double vabs_y = donkey->getVels().x * sin(donkey->getYaw());
+
+	double roz = accs.x;//el rozamiento es el mismo para la x que para la y, de momento
+
+	double aabs_x = roz * cos(donkey->getYaw());
+	double aabs_y = roz * sin(donkey->getYaw());
+
+	// MRUA
+	double new_pos_x = pos.x + vabs_x * t_stop + 0.5 * aabs_x * t_stop * t_stop;
+	double new_pos_y = pos.y + vabs_y * t_stop + 0.5 * aabs_y * t_stop * t_stop;
+
+
+	//std::vector<double> empty_ctrlAct {0, 0, 0};
+	//ShipState* p_auxState = nullptr;
+	//bool b_success = donkey->propagate(empty_ctrlAct, t_stop, &p_auxState);
+	b_ret = carrot->isSamePos(Vector3D(new_pos_x, new_pos_y, 0.0));
+	if (b_ret)
+		double hola = 1;
 	return b_ret;
 }
 
@@ -642,7 +662,7 @@ void EGKRobotPath::drawGL()
 	if (path.size() < 2)return;
 
 	glLineWidth(3);
-	glColor3f(1, 0.2F, 0.2F);
+	glColor3f(0.2F, 1.0F, 0.2F);//1, 0.2F, 0.2F
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINE_STRIP);
 	for (RobotState* i: path)
