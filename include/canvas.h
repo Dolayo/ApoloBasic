@@ -22,7 +22,8 @@ private:
 	Ship* sh;
 	Sampler *s;
 	PathPlanner *p;
-	EGKRobotPath sol;
+	RobotPath sol;
+	EGKRobotPath EGKsol;
 
 	bool flag;
 

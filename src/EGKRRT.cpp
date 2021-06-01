@@ -657,9 +657,26 @@ RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_n
 	else return nullptr;
 }
 
+void EGKRRT::EGKtree::drawGL()
+{
+	//pinta las trayectorias: nodos y lineas que las unen
+	unsigned int i;
+	glLineWidth(1);
+	glColor3f(1, 1, 0);
+	for (i = 0; i < _paths.size(); i++)_paths[i]->drawGL();
+	for (i = 0; i < _nodes.size(); i++)_nodes[i]->drawGL();
+	if (_root)_root->drawGL();
+}
+void EGKRRT::drawGL()
+{
+	if (_tree)
+		_tree->drawGL();
+}
+
 void EGKRobotPath::drawGL()
 {
-	if (path.size() < 2)return;
+	if (path.size() < 2)
+		return;
 
 	glLineWidth(3);
 	glColor3f(0.2F, 1.0F, 0.2F);//1, 0.2F, 0.2F

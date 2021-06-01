@@ -217,7 +217,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
 			delete start;
 			delete goal;
-			if (planner->computePlan(3000))solution.path = (planner->getPlan())->path;//3000
+			if (planner->computePlan(3))solution.path = (planner->getPlan())->path;//3000
 			MyGLCanvas->p = this->planner;
 			MyGLCanvas->sol = this->solution;
 			MyGLCanvas->Refresh(false);
@@ -256,13 +256,17 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			delete start;
 			delete goal;
 
-			if(dynamic_cast<EGKRRT*>(planner))
+			if (dynamic_cast<EGKRRT*>(planner))
 				//if (dynamic_cast<EGKRRT*>(planner)->testingPlan())
-				if (dynamic_cast<EGKRRT*>(planner)->computePlan(30))
-					solution.path = (planner->getPlan())->path;
+				//if (dynamic_cast<EGKRRT*>(planner)->computePlan(10))
+			{
+				dynamic_cast<EGKRRT*>(planner)->computePlan(5);
+				//solution.path = (planner->getPlan())->path;
+			}
+				
 
 			MyGLCanvas->p = this->planner;
-			MyGLCanvas->sol = this->solution;
+			MyGLCanvas->EGKsol = this->solution;
 			MyGLCanvas->Refresh(false);
 			sb->SetStatusText(wxT("EGK done"));
 			break;

@@ -130,7 +130,7 @@ protected:
 		virtual PathSegment* findPath4Node( RobotState* node);
 		virtual void getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei);
 		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState **best);
-		void drawGL();
+		virtual void drawGL();
 	};
 
 	  RDTtree _treeStart;
