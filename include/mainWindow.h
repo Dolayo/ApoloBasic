@@ -78,6 +78,14 @@ private:
 	PathPlanner *planner;
 	EGKRobotPath solution;
 
+    double _x_start{2};
+    double _y_start{8};
+
+    double _x_goal{8};
+    double _y_goal{2};
+    
+    int _n_iter{ 2 };
+
     void createEnvironment();
     void createShipEnvironment();
     

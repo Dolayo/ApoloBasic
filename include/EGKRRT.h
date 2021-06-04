@@ -79,6 +79,7 @@ protected:
 				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter = 100);
 				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState);
 				bool isGhostThere(ShipState* donkey, ShipState* carrot);
+				void drawGL();
 		};
 
 	public:
@@ -113,9 +114,9 @@ protected:
 		//virtual double distance(RobotState* p, PathSegment* path, RobotState** mnode = 0) override;
 		virtual RobotState* addNode(RobotState* node) override;
 		virtual void Reconnect(vector<RobotState*>& v_nei, RobotState* Xnew) override;
-		virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
-		virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
-		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;
+		//virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
+		//virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
+		//virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;
 		virtual void drawGL() override;
 	};
 

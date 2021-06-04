@@ -503,11 +503,7 @@ RDTstar::RDTtree::PathSegment* RDTstar::RDTtree::getBest(vector<RobotState*>& v_
 				min_cost=cost_i;
 				*best=v_nei[i];
 			}
-
 		}
-		
-
-		
 	}
 
 	bestPath=findPath4Node(*best);

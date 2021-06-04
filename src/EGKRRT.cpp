@@ -4,11 +4,6 @@
 #include "defines.h"
 
 
-//double EGKRRT::EGKtree::distance(RobotState* p, PathSegment* path, RobotState** mnode)
-//{
-//
-//} en un principio SI HACE FALTA reescribir la funcion distancia, llamando a create path para ver la distancia real
-
 bool EGKRRT::setStartAndGoalStates(RobotState* start_, RobotState* goal_)
 {
 	if (SBPathPlanner::setStartAndGoalStates(start_, goal_))
@@ -68,7 +63,7 @@ bool EGKRRT::computePlan(int maxiterations)
 
 				path = new RobotPath(pathA);
 
-				//path->filterLoops(); //clean loops if any 
+				path->filterLoops(); //clean loops if any 
 			}
 			
 		}
@@ -541,49 +536,76 @@ double EGKRRT::EGKtree::EGKpath::getLength()
 	return ret;
 }
 
-double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState** mnode)
+void EGKRRT::EGKtree::EGKpath::drawGL()
 {
-	ShipState* p = dynamic_cast<ShipState*>(rs);
-	ShipState* mn = dynamic_cast<ShipState*>(path->_init);
-	if (!p || !mn)
-		return -1.0;
+	vector<double> v;
 
-	bool b_aux = false;
+	v = _init->getSample();
 
-	EGKpath* path_aux = EGKpath::createPath(path->_init, p, b_aux);
+	if (v.size() < 2)return;
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINE_STRIP);
 
-	double minimal = path_aux->getLength();
+	glVertex3f(v[0], v[1], 0);
 
-	if (!b_aux)
-		minimal *= 1.5;
-
-	//end belongs to the path
-	
-	for (RobotState* i: path->_inter)
+	for (int i = 0; i < (int)_inter.size(); i++) 
 	{
-		ShipState* i_aux = dynamic_cast<ShipState*>(i);
-		if (i_aux)
-		{
-			path_aux = EGKpath::createPath(i_aux, p, b_aux);
-
-			double val = path_aux->getLength();
-
-			if (!b_aux)
-				val *= 1.5;// Sustituyo al rayo de visibilidad
-
-			if (val < minimal)
-			{
-				mn = i_aux;
-				minimal = val;
-			}
-		}
-		else
-			continue;
+		v = _inter[i]->getSample();
+		glVertex3f(v[0], v[1], 0);
 	}
-	if (mnode)
-		*mnode = mn;
-	return minimal;
+
+	v = _end->getSample();
+
+	glVertex3f(v[0], v[1], 0);
+
+	glEnd();
+	glEnable(GL_LIGHTING);
 }
+
+
+//double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState** mnode)
+//{
+//	ShipState* p = dynamic_cast<ShipState*>(rs);
+//	ShipState* mn = dynamic_cast<ShipState*>(path->_init);
+//	if (!p || !mn)
+//		return -1.0;
+//
+//	bool b_aux = false;
+//
+//	EGKpath* path_aux = EGKpath::createPath(path->_init, p, b_aux);
+//
+//	double minimal = path_aux->getLength();
+//
+//	if (!b_aux)
+//		minimal *= 1.5;
+//
+//	//end belongs to the path
+//	
+//	for (RobotState* i: path->_inter)
+//	{
+//		ShipState* i_aux = dynamic_cast<ShipState*>(i);
+//		if (i_aux)
+//		{
+//			path_aux = EGKpath::createPath(i_aux, p, b_aux);
+//
+//			double val = path_aux->getLength();
+//
+//			if (!b_aux)
+//				val *= 1.5;// Sustituyo al rayo de visibilidad
+//
+//			if (val < minimal)
+//			{
+//				mn = i_aux;
+//				minimal = val;
+//			}
+//		}
+//		else
+//			continue;
+//	}
+//	if (mnode)
+//		*mnode = mn;
+//	return minimal;
+//}
 
 //RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_nei, RobotState** best)
 //{
@@ -601,68 +623,68 @@ double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState**
 //	return nullptr;
 //}
 
-RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getClosestPathSegment(RobotState* n, RobotState** minstate)
-{
-	*minstate = 0;
-	if (_paths.size() == 0)return 0;
-	RobotState* ms;
-	double dist, minimun = distance(n, _paths[0], minstate);
-	PathSegment* minPath = _paths[0];
-	for (unsigned int i = 1; i < _paths.size(); i++) {
-		dist = distance(n, _paths[i], &ms);
-		if (dist < minimun) {
-			minimun = dist;
-			minPath = _paths[i];
-			*minstate = ms;
-		}
-	}
-	return minPath;
-}
+//RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getClosestPathSegment(RobotState* n, RobotState** minstate)
+//{
+//	*minstate = 0;
+//	if (_paths.size() == 0)return 0;
+//	RobotState* ms;
+//	double dist, minimun = distance(n, _paths[0], minstate);
+//	PathSegment* minPath = _paths[0];
+//	for (unsigned int i = 1; i < _paths.size(); i++) {
+//		dist = distance(n, _paths[i], &ms);
+//		if (dist < minimun) {
+//			minimun = dist;
+//			minPath = _paths[i];
+//			*minstate = ms;
+//		}
+//	}
+//	return minPath;
+//}
 
-RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_nei, RobotState** best)
-{
-
-	if (v_nei.size() == 0)
-		return nullptr;
-
-	*best = v_nei[0];
-
-	double min_cost = 0;
-
-	if (dynamic_cast<ShipState*>(v_nei[0]))
-		min_cost = dynamic_cast<ShipState*>(v_nei[0])->getCost();
-
-
-
-	PathSegment* bestPath = _paths[0];
-
-	for (unsigned int i = 1; i < v_nei.size(); i++)
-	{
-		double cost_i;
-		if (dynamic_cast<ShipState*>(v_nei[i]))
-		{
-			cost_i = dynamic_cast<ShipState*>(v_nei[i])->getCost();
-
-			if (cost_i < min_cost)
-			{
-				min_cost = cost_i;
-				*best = v_nei[i];
-			}
-		}
-	}
-
-	bestPath = findPath4Node(*best);
-
-	if (bestPath) return bestPath;
-	else return nullptr;
-}
+//RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_nei, RobotState** best)
+//{
+//
+//	if (v_nei.size() == 0)
+//		return nullptr;
+//
+//	*best = v_nei[0];
+//
+//	double min_cost = 0;
+//
+//	if (dynamic_cast<ShipState*>(v_nei[0]))
+//		min_cost = dynamic_cast<ShipState*>(v_nei[0])->getCost();
+//
+//
+//
+//	PathSegment* bestPath = _paths[0];
+//
+//	for (unsigned int i = 1; i < v_nei.size(); i++)
+//	{
+//		double cost_i;
+//		if (dynamic_cast<ShipState*>(v_nei[i]))
+//		{
+//			cost_i = dynamic_cast<ShipState*>(v_nei[i])->getCost();
+//
+//			if (cost_i < min_cost)
+//			{
+//				min_cost = cost_i;
+//				*best = v_nei[i];
+//			}
+//		}
+//	}
+//
+//	bestPath = findPath4Node(*best);
+//
+//	if (bestPath) return bestPath;
+//	else return nullptr;
+//}
 
 void EGKRRT::EGKtree::drawGL()
 {
 	//pinta las trayectorias: nodos y lineas que las unen
 	unsigned int i;
 	glLineWidth(1);
-	glColor3f(1, 1, 0);
+	glColor3f(1, 0, 1);
 	for (i = 0; i < _paths.size(); i++)_paths[i]->drawGL();
 	for (i = 0; i < _nodes.size(); i++)_nodes[i]->drawGL();
 	if (_root)_root->drawGL();
@@ -679,13 +701,12 @@ void EGKRobotPath::drawGL()
 		return;
 
 	glLineWidth(3);
-	glColor3f(0.2F, 1.0F, 0.2F);//1, 0.2F, 0.2F
+	glColor3f(1, 0.2F, 0.2F);//1, 0.2F, 0.2F
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINE_STRIP);
 	for (RobotState* i: path)
 		glVertex3f(dynamic_cast<ShipState*>(i)->getPose().x, dynamic_cast<ShipState*>(i)->getPose().y, 0.0);
 	
-
 	glEnd();
 	glEnable(GL_LIGHTING);
 }
