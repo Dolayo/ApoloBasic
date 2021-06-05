@@ -84,7 +84,7 @@ private:
     double _x_goal{8};
     double _y_goal{2};
     
-    int _n_iter{ 2 };
+    int _n_iter{ 4 };
 
     void createEnvironment();
     void createShipEnvironment();

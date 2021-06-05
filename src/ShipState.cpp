@@ -194,7 +194,7 @@ ShipState* ShipState::clone()
 void ShipState::drawGL()
 {
 	glDisable(GL_LIGHTING);
-	glPointSize(2);
+	glPointSize(5);
 	glColor3f(1, 1, 0);
 	glBegin(GL_POINTS);
 	glVertex3f(_pose.x, _pose.y, 0);

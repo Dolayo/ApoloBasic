@@ -141,7 +141,7 @@ void MainWindow::createShipEnvironment()
 {
 	//Intializing test environment Faces included in a FacePart
 	Face deep(Transformation3D(0, 0, 0), 0, -10, 10, 10);
-	//deep.setColor(0.1451, 0.1569, 0.3137,1);
+	deep.setColor(0.1451, 0.1569, 0.3137,1);
 
 	Face land1;
 	Face land2;
@@ -157,19 +157,19 @@ void MainWindow::createShipEnvironment()
 	land1.addVertex(5, -2);
 	land1.addVertex(0, -2);
 	land1.addVertex(0, 0);
-	land1.setColor(0.502, 0.251, 0.1, 1);
+	land1.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
 
 	land2.addVertex(5, 0);
 	land2.addVertex(5, -2);
 	land2.addVertex(0, -2);
 	land2.addVertex(0, 0);
-	land2.setColor(0.502, 0.251, 0.1, 1);
+	land2.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
 
 	land3.addVertex(2, 0);
 	land3.addVertex(2, 2);
 	land3.addVertex(0, 2);
 	land3.addVertex(0, 0);
-	land3.setColor(0.502, 0.251, 0.1, 1);
+	land3.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
 
 	land4.addVertex(2, 0);
 	land4.addVertex(2, 5);

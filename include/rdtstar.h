@@ -34,7 +34,7 @@
 #define __MRCORE__RDT_STAR__H
 #include <mrcore.h>
 #include <algorithm>
-
+#include "defines.h"
 using namespace std;
 
 namespace mr{
@@ -119,7 +119,7 @@ protected:
 		vector<PathSegment *> _paths;
 		vector<RobotState *> _nodes; 
 
-		RDTtree() { _root = 0; _radius = 4; _divided = false; }
+		RDTtree() { _root = 0; _radius = radius; _divided = false; }
 		int getNumNodes(){return (int)_nodes.size();}
 		virtual bool rootTree(RobotState *rot);
 		virtual double distance(RobotState *p, PathSegment *path, RobotState **mnode=0);
