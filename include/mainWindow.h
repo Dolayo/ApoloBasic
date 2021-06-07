@@ -2,6 +2,7 @@
 #include <wx/wx.h>
 #include "canvas.h"
 #include <wx/sizer.h>
+#include "defines.h"
 
 enum id{ID_RDT = 1, ID_RDTstar = 2, ID_Plan = 3, ID_Ship = 4, ID_Sim = 5, ID_Stop = 6, ID_EGK = 7
 };
@@ -84,7 +85,7 @@ private:
     double _x_goal{8};
     double _y_goal{2};
     
-    int _n_iter{ 4 };
+    int _n_iter{ NUM_ITERS };
 
     void createEnvironment();
     void createShipEnvironment();

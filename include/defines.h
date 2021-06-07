@@ -35,6 +35,8 @@ constexpr auto VEL_TOL = 0.5;
 
 constexpr auto radius = 7;
 
+constexpr auto NUM_ITERS = 5;
+
 enum class ZoneType { central, left, right };
 enum class Quadrant { first, second, third, fourth };
 

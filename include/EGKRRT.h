@@ -134,6 +134,7 @@ protected:
 		//virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
 		//virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
 		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;
+		void PopulateVertexes();
 		virtual void drawGL() override;
 	};
 

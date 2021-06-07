@@ -436,7 +436,7 @@ RDTstar::RDTtree::PathSegment* RDTstar::RDTtree::findPath4Node( RobotState* node
 		{
 			for (auto j_node : i_path->_inter)
 			{
-				if ((j_node==node) && (!(j_node==(i_path->_init)))) return i_path;
+				if ((j_node==node) && (j_node!=(i_path->_init))) return i_path;
 				
 			}
 		}
