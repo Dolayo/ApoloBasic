@@ -113,6 +113,8 @@ protected:
 
 		std::vector<RobotState*> _vertexes;
 
+		std::vector<std::vector<double>> _sequence_solution;
+
 		bool erase_vertex(RobotState* node)
 		{
 			bool b_ret = false;
@@ -134,6 +136,8 @@ protected:
 		//virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
 		//virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
 		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;
+		RobotPath getPathFromRoot(RobotState* n) override;
+		double distance(RobotState* p, PathSegment* path, RobotState** mnode) override;
 		void PopulateVertexes();
 		virtual void drawGL() override;
 	};

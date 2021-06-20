@@ -36,6 +36,10 @@ namespace mr
 			//the less the better
 			// yet to be determined along with the expert
 			double distanceTo(RobotState* p) override;
+
+			double distanceTo(Vector3D vec_pos);
+
+			Vector3D getGhostPos();
 			
 			//returns true if the ship state is equal to the state
 			virtual bool isEqualToCurrentRobotState() override;

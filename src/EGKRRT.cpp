@@ -46,16 +46,18 @@ bool EGKRRT::computePlan(int maxiterations)
 		RobotState* node = getNextSample();
 
 		//--! Testing purposes !--//
-		/*if(i==0)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(7, 3, 0));
+		if(i==0)
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, 9, 0));
 		if(i==1)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(4, -2, 0));
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, 3, 0));
 		if (i == 2)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, -3, 0));
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, 2, 0));
 		if (i == 3)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, 2, 0));
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, -8, 0));
 		if (i == 4)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(3, 0, 0));*/
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(3, -9, 0));
+		if (i == 5)
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, -4, 0));
 
 		/*if (i == 0)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, -8, 0));
@@ -72,14 +74,14 @@ bool EGKRRT::computePlan(int maxiterations)
 
 		if (addedNode) 
 		{
-			if (addedNode->isEqual(goal))
+			if (dynamic_cast<ShipState*>(addedNode)->isSamePos(goal))
 			{
 				solved = true;
 
 				_tree->PopulateVertexes();
 
 				//retrive each path
-				RobotPath pathA = _tree->getPathFromRoot(addedNode);
+				RobotPath pathA = _tree->getPathFromRoot(addedNode); //esto hay que cambiarlo para que se genere un EGKpath, hay que hacerlo con punteros y no con objetos tal cual
 
 				//rearrange the states
 				delete path;
@@ -255,6 +257,8 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 
 			// El nuevo segmento que une a Xnew con el vecino
 			EGKpath* newRePath = EGKpath::createPath(Xnew, vecino, b_reach);
+			if (newRePath->_inter.empty())
+				continue;
 			double distance = newRePath->getLength();
 
 			// Si el coste de un vecino es mayor que la distancia a Xnew mas el coste de Xnew, creo el nuevo segmento de Xnew al vecino
@@ -499,16 +503,15 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 			return p_newPath;
 		}
 
-		
-
 		// Obtain the control action
 		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState);
+
 		if (p_newPath->isGhostThere(p_initState, p_finalState))
 		{
 			v_ctrlAct[0] = 0.0;
 			v_ctrlAct[1] = 0.0;
 			v_ctrlAct[2] = 0.0;//Just for simple dynamics
-		}
+		} 
 
 		// Propagate the control action
 		bool b_success_prop = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
@@ -532,6 +535,8 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 	return p_newPath;
 }
 
+
+// En principio solo usaremos esta si queremos imponer que se llegue al destino con una velocidad
 bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot)
 {
 	bool b_ret = false;
@@ -594,6 +599,8 @@ double EGKRRT::EGKtree::EGKpath::getLength()
 
 void EGKRRT::EGKtree::EGKpath::drawGL()
 {
+	if (this->_init == nullptr || this->_end == nullptr)
+		return;
 	vector<double> v;
 
 	v = _init->getSample();
@@ -617,7 +624,6 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	glEnd();
 	glEnable(GL_LIGHTING);
 }
-
 
 //double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState** mnode)
 //{
@@ -662,6 +668,87 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 //		*mnode = mn;
 //	return minimal;
 //}
+
+RobotPath EGKRRT::EGKtree::getPathFromRoot(RobotState* n)
+{
+	EGKRobotPath path;
+	RobotState* rs;
+	PathSegment* p = nullptr;
+
+	// Busco el path que contiene en su _end al nodo GOAL
+	for (PathSegment* i: _paths)
+		if (i->_end == n) 
+		{ 
+			p = i; 
+			break; 
+		}
+
+	if (p == nullptr)
+		return path;
+
+	EGKpath* p_egk = dynamic_cast<EGKpath*>(p);
+
+	if (p_egk)
+	{
+		for (auto a : p_egk->_sequence)
+		{
+			_sequence_solution.push_back(a);
+		}
+	}
+
+	for (int i = (int)p->_inter.size() - 1; i >= 0; i--)
+		path.path.insert(path.path.begin(), (p->_inter)[i]);
+
+	while (p->_parent != nullptr) 
+	{
+		//busco el nodo de inicio
+		p = p->_parent;
+
+		for (int i = (int)p->_inter.size() - 1; i >= 0; i--)
+			path.path.insert(path.path.begin(), p->_inter[i]);
+
+		for (int i = (int)p_egk->_sequence.size() - 1; i >= 0; i--)
+			_sequence_solution.insert(_sequence_solution.begin(), p_egk->_sequence[i]);
+	}
+
+	path.path.insert(path.path.begin(), _root);
+
+	return path;
+}
+
+double EGKRRT::EGKtree::distance(RobotState* p, PathSegment* path, RobotState** mnode)
+{
+	RobotState* mn = path->_init;
+	
+	if (dynamic_cast<ShipState*>(path->_init))
+	{
+		Vector3D ghost_pos = dynamic_cast<ShipState*>(path->_init)->getGhostPos();
+
+		if (dynamic_cast<ShipState*>(p))
+		{
+			double minimal = dynamic_cast<ShipState*>(p)->distanceTo(ghost_pos);
+			double val;
+			//end belongs to the path
+			for (RobotState* i: path->_inter)
+			{
+				if (dynamic_cast<ShipState*>(i))
+				{
+					ghost_pos = dynamic_cast<ShipState*>(i)->getGhostPos();
+					val = dynamic_cast<ShipState*>(p)->distanceTo(ghost_pos);
+					if (val < minimal) {
+						mn = i;
+						minimal = val;
+					}
+				}
+				else continue;
+			}
+
+			if (mnode)*mnode = mn;
+			return minimal;
+		}
+	}
+	return -1.0;
+}
 
 RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_nei, RobotState** best)
 {
@@ -775,7 +862,13 @@ void EGKRRT::EGKtree::drawGL()
 	glColor3f(1, 0, 1);
 	for (i = 0; i < _paths.size(); i++)_paths[i]->drawGL();
 	//for (i = 0; i < _nodes.size(); i++)_nodes[i]->drawGL();
-	for (i = 0; i < _vertexes.size(); i++)_vertexes[i]->drawGL();
+	for (i = 0; i < _vertexes.size(); i++)
+	{
+		if (_vertexes[i] == nullptr)
+			continue;
+		_vertexes[i]->drawGL();
+	}
+
 	if (_root)_root->drawGL();
 }
 
@@ -791,7 +884,7 @@ void EGKRobotPath::drawGL()
 		return;
 
 	glLineWidth(3);
-	glColor3f(1, 0.2F, 0.2F);//1, 0.2F, 0.2F
+	glColor3f(0.2, 1.0F, 0.2F);//1, 0.2F, 0.2F
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINE_STRIP);
 	for (RobotState* i: path)

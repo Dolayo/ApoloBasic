@@ -67,7 +67,71 @@ double ShipState::distanceTo(RobotState* p)
 	if (_world->segmentIntersection(segm, 0))
 		val *= 1.5;
 
+	_ship->setIntersectable(true);
+
 	return val;
+}
+
+double ShipState::distanceTo(Vector3D vec_pos)
+{
+
+	Vector3D thisPos(_pose.x, _pose.y, 0.0);
+
+	Vector3D dif_pos = vec_pos - thisPos;
+
+	double val = dif_pos.module();
+
+	Segment3D segm = Segment3D(Vector3D(_pose.x, _pose.y, 1.0), Vector3D(vec_pos.x, vec_pos.y, 1.0));
+
+	_ship->setIntersectable(false);
+
+	//penalties the intersection
+	if (_world->segmentIntersection(segm, 0))
+		val *= 1.5;
+
+	_ship->setIntersectable(true);
+
+	return val;
+}
+
+Vector3D ShipState::getGhostPos()
+{
+	Vector3D accs = getAccs();
+	Vector3D vels = getVels();
+	Vector3D pos = getPose();
+
+	double vx = vels.x;
+	double vy = vels.y;
+
+	vx = std::abs(vx);
+	vy = std::abs(vy);
+
+	double t_stop = 0.0;
+
+	if ((vx != 0.0) && (vy != 0.0) && (accs.x != 0.0) && (accs.y != 0.0))
+		t_stop = (-1.0 * vx * (accs.x / accs.y) - vy) / (accs.y * (1 + (accs.x * accs.x) / (accs.y * accs.y)));
+
+	else
+		if (vx != 0.0 && accs.x != 0.0)
+			t_stop = vx / std::abs(accs.x);
+		else
+			if ((vy != 0.0) && (accs.y != 0.0))
+				t_stop = vy / accs.y;
+
+	// Transformar las velocidades relativas a absolutas
+	double vabs_x = getVels().x * cos(getYaw());
+	double vabs_y = getVels().x * sin(getYaw());
+
+	double roz = accs.x;//el rozamiento es el mismo para la x que para la y, de momento
+
+	double aabs_x = roz * cos(getYaw());
+	double aabs_y = roz * sin(getYaw());
+
+	// MRUA
+	double new_pos_x = pos.x + vabs_x * t_stop + 0.5 * aabs_x * t_stop * t_stop;
+	double new_pos_y = pos.y + vabs_y * t_stop + 0.5 * aabs_y * t_stop * t_stop;
+
+	return Vector3D(new_pos_x, new_pos_y, 0.0);
 }
 
 bool ShipState::isEqualToCurrentRobotState()

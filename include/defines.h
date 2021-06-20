@@ -33,9 +33,15 @@
 constexpr auto POSE_TOL = 0.5;
 constexpr auto VEL_TOL = 0.5;
 
-constexpr auto radius = 7;
+constexpr double X_START = 2.0;
+constexpr double Y_START = 8.0;
 
-constexpr auto NUM_ITERS = 5;
+constexpr double X_GOAL = 1.0;
+constexpr double Y_GOAL = -4.0;
+
+constexpr auto radius = 8;
+
+constexpr auto NUM_ITERS = 6;
 
 enum class ZoneType { central, left, right };
 enum class Quadrant { first, second, third, fourth };

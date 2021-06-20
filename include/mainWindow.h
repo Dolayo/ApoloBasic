@@ -79,11 +79,11 @@ private:
 	PathPlanner *planner;
 	EGKRobotPath solution;
 
-    double _x_start{2};
-    double _y_start{8};
+    double _x_start{ X_START };
+    double _y_start{ Y_START };
 
-    double _x_goal{8};
-    double _y_goal{2};
+    double _x_goal{X_GOAL};
+    double _y_goal{Y_GOAL};
     
     int _n_iter{ NUM_ITERS };
 
