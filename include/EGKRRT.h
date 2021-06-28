@@ -40,6 +40,14 @@ namespace mr{
 	
 class ShipState;
 
+class EGKRobotPath : public RobotPath
+{
+public:
+
+	EGKRobotPath():RobotPath(){}
+	virtual void drawGL() override;
+};
+
 class EGKRRT: public RDTstar
 {
 protected:
@@ -136,7 +144,7 @@ protected:
 		//virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
 		//virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
 		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;
-		RobotPath getPathFromRoot(RobotState* n) override;
+		EGKRobotPath* GetPathFromRoot(ShipState* n);
 		double distance(RobotState* p, PathSegment* path, RobotState** mnode) override;
 		void PopulateVertexes();
 		virtual void drawGL() override;
@@ -170,12 +178,6 @@ protected:
 
 }
 
-class EGKRobotPath : public RobotPath
-{
-public:
 
-	EGKRobotPath():RobotPath(){}
-	virtual void drawGL() override;
-};
 
 #endif  //__EGKRRT__H

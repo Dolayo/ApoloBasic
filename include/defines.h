@@ -32,12 +32,13 @@
 
 constexpr auto POSE_TOL = 0.5;
 constexpr auto VEL_TOL = 0.5;
+constexpr auto YAW_TOL = PI / 36;//5º
 
-constexpr double X_START = 2.0;
+constexpr double X_START = 1.0;
 constexpr double Y_START = 8.0;
 
-constexpr double X_GOAL = 1.0;
-constexpr double Y_GOAL = -4.0;
+constexpr double X_GOAL = 9.0;
+constexpr double Y_GOAL = 8.0;
 
 constexpr auto radius = 8;
 

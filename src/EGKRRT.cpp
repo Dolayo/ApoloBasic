@@ -18,8 +18,10 @@ bool EGKRRT::setStartAndGoalStates(RobotState* start_, RobotState* goal_)
 
 bool EGKRRT::testingPlan()
 {
+	ShipState* EGKgoal = dynamic_cast<ShipState*>(goal);
+	EGKgoal->setYaw(-PI/2);
 	RobotState* addedNode = _tree->addNode(goal);
-	if (addedNode)
+	if (addedNode && addedNode->isEqual(goal))
 		//if (dynamic_cast<ShipState*>(addedNode)->isSamePos(goal))
 		{	
 			solved = true;
@@ -49,7 +51,7 @@ bool EGKRRT::computePlan(int maxiterations)
 		if(i==0)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, 9, 0));
 		if(i==1)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, 3, 0));
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, 4, 0));
 		if (i == 2)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, 2, 0));
 		if (i == 3)
@@ -74,21 +76,24 @@ bool EGKRRT::computePlan(int maxiterations)
 
 		if (addedNode) 
 		{
-			if (dynamic_cast<ShipState*>(addedNode)->isSamePos(goal))
+			ShipState* EGK_addedNode = dynamic_cast<ShipState*>(addedNode);
+			if (EGK_addedNode && EGK_addedNode-> isSamePos(goal))
 			{
 				solved = true;
 
 				_tree->PopulateVertexes();
 
 				//retrive each path
-				RobotPath pathA = _tree->getPathFromRoot(addedNode); //esto hay que cambiarlo para que se genere un EGKpath, hay que hacerlo con punteros y no con objetos tal cual
+				EGKRobotPath* pathA = _tree->GetPathFromRoot(EGK_addedNode); //esto hay que cambiarlo para que se genere un EGKpath, hay que hacerlo con punteros y no con objetos tal cual
 
 				//rearrange the states
 				delete path;
 
-				path = new RobotPath(pathA);
+				path = &(*pathA);
 
 				path->filterLoops(); //clean loops if any 
+
+				return solved;
 			}
 			
 		}
@@ -506,12 +511,12 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 		// Obtain the control action
 		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState);
 
-		if (p_newPath->isGhostThere(p_initState, p_finalState))
-		{
-			v_ctrlAct[0] = 0.0;
-			v_ctrlAct[1] = 0.0;
-			v_ctrlAct[2] = 0.0;//Just for simple dynamics
-		} 
+		//if (p_newPath->isGhostThere(p_initState, p_finalState))
+		//{
+		//	v_ctrlAct[0] = 0.0;
+		//	v_ctrlAct[1] = 0.0;
+		//	v_ctrlAct[2] = 0.0;//Just for simple dynamics
+		//} 
 
 		// Propagate the control action
 		bool b_success_prop = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
@@ -669,10 +674,10 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 //	return minimal;
 //}
 
-RobotPath EGKRRT::EGKtree::getPathFromRoot(RobotState* n)
+EGKRobotPath* EGKRRT::EGKtree::GetPathFromRoot(ShipState* n)
 {
-	EGKRobotPath path;
-	RobotState* rs;
+	EGKRobotPath* path = new EGKRobotPath();// hay que incluirlo en los destructores
+	ShipState* rs;
 	PathSegment* p = nullptr;
 
 	// Busco el path que contiene en su _end al nodo GOAL
@@ -697,7 +702,7 @@ RobotPath EGKRRT::EGKtree::getPathFromRoot(RobotState* n)
 	}
 
 	for (int i = (int)p->_inter.size() - 1; i >= 0; i--)
-		path.path.insert(path.path.begin(), (p->_inter)[i]);
+		path->path.insert(path->path.begin(), (p->_inter)[i]);
 
 	while (p->_parent != nullptr) 
 	{
@@ -705,13 +710,13 @@ RobotPath EGKRRT::EGKtree::getPathFromRoot(RobotState* n)
 		p = p->_parent;
 
 		for (int i = (int)p->_inter.size() - 1; i >= 0; i--)
-			path.path.insert(path.path.begin(), p->_inter[i]);
+			path->path.insert(path->path.begin(), p->_inter[i]);
 
 		for (int i = (int)p_egk->_sequence.size() - 1; i >= 0; i--)
 			_sequence_solution.insert(_sequence_solution.begin(), p_egk->_sequence[i]);
 	}
 
-	path.path.insert(path.path.begin(), _root);
+	path->path.insert(path->path.begin(), _root);
 
 	return path;
 }

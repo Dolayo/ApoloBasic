@@ -7,13 +7,25 @@ bool ShipState::isEqual(RobotState* n)
 	//Equal if compatible
 	// For now, compatible if less than a constant
 	ShipState* naux = dynamic_cast<ShipState*>(n);
-	if (!naux)return false;
-	if (_ship == 0)return false;
+
+	if (!naux)
+		return false;
+
+	if (_ship == nullptr)
+		return false;
 
 	Vector3D dif_pose = naux->_pose - _pose;
+
+	Vector3D aux(dif_pose[0], dif_pose[1], 0.0);
+
+	double dif_yaw = dif_pose[2];
+
 	Vector3D dif_vel = naux->_vel - _vel;
-	if ((dif_pose.module() < POSE_TOL) && (dif_vel.module() < VEL_TOL))
+
+
+	if ((aux.module() < POSE_TOL) && std::abs(dif_yaw) < YAW_TOL /*&& (dif_vel.module() < VEL_TOL)*/)
 		return true;
+
 	else return false;
 }
 
