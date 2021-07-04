@@ -20,6 +20,7 @@ bool EGKRRT::testingPlan()
 {
 	ShipState* EGKgoal = dynamic_cast<ShipState*>(goal);
 	EGKgoal->setYaw(-PI/2);
+	this->_tree->_vertexes.push_back(EGKgoal);
 	RobotState* addedNode = _tree->addNode(goal);
 	if (addedNode && addedNode->isEqual(goal))
 		//if (dynamic_cast<ShipState*>(addedNode)->isSamePos(goal))
@@ -199,7 +200,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// este segmento sera el que una al nuevo nodo con el segmento que contiene al nodo de 
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success);
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500, true);//170
 
 	//_vertexes.push_back(newPath->_end);
 
@@ -344,7 +345,7 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 	}
 }
 
-std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState, RobotState* p_finalState)
+std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState, RobotState* p_finalState, double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw)
 {
 	std::vector<double> v_auxCtrlAct;
 
@@ -367,6 +368,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 
 	double x_Rel = p_ShipFinalState->getPose().x - p_ShipInitState->getPose().x;
 	double y_Rel = p_ShipFinalState->getPose().y - p_ShipInitState->getPose().y;
+
 	//double angle = PI - std::atan(y_Rel/x_Rel);
 	// 
 	//Debemos distinguir en que cuadrante esta el goal respecto a init
@@ -454,24 +456,118 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	{
 	case ZoneType::right:
 		{
-			v_auxCtrlAct.push_back(THRUSTX);
-			v_auxCtrlAct.push_back(0.);
-			v_auxCtrlAct.push_back(-THRUSTW);
-			break;
+		if (b_ensure_yaw)
+		{
+			double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
+			if (std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
+			{
+				if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
+				{
+					v_auxCtrlAct.push_back(THRUSTX);
+					v_auxCtrlAct.push_back(0.);
+					v_auxCtrlAct.push_back(-THRUSTW);
+				}
+				else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
+				{
+					v_auxCtrlAct.push_back(THRUSTX);
+					v_auxCtrlAct.push_back(0.);
+					v_auxCtrlAct.push_back(THRUSTW);
+				}
+			}
+			else
+			{
+				b_yaw_ensured = true;
+				v_auxCtrlAct.push_back(THRUSTX);
+				v_auxCtrlAct.push_back(0.);
+				v_auxCtrlAct.push_back(-THRUSTW);
+			}
+
 		}
-	case ZoneType::central:
+		else
 		{
 			v_auxCtrlAct.push_back(THRUSTX);
 			v_auxCtrlAct.push_back(0.);
-			v_auxCtrlAct.push_back(0.);
-			break;
+			v_auxCtrlAct.push_back(-THRUSTW);
+		}
+
+		break;
+		}
+
+	case ZoneType::central:
+		{
+			if (b_ensure_yaw)
+			{
+				double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
+				if(std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
+				{
+					if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
+					{
+						v_auxCtrlAct.push_back(THRUSTX);
+						v_auxCtrlAct.push_back(0.);
+						v_auxCtrlAct.push_back(-THRUSTW);
+					}
+					else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
+					{
+						v_auxCtrlAct.push_back(THRUSTX);
+						v_auxCtrlAct.push_back(0.);
+						v_auxCtrlAct.push_back(THRUSTW);
+					}
+				}
+				else
+				{
+					b_yaw_ensured = true;
+					v_auxCtrlAct.push_back(THRUSTX);
+					v_auxCtrlAct.push_back(0.);
+					v_auxCtrlAct.push_back(0.);
+				}
+
+			}
+			else
+			{
+				v_auxCtrlAct.push_back(THRUSTX);
+				v_auxCtrlAct.push_back(0.);
+				v_auxCtrlAct.push_back(0.);
+			}
+				
+				break;
 		}
 	case ZoneType::left:
+		{
+		if (b_ensure_yaw)
+		{
+			double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
+			if (std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
+			{
+				if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
+				{
+					v_auxCtrlAct.push_back(THRUSTX);
+					v_auxCtrlAct.push_back(0.);
+					v_auxCtrlAct.push_back(-THRUSTW);
+				}
+				else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
+				{
+					v_auxCtrlAct.push_back(THRUSTX);
+					v_auxCtrlAct.push_back(0.);
+					v_auxCtrlAct.push_back(THRUSTW);
+				}
+			}
+			else
+			{
+				b_yaw_ensured = true;
+				v_auxCtrlAct.push_back(THRUSTX);
+				v_auxCtrlAct.push_back(0.);
+				v_auxCtrlAct.push_back(THRUSTW);
+			}
+
+		}
+		else
 		{
 			v_auxCtrlAct.push_back(THRUSTX);
 			v_auxCtrlAct.push_back(0.);
 			v_auxCtrlAct.push_back(THRUSTW);
-			break;
+		}
+
+		break;
 		}
 
 	}
@@ -479,18 +575,21 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	return v_auxCtrlAct;
 }
 
-EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_init, RobotState* p_end, bool& b_success, int niter)
+EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_init, RobotState* p_end, bool& b_success, int niter, bool b_ensure_yaw)
 {
 	EGKpath* p_newPath = new EGKpath;
 	ShipState* p_initState = dynamic_cast<ShipState*>(p_init);
 	ShipState* p_finalState = dynamic_cast<ShipState*>(p_end);
 
+	if (!p_initState || !p_finalState)
+			return nullptr;
+
+
 	p_newPath->appendState(p_initState);
 
 	p_newPath->_init = p_initState;
 
-	if (!p_initState || !p_finalState)
-		return nullptr;
+	
 	
 	p_initState->placeRobot();
 
@@ -498,7 +597,12 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 
 	b_success = false; //solo se pone a true si se logra la solucion
 
-	for (int n = 0; n < 500; ++n)
+	// Registramos el valor relativo inicial de la orientacion
+	double init_yaw = p_finalState->getYaw() - p_initState->getYaw();
+
+	bool b_yaw_ensured = false;
+
+	for (int n = 0; n < niter; ++n)
 	{
 		if (p_initState->isSamePos(p_finalState))
 		{
@@ -509,7 +613,11 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 		}
 
 		// Obtain the control action
-		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState);
+		// Si el angulo de alejamiento ya se ha conseguido, no hace falta seguir usando la opcion de asegurar yaw
+		if (b_yaw_ensured)
+			b_ensure_yaw = false;
+
+		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState, init_yaw, b_yaw_ensured, b_ensure_yaw);
 
 		//if (p_newPath->isGhostThere(p_initState, p_finalState))
 		//{

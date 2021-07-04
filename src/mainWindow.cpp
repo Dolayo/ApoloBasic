@@ -244,7 +244,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			ShipState gen(_myship, &world);
 
 			_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
-			//_myship->setRelativeOrientation(0,0,-PI/2);
+			//_myship->setRelativeOrientation(0,0,0);
 
 			_myship->setState(_x_start, _y_start, 0/*-PI / 2*/);
 
@@ -492,9 +492,9 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 
 	_myship = new Ship();
 	_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
-	//_myship->setRelativeOrientation(0,0,-PI/2);
+	_myship->setRelativeOrientation(0,0,0);
 
-	_myship->setState(2.0, 8.0, 0/*-PI / 2*/);
+	_myship->setState(_x_start, _y_start, 0/*-PI / 2*/);
 	world += _myship;
 	
 	//creo un planificador y su sistema de muestreo
