@@ -19,7 +19,7 @@ bool EGKRRT::setStartAndGoalStates(RobotState* start_, RobotState* goal_)
 bool EGKRRT::testingPlan()
 {
 	ShipState* EGKgoal = dynamic_cast<ShipState*>(goal);
-	EGKgoal->setYaw(-PI/2);
+	EGKgoal->setYaw(-PI/9);
 	this->_tree->_vertexes.push_back(EGKgoal);
 	RobotState* addedNode = _tree->addNode(goal);
 	if (addedNode && addedNode->isEqual(goal))
@@ -200,7 +200,8 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// este segmento sera el que una al nuevo nodo con el segmento que contiene al nodo de 
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500, true);//170
+	dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500, true);//120
 
 	//_vertexes.push_back(newPath->_end);
 
@@ -493,11 +494,13 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 		break;
 		}
 
-	case ZoneType::central:
+	case ZoneType::central://la intencion es que si esta muy cerca, en el primer sector de la zona central vaya haciendo miniajustes para colocarse
 		{
+			double distance = p_ShipInitState->distanceTo(p_ShipFinalState);
+			double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
+
 			if (b_ensure_yaw)
 			{
-				double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
 				if(std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
 				{
 					if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
@@ -520,13 +523,48 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 					v_auxCtrlAct.push_back(0.);
 					v_auxCtrlAct.push_back(0.);
 				}
-
 			}
 			else
 			{
-				v_auxCtrlAct.push_back(THRUSTX);
-				v_auxCtrlAct.push_back(0.);
-				v_auxCtrlAct.push_back(0.);
+				if (b_yaw_ensured)
+				{
+					if ((distance < 10) && (distance > 6))
+					{
+						if(yaw_rel > YAW_TOL)
+						{
+							v_auxCtrlAct.push_back(THRUSTX);
+							v_auxCtrlAct.push_back(0.);
+							v_auxCtrlAct.push_back(-THRUSTW);
+						}
+						else
+							if (yaw_rel < -YAW_TOL)
+							{
+								v_auxCtrlAct.push_back(THRUSTX);
+								v_auxCtrlAct.push_back(0.);
+								v_auxCtrlAct.push_back(THRUSTW);
+							}
+							else
+							{
+								v_auxCtrlAct.push_back(THRUSTX);
+								v_auxCtrlAct.push_back(0.);
+								v_auxCtrlAct.push_back(0.);
+							}
+						
+					}
+					else
+					{
+						v_auxCtrlAct.push_back(THRUSTX);
+						v_auxCtrlAct.push_back(0.);
+						v_auxCtrlAct.push_back(0.);
+					}
+
+				}
+				else
+				{
+					v_auxCtrlAct.push_back(THRUSTX);
+					v_auxCtrlAct.push_back(0.);
+					v_auxCtrlAct.push_back(0.);
+				}
 			}
 				
 				break;

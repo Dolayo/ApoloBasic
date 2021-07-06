@@ -2,9 +2,9 @@
 #define __DEFINES_
 
 #define DELTA_T 0.1 //seconds
-#define THETA1 1*PI/60 // 3º
-#define THETA2 1*PI/6 // 30º
-#define THETA3 1*PI/4 // 45º  estos son los valores con los que llega, mira a ver si los puedes apurar un poco
+#define THETA1 1*PI/180 // 2º
+#define THETA2 1*PI/36 // 10º
+#define THETA3 1*PI/6 // 30º  estos son los valores con los que llega, mira a ver si los puedes apurar un poco
 
 #define DIST1 4//4
 #define DIST2 12//12
@@ -38,10 +38,10 @@ constexpr double YAW_TOL = PI / 36;//5º
 constexpr double X_START = 1.0;
 constexpr double Y_START = 8.0;
 
-constexpr double X_GOAL = 9.0;//9.0
+constexpr double X_GOAL = 30.0;//9.0
 constexpr double Y_GOAL = 8.0;//8.0
 
-constexpr double REENTRY_ANGLE_K = 2;
+constexpr double REENTRY_ANGLE_K = 1.2;
 
 constexpr double radius = 8;
 

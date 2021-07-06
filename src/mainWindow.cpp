@@ -140,7 +140,7 @@ void MainWindow::createEnvironment()
 void MainWindow::createShipEnvironment()
 {
 	//Intializing test environment Faces included in a FacePart
-	Face deep(Transformation3D(0, 0, 0), 0, -10, 10, 10);
+	Face deep(Transformation3D(0, 0, 0), 0, -20, 20, 20);
 	deep.setColor(0.1451, 0.1569, 0.3137,1);
 
 	Face land1;
@@ -245,7 +245,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 
 			_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
 			//_myship->setRelativeOrientation(0,0,0);
-
+			_myship->setVels(Vector3D(V_MAX,0,0));
 			_myship->setState(_x_start, _y_start, 0/*-PI / 2*/);
 
 			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_start, _y_start, 0));
@@ -493,6 +493,7 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 	_myship = new Ship();
 	_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
 	_myship->setRelativeOrientation(0,0,0);
+	_myship->setVels(Vector3D(V_MAX, 0, 0));
 
 	_myship->setState(_x_start, _y_start, 0/*-PI / 2*/);
 	world += _myship;
