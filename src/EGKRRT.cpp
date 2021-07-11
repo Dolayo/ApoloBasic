@@ -19,7 +19,7 @@ bool EGKRRT::setStartAndGoalStates(RobotState* start_, RobotState* goal_)
 bool EGKRRT::testingPlan()
 {
 	ShipState* EGKgoal = dynamic_cast<ShipState*>(goal);
-	EGKgoal->setYaw(-PI/9);
+	EGKgoal->setYaw(TEST_YAW);
 	this->_tree->_vertexes.push_back(EGKgoal);
 	RobotState* addedNode = _tree->addNode(goal);
 	if (addedNode && addedNode->isEqual(goal))
@@ -203,6 +203,10 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
 	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500, true);//120
 
+	//SOlo para debugeo
+	double yaw = dynamic_cast<ShipState*>(newPath->_end)->getYaw() * 180/PI;
+	//~SOlo para debugeo
+	// 
 	//_vertexes.push_back(newPath->_end);
 
 	for (RobotState* i : newPath->_inter)
@@ -460,6 +464,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 		if (b_ensure_yaw)
 		{
 			double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
+
 			if (std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
 			{
 				if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
@@ -528,7 +533,8 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 			{
 				if (b_yaw_ensured)
 				{
-					if ((distance < 10) && (distance > 6))
+					// MINIAJUSTES
+					if ((distance < 16) && (distance > 8))
 					{
 						if(yaw_rel > YAW_TOL)
 						{

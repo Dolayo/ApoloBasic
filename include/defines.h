@@ -2,12 +2,14 @@
 #define __DEFINES_
 
 #define DELTA_T 0.1 //seconds
-#define THETA1 1*PI/180 // 2º
-#define THETA2 1*PI/36 // 10º
-#define THETA3 1*PI/6 // 30º  estos son los valores con los que llega, mira a ver si los puedes apurar un poco
+#define THETA1 1*PI/180 // 1º para 20º
+#define THETA2 10*PI/180 // 5º para 20º(10º vale tambien), 10º para 45º
+#define THETA3 1*PI/6 // 30º para 20º
 
-#define DIST1 4//4
-#define DIST2 12//12
+#define TEST_YAW -PI / 6
+
+#define DIST1 8//8 valor seguro 20º
+#define DIST2 16//16 valor seguro 20º
 #define THRUSTX 28000
 #define THRUSTY 28000
 #define THRUSTW 192000
@@ -38,10 +40,10 @@ constexpr double YAW_TOL = PI / 36;//5º
 constexpr double X_START = 1.0;
 constexpr double Y_START = 8.0;
 
-constexpr double X_GOAL = 30.0;//9.0
-constexpr double Y_GOAL = 8.0;//8.0
+constexpr double X_GOAL = 30.0;
+constexpr double Y_GOAL = 8.0;
 
-constexpr double REENTRY_ANGLE_K = 1.2;
+constexpr double REENTRY_ANGLE_K = 1.6;//1.5 para 20º, 1.6 para 45º
 
 constexpr double radius = 8;
 
