@@ -534,7 +534,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 				if (b_yaw_ensured)
 				{
 					// MINIAJUSTES
-					if ((distance < 16) && (distance > 8))
+					if ((distance < DIST_ADJ2) && (distance > DIST_ADJ1))
 					{
 						if(yaw_rel > YAW_TOL)
 						{
@@ -563,6 +563,9 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 						v_auxCtrlAct.push_back(0.);
 						v_auxCtrlAct.push_back(0.);
 					}
+					/*v_auxCtrlAct.push_back(THRUSTX);
+					v_auxCtrlAct.push_back(0.);
+					v_auxCtrlAct.push_back(0.);*/
 
 				}
 				else

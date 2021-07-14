@@ -67,7 +67,19 @@ protected:
 			int size() { return (int)_inter.size(); }
 			PathSegment() { _init = 0; _end = 0; _parent = 0; }
 			*/
+			protected:
+				class circunference
+				{
+					circunference(Vector3D start, Vector3D goal, double yaw_goal);
+					~circunference();
 
+					bool PointBelongs(Vector3D p) const;
+
+					double getAng(Vector3D, double yaw) const;
+
+					double r{ 0.0 };
+					Vector3D c{ 0, 0 };
+				};
 			public:
 
 				std::vector<std::vector<double>>_sequence;

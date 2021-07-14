@@ -2,14 +2,14 @@
 #define __DEFINES_
 
 #define DELTA_T 0.1 //seconds
-#define THETA1 1*PI/180 // 1º para 20º
-#define THETA2 10*PI/180 // 5º para 20º(10º vale tambien), 10º para 45º
-#define THETA3 1*PI/6 // 30º para 20º
+#define THETA1 3*PI/180 // 1º para 20º,30º y 40º
+#define THETA2 10*PI/180 // 5º para 20º(10º vale tambien), 10º para 45º, 10º para 30º
+#define THETA3 1*PI/6 // 30º para 20º, 30º y 40º
 
-#define TEST_YAW -PI / 6
+#define TEST_YAW -PI / 4
 
-#define DIST1 8//8 valor seguro 20º
-#define DIST2 16//16 valor seguro 20º
+#define DIST1 8//8 valor seguro 20º, 30º y 40º
+#define DIST2 18//16 valor seguro 20º, 30º y 40º
 #define THRUSTX 28000
 #define THRUSTY 28000
 #define THRUSTW 192000
@@ -33,9 +33,9 @@
 #define RO_WATER 1000
 #define RO_AIR 1.225
 
-constexpr double POSE_TOL = 0.5;
+constexpr double POSE_TOL = 1;
 constexpr double VEL_TOL = 0.5;
-constexpr double YAW_TOL = PI / 36;//5º
+constexpr double YAW_TOL = PI / 4;//5º
 
 constexpr double X_START = 1.0;
 constexpr double Y_START = 8.0;
@@ -43,7 +43,11 @@ constexpr double Y_START = 8.0;
 constexpr double X_GOAL = 30.0;
 constexpr double Y_GOAL = 8.0;
 
-constexpr double REENTRY_ANGLE_K = 1.6;//1.5 para 20º, 1.6 para 45º
+constexpr double REENTRY_ANGLE_K = 1.6;//1.5 para 20º, 1.6 para 45º, 1.6 para 30º un poco justo
+//Para el caso sin miniajustes: 1.6 para 10 y 20 grados
+
+constexpr double DIST_ADJ1 = 8;
+constexpr double DIST_ADJ2 = 18;
 
 constexpr double radius = 8;
 
