@@ -350,6 +350,55 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 	}
 }
 
+EGKRRT::EGKtree::EGKpath::circunference()
+{
+
+}
+
+std::vector<double> EGKRRT::EGKtree::EGKpath::navigationOrient(RobotState* ap_initState, circunference* ap_circ)
+{
+	std::vector<double> v_auxCtrlAct;
+
+	ShipState* p_ShipInitState = dynamic_cast<ShipState*>(ap_initState);
+	
+	if (!p_ShipInitState)
+		return v_auxCtrlAct;
+	
+	Vector3D init_pose = p_ShipInitState->getPose();
+	
+	if(ap_circ->IsPointInMe(init_pose))
+	{
+		double angle_rel = ap_circ->getAng(/*No me acuerdo que argumentos tenia*/);
+		if(std::abs(angle_rel)<YAW_TOL)
+		{
+			// Avance recto	
+		}
+		else
+		{
+			if(angle_rel > 0.0)
+			{
+				// Circunferencia a la izquierda, giro a la izquierda
+			}
+			else
+			{
+			// Circunferencia a la derecha, giro a la derecha
+			}
+		}
+		
+	}
+	else
+	{	
+		// Giro hacia la circunferencia
+		ap_circ->IsPointInside(init_pose)
+		{
+			// Punto dentro de la circunferencia
+		}
+		else
+		{
+			// Punto fuera de la circunferencia
+		}
+	}
+}
 std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState, RobotState* p_finalState, double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw)
 {
 	std::vector<double> v_auxCtrlAct;
