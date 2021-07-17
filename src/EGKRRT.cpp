@@ -3,7 +3,6 @@
 #include "ShipState.h"
 #include "defines.h"
 
-
 bool EGKRRT::setStartAndGoalStates(RobotState* start_, RobotState* goal_)
 {
 	if (SBPathPlanner::setStartAndGoalStates(start_, goal_))
@@ -14,7 +13,6 @@ bool EGKRRT::setStartAndGoalStates(RobotState* start_, RobotState* goal_)
 	}
 	return false;
 }
-
 
 bool EGKRRT::testingPlan()
 {
@@ -105,7 +103,7 @@ bool EGKRRT::computePlan(int maxiterations)
 	return false;
 }
 
-RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
+mr::RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 {
 	/*RobotState* in = dynamic_cast<ShipState*>(node);
 	if (!in)
@@ -350,55 +348,93 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 	}
 }
 
-EGKRRT::EGKtree::EGKpath::circunference()
+//! -------------------------------------- Circunference -------------------------------------- 
+EGKRRT::EGKtree::EGKpath::Circunference::Circunference(RobotState* ap_init, RobotState* ap_goal)
 {
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+	ShipState* p_EGK_goal = dynamic_cast<ShipState*>(ap_goal);
 
-}
+	if (!(p_EGK_init) || (!p_EGK_goal))
+		_b_is_Ok = false;
 
-std::vector<double> EGKRRT::EGKtree::EGKpath::navigationOrient(RobotState* ap_initState, circunference* ap_circ)
-{
-	std::vector<double> v_auxCtrlAct;
-
-	ShipState* p_ShipInitState = dynamic_cast<ShipState*>(ap_initState);
-	
-	if (!p_ShipInitState)
-		return v_auxCtrlAct;
-	
-	Vector3D init_pose = p_ShipInitState->getPose();
-	
-	if(ap_circ->IsPointInMe(init_pose))
+	//! Construcción de la circunferencia
+	if (_b_is_Ok)
 	{
-		double angle_rel = ap_circ->getAng(/*No me acuerdo que argumentos tenia*/);
-		if(std::abs(angle_rel)<YAW_TOL)
-		{
-			// Avance recto	
-		}
-		else
-		{
-			if(angle_rel > 0.0)
-			{
-				// Circunferencia a la izquierda, giro a la izquierda
-			}
-			else
-			{
-			// Circunferencia a la derecha, giro a la derecha
-			}
-		}
-		
-	}
-	else
-	{	
-		// Giro hacia la circunferencia
-		ap_circ->IsPointInside(init_pose)
-		{
-			// Punto dentro de la circunferencia
-		}
-		else
-		{
-			// Punto fuera de la circunferencia
-		}
+		double yaw_goal = p_EGK_goal->getYaw();
+		Vector3D pos_goal = p_EGK_goal->getPose();
+
+		Vector3D pos_init = p_EGK_init->getPose();
+
+		Vector2D unit_yaw_goal(cos(yaw_goal) + pos_goal.x, sin(yaw_goal) + pos_goal.y);
+
+		Vector2D unit_yaw_perp = unit_yaw_goal.perpendicularVector();
+
+		//! Pendiente de la recta que pasa por goal y el centro de la circunferencia
+		double M = tan(unit_yaw_perp.y / unit_yaw_perp.x); 
+
+		//! Anclaje de la recta que pasa por goal y el centro de la circunferencia
+		double n = M * pos_goal.x - pos_goal.y;
+
+		//! Coordenada X del centro de la circunferencia
+		_center.x = ((pos_goal.x)*(pos_goal.x) - (pos_init.x)*(pos_init.x) + (pos_goal.y)*(pos_goal.y) - (pos_init.y)*(pos_init.y) - 2*(pos_goal.y - pos_init.y) * n) /
+			(2 * (pos_goal.x - pos_init.x) + 2 * (pos_goal.y - pos_init.y) * M);
+
+		//! Coordenada Y del centro de la circunferencia
+		_center.y = M * _center.x + n;
+
+		//! Radio de la circunferencia
+		_radius = sqrt((pos_goal.x - _center.x)*(pos_goal.x - _center.x) + (pos_goal.y - _center.y)* (pos_goal.y - _center.y));
 	}
 }
+
+
+
+
+//std::vector<double> EGKRRT::EGKtree::EGKpath::navigationOrient(RobotState* ap_initState, circunference* ap_circ)
+//{
+//	std::vector<double> v_auxCtrlAct;
+//
+//	ShipState* p_ShipInitState = dynamic_cast<ShipState*>(ap_initState);
+//	
+//	if (!p_ShipInitState)
+//		return v_auxCtrlAct;
+//	
+//	Vector3D init_pose = p_ShipInitState->getPose();
+//	
+//	if(ap_circ->PointBelongs(init_pose))
+//	{
+//		double angle_rel = ap_circ->getAng(/*No me acuerdo que argumentos tenia*/);
+//		if(std::abs(angle_rel)<YAW_TOL)
+//		{
+//			// Avance recto	
+//		}
+//		else
+//		{
+//			if(angle_rel > 0.0)
+//			{
+//				// Circunferencia a la izquierda, giro a la izquierda
+//			}
+//			else
+//			{
+//			// Circunferencia a la derecha, giro a la derecha
+//			}
+//		}
+//		
+//	}
+//	else
+//	{	
+//		// Giro hacia la circunferencia
+//		ap_circ->IsPointInside(init_pose)
+//		{
+//			// Punto dentro de la circunferencia
+//		}
+//		else
+//		{
+//			// Punto fuera de la circunferencia
+//		}
+//	}
+//}
+
 std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState, RobotState* p_finalState, double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw)
 {
 	std::vector<double> v_auxCtrlAct;
@@ -532,6 +568,8 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 			else
 			{
 				b_yaw_ensured = true;
+				_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+				_p_circ->drawGL();
 				v_auxCtrlAct.push_back(THRUSTX);
 				v_auxCtrlAct.push_back(0.);
 				v_auxCtrlAct.push_back(-THRUSTW);
@@ -573,6 +611,8 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 				else
 				{
 					b_yaw_ensured = true;
+					_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+					_p_circ->drawGL();
 					v_auxCtrlAct.push_back(THRUSTX);
 					v_auxCtrlAct.push_back(0.);
 					v_auxCtrlAct.push_back(0.);
@@ -650,6 +690,8 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 			else
 			{
 				b_yaw_ensured = true;
+				_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+				_p_circ->drawGL();
 				v_auxCtrlAct.push_back(THRUSTX);
 				v_auxCtrlAct.push_back(0.);
 				v_auxCtrlAct.push_back(THRUSTW);
@@ -673,7 +715,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 
 EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_init, RobotState* p_end, bool& b_success, int niter, bool b_ensure_yaw)
 {
-	EGKpath* p_newPath = new EGKpath;
+	EGKpath* p_newPath = new EGKpath();
 	ShipState* p_initState = dynamic_cast<ShipState*>(p_init);
 	ShipState* p_finalState = dynamic_cast<ShipState*>(p_end);
 
@@ -744,7 +786,6 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 	return p_newPath;
 }
 
-
 // En principio solo usaremos esta si queremos imponer que se llegue al destino con una velocidad
 bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot)
 {
@@ -804,34 +845,6 @@ double EGKRRT::EGKtree::EGKpath::getLength()
 			ret += this->_inter[i]->distanceTo(this->_inter[i + 1]);
 
 	return ret;
-}
-
-void EGKRRT::EGKtree::EGKpath::drawGL()
-{
-	if (this->_init == nullptr || this->_end == nullptr)
-		return;
-	vector<double> v;
-
-	v = _init->getSample();
-
-	if (v.size() < 2)return;
-	glDisable(GL_LIGHTING);
-	glBegin(GL_LINE_STRIP);
-
-	glVertex3f(v[0], v[1], 0);
-
-	for (int i = 0; i < (int)_inter.size(); i++) 
-	{
-		v = _inter[i]->getSample();
-		glVertex3f(v[0], v[1], 0);
-	}
-
-	v = _end->getSample();
-
-	glVertex3f(v[0], v[1], 0);
-
-	glEnd();
-	glEnable(GL_LIGHTING);
 }
 
 //double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState** mnode)
@@ -1063,6 +1076,14 @@ void EGKRRT::EGKtree::PopulateVertexes()
 	}
 }
 
+//! -------------------------------------- Drawing methods --------------------------------------
+
+void EGKRRT::drawGL()
+{
+	if (_tree)
+		_tree->drawGL();
+}
+
 void EGKRRT::EGKtree::drawGL()
 {
 	//pinta las trayectorias: nodos y lineas que las unen
@@ -1081,10 +1102,52 @@ void EGKRRT::EGKtree::drawGL()
 	if (_root)_root->drawGL();
 }
 
-void EGKRRT::drawGL()
+void EGKRRT::EGKtree::EGKpath::drawGL()
 {
-	if (_tree)
-		_tree->drawGL();
+	if (_p_circ)
+		_p_circ->drawGL();
+
+	/*if (this->_init == nullptr || this->_end == nullptr)
+		return;
+	vector<double> v;
+
+	v = _init->getSample();
+
+	if (v.size() < 2)return;
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINE_STRIP);
+
+	glVertex3f(v[0], v[1], 0);
+
+	for (int i = 0; i < (int)_inter.size(); i++)
+	{
+		v = _inter[i]->getSample();
+		glVertex3f(v[0], v[1], 0);
+	}
+
+	v = _end->getSample();
+
+	glVertex3f(v[0], v[1], 0);
+
+	glEnd();
+	glEnable(GL_LIGHTING);*/
+}
+
+void EGKRRT::EGKtree::EGKpath::Circunference::drawGL()
+{
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINE_STRIP);
+
+	glLineWidth(5);
+	glColor3f(0.2, 0.8F, 1.0F);
+	for (int i = 0; i < 360; ++i)
+	{
+		double x = _center.x + _radius * cos(i * PI / 360);
+		double y = _center.y + _radius * sin(i * PI / 360);
+		glVertex3f(x, y, 0.0);
+	}
+	glEnd();
+	glEnable(GL_LIGHTING);
 }
 
 void EGKRobotPath::drawGL()

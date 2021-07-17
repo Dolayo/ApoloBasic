@@ -67,21 +67,37 @@ protected:
 			int size() { return (int)_inter.size(); }
 			PathSegment() { _init = 0; _end = 0; _parent = 0; }
 			*/
-			protected:
-				class circunference
+			protected: 
+
+				class Circunference
 				{
-					circunference(Vector3D start, Vector3D goal, double yaw_goal);
-					~circunference();
+					public:
+						Circunference(RobotState* ap_init, RobotState* ap_goal);
+						Circunference() = delete;
+						~Circunference() = default;
 
-					bool PointBelongs(Vector3D p) const;
+						bool StateBelongs(RobotState* ap_init) const;
 
-					double getAng(Vector3D, double yaw) const;
+						double getAng(Vector3D, double yaw) const;
 
-					double r{ 0.0 };
-					Vector3D c{ 0, 0 };
+						double getRadius() const {return _radius;}
+						void setRadius(double& ar_r) { _radius = ar_r; }
+
+						Vector2D getCenter() const { return _center; }
+						void setCenter(Vector2D& ar_center) { _center = ar_center; }
+
+						void drawGL();
+
+					private:
+
+						double _radius{ 0.0 };
+						Vector2D _center{ 0, 0 };
+						bool _b_is_Ok{true};
 				};
 			public:
 
+
+				virtual ~EGKpath() {if (_p_circ)delete _p_circ;}
 				std::vector<std::vector<double>>_sequence;
 				EGKpath():PathSegment(){}
 				const EGKpath& operator=(const EGKpath& n) {
@@ -99,8 +115,11 @@ protected:
 				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter = 100, bool b_ensure_yaw = false);
 				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState, 
 														double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw = false);
-				virtual std::vector<double> navigationOrient(RobotState* ap_initState, circunference* ap_circ);
+				//virtual std::vector<double> navigationOrient(RobotState* ap_initState, Circunference* ap_circ);
 				bool isGhostThere(ShipState* donkey, ShipState* carrot);
+
+				Circunference* _p_circ{nullptr};
+
 				void drawGL();
 		};
 
