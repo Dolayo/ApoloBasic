@@ -37,6 +37,8 @@ constexpr double POSE_TOL = 1;
 constexpr double VEL_TOL = 0.5;
 constexpr double YAW_TOL = PI / 4;//5º
 
+constexpr double CIRC_TOL = 0.5;
+
 constexpr double X_START = 1.0;
 constexpr double Y_START = 8.0;
 

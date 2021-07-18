@@ -78,7 +78,7 @@ protected:
 
 						bool StateBelongs(RobotState* ap_init) const;
 
-						double getAng(Vector3D, double yaw) const;
+						double getRelativeAng(RobotState* ap_init) const;
 
 						double getRadius() const {return _radius;}
 						void setRadius(double& ar_r) { _radius = ar_r; }

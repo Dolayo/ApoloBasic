@@ -3,6 +3,8 @@
 #include "ShipState.h"
 #include "defines.h"
 
+//! -------------------------------------- Planner -------------------------------------- 
+
 bool EGKRRT::setStartAndGoalStates(RobotState* start_, RobotState* goal_)
 {
 	if (SBPathPlanner::setStartAndGoalStates(start_, goal_))
@@ -103,7 +105,9 @@ bool EGKRRT::computePlan(int maxiterations)
 	return false;
 }
 
-mr::RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
+//! -------------------------------------- Tree -------------------------------------- 
+
+RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 {
 	/*RobotState* in = dynamic_cast<ShipState*>(node);
 	if (!in)
@@ -348,92 +352,236 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 	}
 }
 
-//! -------------------------------------- Circunference -------------------------------------- 
-EGKRRT::EGKtree::EGKpath::Circunference::Circunference(RobotState* ap_init, RobotState* ap_goal)
+//double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState** mnode)
+//{
+//	ShipState* p = dynamic_cast<ShipState*>(rs);
+//	ShipState* mn = dynamic_cast<ShipState*>(path->_init);
+//	if (!p || !mn)
+//		return -1.0;
+//
+//	bool b_aux = false;
+//
+//	EGKpath* path_aux = EGKpath::createPath(path->_init, p, b_aux);
+//
+//	double minimal = path_aux->getLength();
+//
+//	if (!b_aux)
+//		minimal *= 1.5;
+//
+//	//end belongs to the path
+//	
+//	for (RobotState* i: path->_inter)
+//	{
+//		ShipState* i_aux = dynamic_cast<ShipState*>(i);
+//		if (i_aux)
+//		{
+//			path_aux = EGKpath::createPath(i_aux, p, b_aux);
+//
+//			double val = path_aux->getLength();
+//
+//			if (!b_aux)
+//				val *= 1.5;// Sustituyo al rayo de visibilidad
+//
+//			if (val < minimal)
+//			{
+//				mn = i_aux;
+//				minimal = val;
+//			}
+//		}
+//		else
+//			continue;
+//	}
+//	if (mnode)
+//		*mnode = mn;
+//	return minimal;
+//}
+
+EGKRobotPath* EGKRRT::EGKtree::GetPathFromRoot(ShipState* n)
 {
-	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
-	ShipState* p_EGK_goal = dynamic_cast<ShipState*>(ap_goal);
+	EGKRobotPath* path = new EGKRobotPath();// hay que incluirlo en los destructores
+	ShipState* rs;
+	PathSegment* p = nullptr;
 
-	if (!(p_EGK_init) || (!p_EGK_goal))
-		_b_is_Ok = false;
+	// Busco el path que contiene en su _end al nodo GOAL
+	for (PathSegment* i: _paths)
+		if (i->_end == n) 
+		{ 
+			p = i; 
+			break; 
+		}
 
-	//! Construcción de la circunferencia
-	if (_b_is_Ok)
+	if (p == nullptr)
+		return path;
+
+	EGKpath* p_egk = dynamic_cast<EGKpath*>(p);
+
+	if (p_egk)
 	{
-		double yaw_goal = p_EGK_goal->getYaw();
-		Vector3D pos_goal = p_EGK_goal->getPose();
+		for (auto a : p_egk->_sequence)
+		{
+			_sequence_solution.push_back(a);
+		}
+	}
 
-		Vector3D pos_init = p_EGK_init->getPose();
+	for (int i = (int)p->_inter.size() - 1; i >= 0; i--)
+		path->path.insert(path->path.begin(), (p->_inter)[i]);
 
-		Vector2D unit_yaw_goal(cos(yaw_goal) + pos_goal.x, sin(yaw_goal) + pos_goal.y);
+	while (p->_parent != nullptr) 
+	{
+		//busco el nodo de inicio
+		p = p->_parent;
 
-		Vector2D unit_yaw_perp = unit_yaw_goal.perpendicularVector();
+		for (int i = (int)p->_inter.size() - 1; i >= 0; i--)
+			path->path.insert(path->path.begin(), p->_inter[i]);
 
-		//! Pendiente de la recta que pasa por goal y el centro de la circunferencia
-		double M = tan(unit_yaw_perp.y / unit_yaw_perp.x); 
+		for (int i = (int)p_egk->_sequence.size() - 1; i >= 0; i--)
+			_sequence_solution.insert(_sequence_solution.begin(), p_egk->_sequence[i]);
+	}
 
-		//! Anclaje de la recta que pasa por goal y el centro de la circunferencia
-		double n = M * pos_goal.x - pos_goal.y;
+	path->path.insert(path->path.begin(), _root);
 
-		//! Coordenada X del centro de la circunferencia
-		_center.x = ((pos_goal.x)*(pos_goal.x) - (pos_init.x)*(pos_init.x) + (pos_goal.y)*(pos_goal.y) - (pos_init.y)*(pos_init.y) - 2*(pos_goal.y - pos_init.y) * n) /
-			(2 * (pos_goal.x - pos_init.x) + 2 * (pos_goal.y - pos_init.y) * M);
+	return path;
+}
 
-		//! Coordenada Y del centro de la circunferencia
-		_center.y = M * _center.x + n;
+double EGKRRT::EGKtree::distance(RobotState* p, PathSegment* path, RobotState** mnode)
+{
+	RobotState* mn = path->_init;
+	
+	if (dynamic_cast<ShipState*>(path->_init))
+	{
+		Vector3D ghost_pos = dynamic_cast<ShipState*>(path->_init)->getGhostPos();
 
-		//! Radio de la circunferencia
-		_radius = sqrt((pos_goal.x - _center.x)*(pos_goal.x - _center.x) + (pos_goal.y - _center.y)* (pos_goal.y - _center.y));
+		if (dynamic_cast<ShipState*>(p))
+		{
+			double minimal = dynamic_cast<ShipState*>(p)->distanceTo(ghost_pos);
+			double val;
+			//end belongs to the path
+			for (RobotState* i: path->_inter)
+			{
+				if (dynamic_cast<ShipState*>(i))
+				{
+					ghost_pos = dynamic_cast<ShipState*>(i)->getGhostPos();
+					val = dynamic_cast<ShipState*>(p)->distanceTo(ghost_pos);
+					if (val < minimal) {
+						mn = i;
+						minimal = val;
+					}
+				}
+				else continue;
+			}
+
+			if (mnode)*mnode = mn;
+			return minimal;
+		}
+	}
+	return -1.0;
+}
+
+RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_nei, RobotState** best)
+{
+
+	if (v_nei.size() == 0)
+		return nullptr;
+
+	*best = v_nei[0];
+
+	double min_cost = 0;
+
+	if (dynamic_cast<ShipState*>(v_nei[0]))
+	{
+		min_cost = dynamic_cast<ShipState*>(v_nei[0])->getCost();
+	}
+
+
+	PathSegment* bestPath = _paths[0];
+
+	for (unsigned int i = 1; i < v_nei.size(); i++)
+	{
+		double cost_i;
+		if (dynamic_cast<ShipState*>(v_nei[i]))
+		{
+			cost_i = dynamic_cast<ShipState*>(v_nei[i])->getCost();
+
+			if (cost_i < min_cost)
+			{
+				min_cost = cost_i;
+				*best = v_nei[i];
+			}
+		}
+	}
+
+	bestPath = findPath4Node(*best);
+
+	if (bestPath) return bestPath;
+	else return nullptr;
+}
+
+//RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getClosestPathSegment(RobotState* n, RobotState** minstate)
+//{
+//	*minstate = 0;
+//	if (_paths.size() == 0)return 0;
+//	RobotState* ms;
+//	double dist, minimun = distance(n, _paths[0], minstate);
+//	PathSegment* minPath = _paths[0];
+//	for (unsigned int i = 1; i < _paths.size(); i++) {
+//		dist = distance(n, _paths[i], &ms);
+//		if (dist < minimun) {
+//			minimun = dist;
+//			minPath = _paths[i];
+//			*minstate = ms;
+//		}
+//	}
+//	return minPath;
+//}
+
+//RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_nei, RobotState** best)
+//{
+//
+//	if (v_nei.size() == 0)
+//		return nullptr;
+//
+//	*best = v_nei[0];
+//
+//	double min_cost = 0;
+//
+//	if (dynamic_cast<ShipState*>(v_nei[0]))
+//		min_cost = dynamic_cast<ShipState*>(v_nei[0])->getCost();
+//
+//
+//
+//	PathSegment* bestPath = _paths[0];
+//
+//	for (unsigned int i = 1; i < v_nei.size(); i++)
+//	{
+//		double cost_i;
+//		if (dynamic_cast<ShipState*>(v_nei[i]))
+//		{
+//			cost_i = dynamic_cast<ShipState*>(v_nei[i])->getCost();
+//
+//			if (cost_i < min_cost)
+//			{
+//				min_cost = cost_i;
+//				*best = v_nei[i];
+//			}
+//		}
+//	}
+//
+//	bestPath = findPath4Node(*best);
+//
+//	if (bestPath) return bestPath;
+//	else return nullptr;
+//}
+
+void EGKRRT::EGKtree::PopulateVertexes()
+{
+	for (auto p : _paths)
+	{
+		_vertexes.push_back(p->_init);
+		_vertexes.push_back(p->_end);
 	}
 }
 
-
-
-
-//std::vector<double> EGKRRT::EGKtree::EGKpath::navigationOrient(RobotState* ap_initState, circunference* ap_circ)
-//{
-//	std::vector<double> v_auxCtrlAct;
-//
-//	ShipState* p_ShipInitState = dynamic_cast<ShipState*>(ap_initState);
-//	
-//	if (!p_ShipInitState)
-//		return v_auxCtrlAct;
-//	
-//	Vector3D init_pose = p_ShipInitState->getPose();
-//	
-//	if(ap_circ->PointBelongs(init_pose))
-//	{
-//		double angle_rel = ap_circ->getAng(/*No me acuerdo que argumentos tenia*/);
-//		if(std::abs(angle_rel)<YAW_TOL)
-//		{
-//			// Avance recto	
-//		}
-//		else
-//		{
-//			if(angle_rel > 0.0)
-//			{
-//				// Circunferencia a la izquierda, giro a la izquierda
-//			}
-//			else
-//			{
-//			// Circunferencia a la derecha, giro a la derecha
-//			}
-//		}
-//		
-//	}
-//	else
-//	{	
-//		// Giro hacia la circunferencia
-//		ap_circ->IsPointInside(init_pose)
-//		{
-//			// Punto dentro de la circunferencia
-//		}
-//		else
-//		{
-//			// Punto fuera de la circunferencia
-//		}
-//	}
-//}
+//! -------------------------------------- Path -------------------------------------- 
 
 std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState, RobotState* p_finalState, double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw)
 {
@@ -786,7 +934,6 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 	return p_newPath;
 }
 
-// En principio solo usaremos esta si queremos imponer que se llegue al destino con una velocidad
 bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot)
 {
 	bool b_ret = false;
@@ -847,233 +994,104 @@ double EGKRRT::EGKtree::EGKpath::getLength()
 	return ret;
 }
 
-//double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState** mnode)
+//std::vector<double> EGKRRT::EGKtree::EGKpath::navigationOrient(RobotState* ap_initState, circunference* ap_circ)
 //{
-//	ShipState* p = dynamic_cast<ShipState*>(rs);
-//	ShipState* mn = dynamic_cast<ShipState*>(path->_init);
-//	if (!p || !mn)
-//		return -1.0;
+//	std::vector<double> v_auxCtrlAct;
 //
-//	bool b_aux = false;
-//
-//	EGKpath* path_aux = EGKpath::createPath(path->_init, p, b_aux);
-//
-//	double minimal = path_aux->getLength();
-//
-//	if (!b_aux)
-//		minimal *= 1.5;
-//
-//	//end belongs to the path
+//	ShipState* p_ShipInitState = dynamic_cast<ShipState*>(ap_initState);
 //	
-//	for (RobotState* i: path->_inter)
+//	if (!p_ShipInitState)
+//		return v_auxCtrlAct;
+//	
+//	Vector3D init_pose = p_ShipInitState->getPose();
+//	
+//	if(ap_circ->PointBelongs(init_pose))
 //	{
-//		ShipState* i_aux = dynamic_cast<ShipState*>(i);
-//		if (i_aux)
+//		double angle_rel = ap_circ->getAng(/*No me acuerdo que argumentos tenia*/);
+//		if(std::abs(angle_rel)<YAW_TOL)
 //		{
-//			path_aux = EGKpath::createPath(i_aux, p, b_aux);
-//
-//			double val = path_aux->getLength();
-//
-//			if (!b_aux)
-//				val *= 1.5;// Sustituyo al rayo de visibilidad
-//
-//			if (val < minimal)
-//			{
-//				mn = i_aux;
-//				minimal = val;
-//			}
+//			// Avance recto	
 //		}
 //		else
-//			continue;
-//	}
-//	if (mnode)
-//		*mnode = mn;
-//	return minimal;
-//}
-
-EGKRobotPath* EGKRRT::EGKtree::GetPathFromRoot(ShipState* n)
-{
-	EGKRobotPath* path = new EGKRobotPath();// hay que incluirlo en los destructores
-	ShipState* rs;
-	PathSegment* p = nullptr;
-
-	// Busco el path que contiene en su _end al nodo GOAL
-	for (PathSegment* i: _paths)
-		if (i->_end == n) 
-		{ 
-			p = i; 
-			break; 
-		}
-
-	if (p == nullptr)
-		return path;
-
-	EGKpath* p_egk = dynamic_cast<EGKpath*>(p);
-
-	if (p_egk)
-	{
-		for (auto a : p_egk->_sequence)
-		{
-			_sequence_solution.push_back(a);
-		}
-	}
-
-	for (int i = (int)p->_inter.size() - 1; i >= 0; i--)
-		path->path.insert(path->path.begin(), (p->_inter)[i]);
-
-	while (p->_parent != nullptr) 
-	{
-		//busco el nodo de inicio
-		p = p->_parent;
-
-		for (int i = (int)p->_inter.size() - 1; i >= 0; i--)
-			path->path.insert(path->path.begin(), p->_inter[i]);
-
-		for (int i = (int)p_egk->_sequence.size() - 1; i >= 0; i--)
-			_sequence_solution.insert(_sequence_solution.begin(), p_egk->_sequence[i]);
-	}
-
-	path->path.insert(path->path.begin(), _root);
-
-	return path;
-}
-
-double EGKRRT::EGKtree::distance(RobotState* p, PathSegment* path, RobotState** mnode)
-{
-	RobotState* mn = path->_init;
-	
-	if (dynamic_cast<ShipState*>(path->_init))
-	{
-		Vector3D ghost_pos = dynamic_cast<ShipState*>(path->_init)->getGhostPos();
-
-		if (dynamic_cast<ShipState*>(p))
-		{
-			double minimal = dynamic_cast<ShipState*>(p)->distanceTo(ghost_pos);
-			double val;
-			//end belongs to the path
-			for (RobotState* i: path->_inter)
-			{
-				if (dynamic_cast<ShipState*>(i))
-				{
-					ghost_pos = dynamic_cast<ShipState*>(i)->getGhostPos();
-					val = dynamic_cast<ShipState*>(p)->distanceTo(ghost_pos);
-					if (val < minimal) {
-						mn = i;
-						minimal = val;
-					}
-				}
-				else continue;
-			}
-
-			if (mnode)*mnode = mn;
-			return minimal;
-		}
-	}
-	return -1.0;
-}
-
-RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_nei, RobotState** best)
-{
-
-	if (v_nei.size() == 0)
-		return nullptr;
-
-	*best = v_nei[0];
-
-	double min_cost = 0;
-
-	if (dynamic_cast<ShipState*>(v_nei[0]))
-	{
-		min_cost = dynamic_cast<ShipState*>(v_nei[0])->getCost();
-	}
-
-
-	PathSegment* bestPath = _paths[0];
-
-	for (unsigned int i = 1; i < v_nei.size(); i++)
-	{
-		double cost_i;
-		if (dynamic_cast<ShipState*>(v_nei[i]))
-		{
-			cost_i = dynamic_cast<ShipState*>(v_nei[i])->getCost();
-
-			if (cost_i < min_cost)
-			{
-				min_cost = cost_i;
-				*best = v_nei[i];
-			}
-		}
-	}
-
-	bestPath = findPath4Node(*best);
-
-	if (bestPath) return bestPath;
-	else return nullptr;
-}
-
-//RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getClosestPathSegment(RobotState* n, RobotState** minstate)
-//{
-//	*minstate = 0;
-//	if (_paths.size() == 0)return 0;
-//	RobotState* ms;
-//	double dist, minimun = distance(n, _paths[0], minstate);
-//	PathSegment* minPath = _paths[0];
-//	for (unsigned int i = 1; i < _paths.size(); i++) {
-//		dist = distance(n, _paths[i], &ms);
-//		if (dist < minimun) {
-//			minimun = dist;
-//			minPath = _paths[i];
-//			*minstate = ms;
-//		}
-//	}
-//	return minPath;
-//}
-
-//RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_nei, RobotState** best)
-//{
-//
-//	if (v_nei.size() == 0)
-//		return nullptr;
-//
-//	*best = v_nei[0];
-//
-//	double min_cost = 0;
-//
-//	if (dynamic_cast<ShipState*>(v_nei[0]))
-//		min_cost = dynamic_cast<ShipState*>(v_nei[0])->getCost();
-//
-//
-//
-//	PathSegment* bestPath = _paths[0];
-//
-//	for (unsigned int i = 1; i < v_nei.size(); i++)
-//	{
-//		double cost_i;
-//		if (dynamic_cast<ShipState*>(v_nei[i]))
 //		{
-//			cost_i = dynamic_cast<ShipState*>(v_nei[i])->getCost();
-//
-//			if (cost_i < min_cost)
+//			if(angle_rel > 0.0)
 //			{
-//				min_cost = cost_i;
-//				*best = v_nei[i];
+//				// Circunferencia a la izquierda, giro a la izquierda
+//			}
+//			else
+//			{
+//			// Circunferencia a la derecha, giro a la derecha
 //			}
 //		}
+//		
 //	}
-//
-//	bestPath = findPath4Node(*best);
-//
-//	if (bestPath) return bestPath;
-//	else return nullptr;
+//	else
+//	{	
+//		// Giro hacia la circunferencia
+//		ap_circ->IsPointInside(init_pose)
+//		{
+//			// Punto dentro de la circunferencia
+//		}
+//		else
+//		{
+//			// Punto fuera de la circunferencia
+//		}
+//	}
 //}
 
-void EGKRRT::EGKtree::PopulateVertexes()
+//! -------------------------------------- Circunference -------------------------------------- 
+
+EGKRRT::EGKtree::EGKpath::Circunference::Circunference(RobotState* ap_init, RobotState* ap_goal)
 {
-	for (auto p : _paths)
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+	ShipState* p_EGK_goal = dynamic_cast<ShipState*>(ap_goal);
+
+	if (!(p_EGK_init) || (!p_EGK_goal))
+		_b_is_Ok = false;
+
+	//! Construcción de la circunferencia
+	if (_b_is_Ok)
 	{
-		_vertexes.push_back(p->_init);
-		_vertexes.push_back(p->_end);
+		double yaw_goal = p_EGK_goal->getYaw();
+		Vector3D pos_goal = p_EGK_goal->getPose();
+
+		Vector3D pos_init = p_EGK_init->getPose();
+
+		Vector2D unit_yaw_goal(cos(yaw_goal) + pos_goal.x, sin(yaw_goal) + pos_goal.y);
+
+		Vector2D unit_yaw_perp = unit_yaw_goal.perpendicularVector();
+
+		//! Pendiente de la recta que pasa por goal y el centro de la circunferencia
+		double M = tan(unit_yaw_perp.y / unit_yaw_perp.x); 
+
+		//! Anclaje de la recta que pasa por goal y el centro de la circunferencia
+		double n = M * pos_goal.x - pos_goal.y;
+
+		//! Coordenada X del centro de la circunferencia
+		_center.x = ((pos_goal.x)*(pos_goal.x) - (pos_init.x)*(pos_init.x) + (pos_goal.y)*(pos_goal.y) - (pos_init.y)*(pos_init.y) - 2*(pos_goal.y - pos_init.y) * n) /
+			(2 * (pos_goal.x - pos_init.x) + 2 * (pos_goal.y - pos_init.y) * M);
+
+		//! Coordenada Y del centro de la circunferencia
+		_center.y = M * _center.x + n;
+
+		//! Radio de la circunferencia
+		_radius = sqrt((pos_goal.x - _center.x)*(pos_goal.x - _center.x) + (pos_goal.y - _center.y)* (pos_goal.y - _center.y));
 	}
+}
+
+bool EGKRRT::EGKtree::EGKpath::Circunference::StateBelongs(RobotState* ap_init) const
+{
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+
+	if (!p_EGK_init)
+		return false;
+
+	return std::abs((Vector2D(p_EGK_init->getPose().x, p_EGK_init->getPose().y) - _center).module() - _radius) < CIRC_TOL;
+}
+
+double EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_init) const
+{
+
 }
 
 //! -------------------------------------- Drawing methods --------------------------------------
@@ -1104,10 +1122,10 @@ void EGKRRT::EGKtree::drawGL()
 
 void EGKRRT::EGKtree::EGKpath::drawGL()
 {
-	if (_p_circ)
-		_p_circ->drawGL();
+	/*if (_p_circ)
+		_p_circ->drawGL();*/
 
-	/*if (this->_init == nullptr || this->_end == nullptr)
+	if (this->_init == nullptr || this->_end == nullptr)
 		return;
 	vector<double> v;
 
@@ -1130,7 +1148,7 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	glVertex3f(v[0], v[1], 0);
 
 	glEnd();
-	glEnable(GL_LIGHTING);*/
+	glEnable(GL_LIGHTING);
 }
 
 void EGKRRT::EGKtree::EGKpath::Circunference::drawGL()
