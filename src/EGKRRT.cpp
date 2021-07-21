@@ -690,6 +690,13 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 		}
 	}
 
+	if(b_yaw_ensured)
+	{
+		generateCtrlActCirc(p_ShipInitState, quad, v_auxCtrlAct);
+		return v_auxCtrlAct;// dale una vuelta a como es el flujo trambolico de toda esta funcion
+	}
+	
+
 	switch (zone)
 	{
 	case ZoneType::right:
@@ -717,7 +724,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 			{
 				b_yaw_ensured = true;
 				_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
-				_p_circ->drawGL();
+
 				v_auxCtrlAct.push_back(THRUSTX);
 				v_auxCtrlAct.push_back(0.);
 				v_auxCtrlAct.push_back(-THRUSTW);
@@ -734,7 +741,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 		break;
 		}
 
-	case ZoneType::central://la intencion es que si esta muy cerca, en el primer sector de la zona central vaya haciendo miniajustes para colocarse
+	case ZoneType::central:
 		{
 			double distance = p_ShipInitState->distanceTo(p_ShipFinalState);
 			double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
@@ -760,7 +767,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 				{
 					b_yaw_ensured = true;
 					_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
-					_p_circ->drawGL();
+
 					v_auxCtrlAct.push_back(THRUSTX);
 					v_auxCtrlAct.push_back(0.);
 					v_auxCtrlAct.push_back(0.);
@@ -771,7 +778,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 				if (b_yaw_ensured)
 				{
 					// MINIAJUSTES
-					if ((distance < DIST_ADJ2) && (distance > DIST_ADJ1))
+					/*if ((distance < DIST_ADJ2) && (distance > DIST_ADJ1))
 					{
 						if(yaw_rel > YAW_TOL)
 						{
@@ -799,10 +806,12 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 						v_auxCtrlAct.push_back(THRUSTX);
 						v_auxCtrlAct.push_back(0.);
 						v_auxCtrlAct.push_back(0.);
-					}
+					}*/
 					/*v_auxCtrlAct.push_back(THRUSTX);
 					v_auxCtrlAct.push_back(0.);
 					v_auxCtrlAct.push_back(0.);*/
+
+
 
 				}
 				else
@@ -839,7 +848,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 			{
 				b_yaw_ensured = true;
 				_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
-				_p_circ->drawGL();
+
 				v_auxCtrlAct.push_back(THRUSTX);
 				v_auxCtrlAct.push_back(0.);
 				v_auxCtrlAct.push_back(THRUSTW);
@@ -994,6 +1003,103 @@ double EGKRRT::EGKtree::EGKpath::getLength()
 	return ret;
 }
 
+bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, std::vector<double>& ar_ctrl_act)
+{
+	if (_p_circ->StateBelongs(ap_initState))
+	{
+		//! Estamos dentro de la circunferencia
+		double relative_ang = _p_circ->getRelativeAng(ap_initState);
+
+		if (std::abs(relative_ang) < YAW_TOL)
+		{
+			//! avance recto
+			ar_ctrl_act.push_back(THRUSTX);
+			ar_ctrl_act.push_back(0.);
+			ar_ctrl_act.push_back(0.);
+			return true;
+		}
+		else
+		{
+			if (relative_ang < 0)// Esto vas a tener que debugearlo, creo que esto es que la circ esta a la derecha, por ejemplo
+			{
+				//! giro derecha
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(-THRUSTW);
+				return true;
+			}
+			else
+			{
+				//! giro izquierda
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(THRUSTW);
+				return true;
+			}
+		}
+	}
+	else
+	{
+		double distance = _p_circ->getDistance(ap_initState);
+		
+		if (distance > 0)
+		{
+			//! Fuera de la circunferencia
+			switch (ar_quad)
+			{
+			case Quadrant::fourth: // Punto final a la derecha
+				{
+					//! Giro a la derecha
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW);
+					return true;
+					break;
+				}
+			case Quadrant::first: // Punto final a la izquierda
+				{
+					//! Giro a la izquierda
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+					return true;
+					break;
+				}
+			default:
+				{
+					return false;
+					break;
+				}
+			}
+			
+				
+		}
+		else
+		{
+			//! Dentro de la circunferencia
+			switch (ar_quad)
+			{
+			case Quadrant::fourth:// Punto final a la derecha
+				{
+					//! Giro a la izquierda
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+					break;
+				}
+			case Quadrant::first:// Punto final a la izquierda
+				{
+					//! Giro a la derecha
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW);
+					break;
+				}
+			}
+		}
+	}
+}
+
 //std::vector<double> EGKRRT::EGKtree::EGKpath::navigationOrient(RobotState* ap_initState, circunference* ap_circ)
 //{
 //	std::vector<double> v_auxCtrlAct;
@@ -1091,7 +1197,40 @@ bool EGKRRT::EGKtree::EGKpath::Circunference::StateBelongs(RobotState* ap_init) 
 
 double EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_init) const
 {
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 
+	if (!p_EGK_init)
+		return 9999;
+
+	Vector3D init_pos = p_EGK_init->getPose();
+
+	double init_yaw = p_EGK_init->getYaw();
+
+	if (StateBelongs(ap_init))
+	{
+		//! Vector tangente a la circunferencia que pasa por init
+
+		Vector2D init_2_center(_center.x - init_pos.x, _center.y - init_pos.y);
+
+		Vector2D init_tan = init_2_center.perpendicularVector();
+
+		Vector2D init_dir(init_pos.x + cos(init_yaw), init_pos.y + sin(init_yaw));
+
+		//! Producto escalar
+		return acos(init_tan.x * init_dir.x + init_tan.y * init_dir.y);
+	}
+}
+
+double EGKRRT::EGKtree::EGKpath::Circunference::getDistance(RobotState* ap_init) const
+{
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+
+	if (!p_EGK_init)
+		return 9999;
+
+	Vector2D init_pose(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
+
+	return (init_pose - _center).module() - _radius;
 }
 
 //! -------------------------------------- Drawing methods --------------------------------------

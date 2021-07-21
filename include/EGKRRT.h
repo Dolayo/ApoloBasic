@@ -80,6 +80,8 @@ protected:
 
 						double getRelativeAng(RobotState* ap_init) const;
 
+						double getDistance(RobotState* ap_init) const;
+
 						double getRadius() const {return _radius;}
 						void setRadius(double& ar_r) { _radius = ar_r; }
 
@@ -115,6 +117,7 @@ protected:
 				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter = 100, bool b_ensure_yaw = false);
 				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState, 
 														double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw = false);
+				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, std::vector<double>& ar_ctrl_act);
 				//virtual std::vector<double> navigationOrient(RobotState* ap_initState, Circunference* ap_circ);
 				bool isGhostThere(ShipState* donkey, ShipState* carrot);
 
