@@ -40,6 +40,7 @@ bool EGKRRT::testingPlan()
 	return false;
 }
 
+
 bool EGKRRT::computePlan(int maxiterations)
 {
 	if (solved)return true;
@@ -690,184 +691,199 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 		}
 	}
 
-	if(b_yaw_ensured)
+	//! +++++++++++++++++++++ ONLY for testing purposes
+	if (b_ensure_yaw)
+	{
+		b_yaw_ensured = true;
+		_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+	}
+	//! //! +++++++++++++++++++++ ONLY for testing purposes
+
+	if(b_yaw_ensured)//b_yaw_ensured
 	{
 		generateCtrlActCirc(p_ShipInitState, quad, v_auxCtrlAct);
+		if(v_auxCtrlAct.size()==0)
+		{
+			v_auxCtrlAct.push_back(0.);
+			v_auxCtrlAct.push_back(0.);
+			v_auxCtrlAct.push_back(0.);
+		}
 		return v_auxCtrlAct;// dale una vuelta a como es el flujo trambolico de toda esta funcion
 	}
 	
 
-	switch (zone)
-	{
-	case ZoneType::right:
-		{
-		if (b_ensure_yaw)
-		{
-			double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
+	//switch (zone)
+	//{
+	//case ZoneType::right:
+	//	{
+	//	if (b_ensure_yaw)
+	//	{
+	//		double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
 
-			if (std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
-			{
-				if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
-				{
-					v_auxCtrlAct.push_back(THRUSTX);
-					v_auxCtrlAct.push_back(0.);
-					v_auxCtrlAct.push_back(-THRUSTW);
-				}
-				else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
-				{
-					v_auxCtrlAct.push_back(THRUSTX);
-					v_auxCtrlAct.push_back(0.);
-					v_auxCtrlAct.push_back(THRUSTW);
-				}
-			}
-			else
-			{
-				b_yaw_ensured = true;
-				_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+	//		if (std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
+	//		{
+	//			if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
+	//			{
+	//				v_auxCtrlAct.push_back(THRUSTX);
+	//				v_auxCtrlAct.push_back(0.);
+	//				v_auxCtrlAct.push_back(-THRUSTW);
+	//			}
+	//			else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
+	//			{
+	//				v_auxCtrlAct.push_back(THRUSTX);
+	//				v_auxCtrlAct.push_back(0.);
+	//				v_auxCtrlAct.push_back(THRUSTW);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			b_yaw_ensured = true;
+	//			_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
 
-				v_auxCtrlAct.push_back(THRUSTX);
-				v_auxCtrlAct.push_back(0.);
-				v_auxCtrlAct.push_back(-THRUSTW);
-			}
+	//			v_auxCtrlAct.push_back(THRUSTX);
+	//			v_auxCtrlAct.push_back(0.);
+	//			v_auxCtrlAct.push_back(-THRUSTW);
+	//		}
 
-		}
-		else
-		{
-			v_auxCtrlAct.push_back(THRUSTX);
-			v_auxCtrlAct.push_back(0.);
-			v_auxCtrlAct.push_back(-THRUSTW);
-		}
+	//	}
+	//	else
+	//	{
+	//		v_auxCtrlAct.push_back(THRUSTX);
+	//		v_auxCtrlAct.push_back(0.);
+	//		v_auxCtrlAct.push_back(-THRUSTW);
+	//	}
 
-		break;
-		}
+	//	break;
+	//	}
 
-	case ZoneType::central:
-		{
-			double distance = p_ShipInitState->distanceTo(p_ShipFinalState);
-			double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
+	//case ZoneType::central:
+	//	{
+	//		double distance = p_ShipInitState->distanceTo(p_ShipFinalState);
+	//		double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
 
-			if (b_ensure_yaw)
-			{
-				if(std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
-				{
-					if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
-					{
-						v_auxCtrlAct.push_back(THRUSTX);
-						v_auxCtrlAct.push_back(0.);
-						v_auxCtrlAct.push_back(-THRUSTW);
-					}
-					else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
-					{
-						v_auxCtrlAct.push_back(THRUSTX);
-						v_auxCtrlAct.push_back(0.);
-						v_auxCtrlAct.push_back(THRUSTW);
-					}
-				}
-				else
-				{
-					b_yaw_ensured = true;
-					_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+	//		if (b_ensure_yaw)
+	//		{
+	//			if(std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
+	//			{
+	//				if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
+	//				{
+	//					v_auxCtrlAct.push_back(THRUSTX);
+	//					v_auxCtrlAct.push_back(0.);
+	//					v_auxCtrlAct.push_back(-THRUSTW);
+	//				}
+	//				else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
+	//				{
+	//					v_auxCtrlAct.push_back(THRUSTX);
+	//					v_auxCtrlAct.push_back(0.);
+	//					v_auxCtrlAct.push_back(THRUSTW);
+	//				}
+	//			}
+	//			else
+	//			{
+	//				b_yaw_ensured = true;
+	//				_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
 
-					v_auxCtrlAct.push_back(THRUSTX);
-					v_auxCtrlAct.push_back(0.);
-					v_auxCtrlAct.push_back(0.);
-				}
-			}
-			else
-			{
-				if (b_yaw_ensured)
-				{
-					// MINIAJUSTES
-					/*if ((distance < DIST_ADJ2) && (distance > DIST_ADJ1))
-					{
-						if(yaw_rel > YAW_TOL)
-						{
-							v_auxCtrlAct.push_back(THRUSTX);
-							v_auxCtrlAct.push_back(0.);
-							v_auxCtrlAct.push_back(-THRUSTW);
-						}
-						else
-							if (yaw_rel < -YAW_TOL)
-							{
-								v_auxCtrlAct.push_back(THRUSTX);
-								v_auxCtrlAct.push_back(0.);
-								v_auxCtrlAct.push_back(THRUSTW);
-							}
-							else
-							{
-								v_auxCtrlAct.push_back(THRUSTX);
-								v_auxCtrlAct.push_back(0.);
-								v_auxCtrlAct.push_back(0.);
-							}
-						
-					}
-					else
-					{
-						v_auxCtrlAct.push_back(THRUSTX);
-						v_auxCtrlAct.push_back(0.);
-						v_auxCtrlAct.push_back(0.);
-					}*/
-					/*v_auxCtrlAct.push_back(THRUSTX);
-					v_auxCtrlAct.push_back(0.);
-					v_auxCtrlAct.push_back(0.);*/
+	//				v_auxCtrlAct.push_back(THRUSTX);
+	//				v_auxCtrlAct.push_back(0.);
+	//				v_auxCtrlAct.push_back(0.);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			if (b_yaw_ensured)
+	//			{
+	//				// MINIAJUSTES
+	//				/*if ((distance < DIST_ADJ2) && (distance > DIST_ADJ1))
+	//				{
+	//					if(yaw_rel > YAW_TOL)
+	//					{
+	//						v_auxCtrlAct.push_back(THRUSTX);
+	//						v_auxCtrlAct.push_back(0.);
+	//						v_auxCtrlAct.push_back(-THRUSTW);
+	//					}
+	//					else
+	//						if (yaw_rel < -YAW_TOL)
+	//						{
+	//							v_auxCtrlAct.push_back(THRUSTX);
+	//							v_auxCtrlAct.push_back(0.);
+	//							v_auxCtrlAct.push_back(THRUSTW);
+	//						}
+	//						else
+	//						{
+	//							v_auxCtrlAct.push_back(THRUSTX);
+	//							v_auxCtrlAct.push_back(0.);
+	//							v_auxCtrlAct.push_back(0.);
+	//						}
+	//					
+	//				}
+	//				else
+	//				{
+	//					v_auxCtrlAct.push_back(THRUSTX);
+	//					v_auxCtrlAct.push_back(0.);
+	//					v_auxCtrlAct.push_back(0.);
+	//				}*/
+	//				/*v_auxCtrlAct.push_back(THRUSTX);
+	//				v_auxCtrlAct.push_back(0.);
+	//				v_auxCtrlAct.push_back(0.);*/
 
+	//				//! Seguimiento de circunferencia
+	//				
 
+	//			}
+	//			else
+	//			{
+	//				v_auxCtrlAct.push_back(THRUSTX);
+	//				v_auxCtrlAct.push_back(0.);
+	//				v_auxCtrlAct.push_back(0.);
+	//			}
+	//		}
+	//			
+	//			break;
+	//	}
+	//case ZoneType::left:
+	//	{
+	//	if (b_ensure_yaw)
+	//	{
+	//		double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
+	//		if (std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
+	//		{
+	//			if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
+	//			{
+	//				v_auxCtrlAct.push_back(THRUSTX);
+	//				v_auxCtrlAct.push_back(0.);
+	//				v_auxCtrlAct.push_back(-THRUSTW);
+	//			}
+	//			else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
+	//			{
+	//				v_auxCtrlAct.push_back(THRUSTX);
+	//				v_auxCtrlAct.push_back(0.);
+	//				v_auxCtrlAct.push_back(THRUSTW);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			b_yaw_ensured = true;
+	//			_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
 
-				}
-				else
-				{
-					v_auxCtrlAct.push_back(THRUSTX);
-					v_auxCtrlAct.push_back(0.);
-					v_auxCtrlAct.push_back(0.);
-				}
-			}
-				
-				break;
-		}
-	case ZoneType::left:
-		{
-		if (b_ensure_yaw)
-		{
-			double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
-			if (std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
-			{
-				if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
-				{
-					v_auxCtrlAct.push_back(THRUSTX);
-					v_auxCtrlAct.push_back(0.);
-					v_auxCtrlAct.push_back(-THRUSTW);
-				}
-				else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
-				{
-					v_auxCtrlAct.push_back(THRUSTX);
-					v_auxCtrlAct.push_back(0.);
-					v_auxCtrlAct.push_back(THRUSTW);
-				}
-			}
-			else
-			{
-				b_yaw_ensured = true;
-				_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+	//			v_auxCtrlAct.push_back(THRUSTX);
+	//			v_auxCtrlAct.push_back(0.);
+	//			v_auxCtrlAct.push_back(THRUSTW);
+	//		}
 
-				v_auxCtrlAct.push_back(THRUSTX);
-				v_auxCtrlAct.push_back(0.);
-				v_auxCtrlAct.push_back(THRUSTW);
-			}
+	//	}
+	//	else
+	//	{
+	//		v_auxCtrlAct.push_back(THRUSTX);
+	//		v_auxCtrlAct.push_back(0.);
+	//		v_auxCtrlAct.push_back(THRUSTW);
+	//	}
 
-		}
-		else
-		{
-			v_auxCtrlAct.push_back(THRUSTX);
-			v_auxCtrlAct.push_back(0.);
-			v_auxCtrlAct.push_back(THRUSTW);
-		}
+	//	break;
+	//	}
 
-		break;
-		}
+	//}
 
-	}
-
-	return v_auxCtrlAct;
+	//return v_auxCtrlAct;
 }
 
 EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_init, RobotState* p_end, bool& b_success, int niter, bool b_ensure_yaw)
@@ -1025,7 +1041,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 				//! giro derecha
 				ar_ctrl_act.push_back(THRUSTX);
 				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(-THRUSTW);
+				ar_ctrl_act.push_back(THRUSTW);
 				return true;
 			}
 			else
@@ -1033,7 +1049,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 				//! giro izquierda
 				ar_ctrl_act.push_back(THRUSTX);
 				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(THRUSTW);
+				ar_ctrl_act.push_back(-THRUSTW);
 				return true;
 			}
 		}
@@ -1217,7 +1233,7 @@ double EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_in
 		Vector2D init_dir(init_pos.x + cos(init_yaw), init_pos.y + sin(init_yaw));
 
 		//! Producto escalar
-		return acos(init_tan.x * init_dir.x + init_tan.y * init_dir.y);
+		return acos((init_tan.x * init_dir.x + init_tan.y * init_dir.y) / (init_tan.module() * init_dir.module()));
 	}
 }
 
@@ -1261,8 +1277,8 @@ void EGKRRT::EGKtree::drawGL()
 
 void EGKRRT::EGKtree::EGKpath::drawGL()
 {
-	/*if (_p_circ)
-		_p_circ->drawGL();*/
+	if (_p_circ)
+		_p_circ->drawGL();
 
 	if (this->_init == nullptr || this->_end == nullptr)
 		return;
@@ -1299,8 +1315,8 @@ void EGKRRT::EGKtree::EGKpath::Circunference::drawGL()
 	glColor3f(0.2, 0.8F, 1.0F);
 	for (int i = 0; i < 360; ++i)
 	{
-		double x = _center.x + _radius * cos(i * PI / 360);
-		double y = _center.y + _radius * sin(i * PI / 360);
+		double x = _center.x + _radius * cos(i * PI / 180);
+		double y = _center.y + _radius * sin(i * PI / 180);// dale una vuelta a como pintar la circunferencia entera
 		glVertex3f(x, y, 0.0);
 	}
 	glEnd();

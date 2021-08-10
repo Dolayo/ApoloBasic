@@ -257,14 +257,13 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			delete goal;
 
 			if (dynamic_cast<EGKRRT*>(planner))
-				
-				//if (dynamic_cast<EGKRRT*>(planner)->computePlan(10))
 			{
 				dynamic_cast<EGKRRT*>(planner)->testingPlan();
 				//dynamic_cast<EGKRRT*>(planner)->computePlan(_n_iter);
-				auto solution_plan = planner->getPlan();
+
+				/*auto solution_plan = planner->getPlan();
 				if (solution_plan)
-					solution.path = solution_plan->path;
+					solution.path = solution_plan->path;*/
 				
 			}
 				

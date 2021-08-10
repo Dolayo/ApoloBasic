@@ -6,7 +6,7 @@
 #define THETA2 10*PI/180 // 5º para 20º(10º vale tambien), 10º para 45º, 10º para 30º
 #define THETA3 1*PI/6 // 30º para 20º, 30º y 40º
 
-#define TEST_YAW -PI / 4
+#define TEST_YAW -PI/360//-PI / 6
 
 #define DIST1 8//8 valor seguro 20º, 30º y 40º
 #define DIST2 18//16 valor seguro 20º, 30º y 40º
@@ -41,11 +41,11 @@ constexpr double CIRC_TOL = 0.5;
 
 constexpr double CIRC_TOL_2 = 2;
 
-constexpr double X_START = 1.0;
-constexpr double Y_START = 8.0;
+constexpr double X_START = 0.0;
+constexpr double Y_START = 30.0;
 
 constexpr double X_GOAL = 30.0;
-constexpr double Y_GOAL = 8.0;
+constexpr double Y_GOAL = 0.0;
 
 constexpr double REENTRY_ANGLE_K = 1.6;//1.5 para 20º, 1.6 para 45º, 1.6 para 30º un poco justo
 //Para el caso sin miniajustes: 1.6 para 10 y 20 grados

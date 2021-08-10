@@ -120,10 +120,10 @@ protected:
 				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, std::vector<double>& ar_ctrl_act);
 				//virtual std::vector<double> navigationOrient(RobotState* ap_initState, Circunference* ap_circ);
 				bool isGhostThere(ShipState* donkey, ShipState* carrot);
-
-				Circunference* _p_circ{nullptr};
-
 				void drawGL();
+
+		private:
+			Circunference* _p_circ{nullptr};
 		};
 
 	public:
