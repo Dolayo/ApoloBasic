@@ -246,9 +246,9 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 			_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
 			//_myship->setRelativeOrientation(0,0,0);
 			_myship->setVels(Vector3D(V_MAX,0,0));
-			_myship->setState(_x_start, _y_start, 0/*-PI / 2*/);
+			_myship->setState(_x_start, _y_start, _yaw_start/*-PI / 2*/);
 
-			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_start, _y_start, 0));
+			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_start, _y_start, _yaw_start));
 			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_goal, _y_goal, 0));
 
 			solution.path.clear();
@@ -491,10 +491,10 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 
 	_myship = new Ship();
 	_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
-	_myship->setRelativeOrientation(0,0,0);
+	_myship->setRelativeOrientation(0,0, _yaw_start);
 	_myship->setVels(Vector3D(V_MAX, 0, 0));
 
-	_myship->setState(_x_start, _y_start, 0/*-PI / 2*/);
+	_myship->setState(_x_start, _y_start, _yaw_start/*-PI / 2*/);
 	world += _myship;
 	
 	//creo un planificador y su sistema de muestreo

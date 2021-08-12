@@ -6,7 +6,7 @@
 #define THETA2 10*PI/180 // 5º para 20º(10º vale tambien), 10º para 45º, 10º para 30º
 #define THETA3 1*PI/6 // 30º para 20º, 30º y 40º
 
-#define TEST_YAW -PI/360//-PI / 6
+#define TEST_YAW -PI/2//-PI / 6
 
 #define DIST1 8//8 valor seguro 20º, 30º y 40º
 #define DIST2 18//16 valor seguro 20º, 30º y 40º
@@ -21,7 +21,7 @@
 #define XP 5
 #define S_AIR 15
 #define S_WATER 2.5
-#define V_MAX 2.7
+#define V_MAX 0.4//2.7
 #define A_MAX 0.3857
 #define M_ARM 1
 #define TRUE_WIND_DIR PI
@@ -37,12 +37,14 @@ constexpr double POSE_TOL = 1;
 constexpr double VEL_TOL = 0.5;
 constexpr double YAW_TOL = PI / 36;//5º
 
-constexpr double CIRC_TOL = 0.5;
+constexpr double CIRC_TOL = 1;//0.5
 
 constexpr double CIRC_TOL_2 = 2;
 
 constexpr double X_START = 0.0;
 constexpr double Y_START = 30.0;
+constexpr double YAW_START = 0;
+
 
 constexpr double X_GOAL = 30.0;
 constexpr double Y_GOAL = 0.0;

@@ -204,7 +204,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
 	dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500, true);//120
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 4000, true);//500
 
 	//SOlo para debugeo
 	double yaw = dynamic_cast<ShipState*>(newPath->_end)->getYaw() * 180/PI;
@@ -1023,8 +1023,10 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 {
 	if (_p_circ->StateBelongs(ap_initState))
 	{
-		//! Estamos dentro de la circunferencia
-		double relative_ang = _p_circ->getRelativeAng(ap_initState);
+		//! Pertenecemos a la circunferencia
+		double relative_ang = (_p_circ->getRelativeAng(ap_initState)).first;
+		bool relative_sgn = (_p_circ->getRelativeAng(ap_initState)).second;
+		
 
 		if (std::abs(relative_ang) < YAW_TOL)
 		{
@@ -1036,12 +1038,12 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 		}
 		else
 		{
-			if (relative_ang < 0)// Esto vas a tener que debugearlo, creo que esto es que la circ esta a la derecha, por ejemplo
+			if (!relative_sgn)// Mirando hacia afuera
 			{
 				//! giro derecha
 				ar_ctrl_act.push_back(THRUSTX);
 				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(THRUSTW);
+				ar_ctrl_act.push_back(-THRUSTW);
 				return true;
 			}
 			else
@@ -1049,7 +1051,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 				//! giro izquierda
 				ar_ctrl_act.push_back(THRUSTX);
 				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(-THRUSTW);
+				ar_ctrl_act.push_back(THRUSTW);
 				return true;
 			}
 		}
@@ -1179,7 +1181,7 @@ EGKRRT::EGKtree::EGKpath::Circunference::Circunference(RobotState* ap_init, Robo
 
 		Vector3D pos_init = p_EGK_init->getPose();
 
-		Vector2D unit_yaw_goal(cos(yaw_goal) + pos_goal.x, sin(yaw_goal) + pos_goal.y);
+		Vector2D unit_yaw_goal(cos(yaw_goal), sin(yaw_goal));
 
 		Vector2D unit_yaw_perp = unit_yaw_goal.perpendicularVector();
 
@@ -1211,12 +1213,12 @@ bool EGKRRT::EGKtree::EGKpath::Circunference::StateBelongs(RobotState* ap_init) 
 	return std::abs((Vector2D(p_EGK_init->getPose().x, p_EGK_init->getPose().y) - _center).module() - _radius) < CIRC_TOL;
 }
 
-double EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_init) const
+std::pair<double, bool> EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_init) const
 {
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 
 	if (!p_EGK_init)
-		return 9999;
+		return std::make_pair(9999, false);
 
 	Vector3D init_pos = p_EGK_init->getPose();
 
@@ -1226,14 +1228,21 @@ double EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_in
 	{
 		//! Vector tangente a la circunferencia que pasa por init
 
-		Vector2D init_2_center(_center.x - init_pos.x, _center.y - init_pos.y);
+		Vector2D init_2_center(init_pos.x - _center.x, init_pos.y - _center.y);
+
+		init_2_center = init_2_center.normalize();
 
 		Vector2D init_tan = init_2_center.perpendicularVector();
 
-		Vector2D init_dir(init_pos.x + cos(init_yaw), init_pos.y + sin(init_yaw));
+		Vector2D init_dir(cos(init_yaw), sin(init_yaw));
+
+		init_dir = init_dir.normalize();
 
 		//! Producto escalar
-		return acos((init_tan.x * init_dir.x + init_tan.y * init_dir.y) / (init_tan.module() * init_dir.module()));
+		double ang = acos((init_tan.x * init_dir.x + init_tan.y * init_dir.y) / (init_tan.module() * init_dir.module()));
+		bool sgn = (init_dir.x * init_tan.y - init_tan.x * init_dir.y) > 0.0; //! Producto vectorial: V x U: Vx.Uy - Ux.Vy
+
+		return std::make_pair(ang, sgn);
 	}
 }
 

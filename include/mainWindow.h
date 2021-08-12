@@ -81,6 +81,7 @@ private:
 
     double _x_start{ X_START };
     double _y_start{ Y_START };
+    double _yaw_start{ YAW_START };
 
     double _x_goal{X_GOAL};
     double _y_goal{Y_GOAL};
