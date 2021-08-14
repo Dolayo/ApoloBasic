@@ -21,7 +21,7 @@
 #define XP 5
 #define S_AIR 15
 #define S_WATER 2.5
-#define V_MAX 0.4//2.7
+#define V_MAX 1.4//2.7
 #define A_MAX 0.3857
 #define M_ARM 1
 #define TRUE_WIND_DIR PI
@@ -33,33 +33,52 @@
 #define RO_WATER 1000
 #define RO_AIR 1.225
 
+//! Tolerancia de posicion
 constexpr double POSE_TOL = 1;
+
+//! Tolerancia de velocidad
 constexpr double VEL_TOL = 0.5;
+
+//! Tolerancia de orientacion con respecto a la recta tangente a la curva
 constexpr double YAW_TOL = PI / 36;//5º
 
-constexpr double CIRC_TOL = 1;//0.5
+//! Pertenencia a la circunferencia
+constexpr double CIRC_TOL_INNER = 1;//0.5
 
+//! Entrada en la circunferencia
+constexpr double CIRC_TOL_OUTER = 3;
+
+//!????
 constexpr double CIRC_TOL_2 = 2;
 
+//! Coordenadas absolutas X e Y del punto de inicio
 constexpr double X_START = 0.0;
 constexpr double Y_START = 30.0;
+
+//! Orientacion relativa del robot en el punto de incio
 constexpr double YAW_START = 0;
 
 
+//! Coordenadas absolutas X e Y del punto destino
 constexpr double X_GOAL = 30.0;
 constexpr double Y_GOAL = 0.0;
 
-constexpr double REENTRY_ANGLE_K = 1.6;//1.5 para 20º, 1.6 para 45º, 1.6 para 30º un poco justo
-//Para el caso sin miniajustes: 1.6 para 10 y 20 grados
 
-constexpr double DIST_ADJ1 = 8;
-constexpr double DIST_ADJ2 = 18;
-
+//! Radio de reconexion para el RRT*
 constexpr double radius = 8;
 
+//!??????
 constexpr unsigned int NUM_ITERS = 6;
 
+//! Zona en la que se encuentra el punto goal con respecto al robot
 enum class ZoneType { central, left, right };
+
+//! Cuadrante en el que se encuentra el punto goal con respecto al robot
 enum class Quadrant { first, second, third, fourth };
+
+//! Zona en la que se encuentra el robot respecto a la curva
+enum class CurveZone {Inner, Medium, Outer};
+
+
 
 #endif

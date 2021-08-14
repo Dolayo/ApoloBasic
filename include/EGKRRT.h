@@ -76,7 +76,7 @@ protected:
 						Circunference() = delete;
 						~Circunference() = default;
 
-						bool StateBelongs(RobotState* ap_init) const;
+						CurveZone StateZone(RobotState* ap_init) const;
 
 						std::pair<double, bool> getRelativeAng(RobotState* ap_init) const;
 

@@ -1021,9 +1021,9 @@ double EGKRRT::EGKtree::EGKpath::getLength()
 
 bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, std::vector<double>& ar_ctrl_act)
 {
-	if (_p_circ->StateBelongs(ap_initState))
+	//! Pertenecemos a la circunferencia
+	if (_p_circ->StateBelongs(ap_initState))// USA LA FUNCION PARA SABER EN QUE ZONA ESTAMOS Y DEFINE ESA NUEVA ZONA
 	{
-		//! Pertenecemos a la circunferencia
 		double relative_ang = (_p_circ->getRelativeAng(ap_initState)).first;
 		bool relative_sgn = (_p_circ->getRelativeAng(ap_initState)).second;
 		
@@ -1056,6 +1056,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 			}
 		}
 	}
+	//! No pertenecemos a la circunferencia
 	else
 	{
 		double distance = _p_circ->getDistance(ap_initState);
@@ -1097,7 +1098,8 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 			//! Dentro de la circunferencia
 			switch (ar_quad)
 			{
-			case Quadrant::fourth:// Punto final a la derecha
+			//! Punto final a la derecha
+			case Quadrant::fourth:
 				{
 					//! Giro a la izquierda
 					ar_ctrl_act.push_back(THRUSTX);
@@ -1105,7 +1107,26 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 					ar_ctrl_act.push_back(THRUSTW);
 					break;
 				}
-			case Quadrant::first:// Punto final a la izquierda
+			//! Punto final a la izquierda
+			case Quadrant::first:
+				{
+					//! Giro a la derecha
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW);
+					break;
+				}
+			//! Punto final detras a la derecha
+			case Quadrant::third:
+				{
+					//! Giro a la izquierda
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+					break;
+				}
+			//! Punto final detras a la izquierda
+			case Quadrant::second:
 				{
 					//! Giro a la derecha
 					ar_ctrl_act.push_back(THRUSTX);
@@ -1203,14 +1224,30 @@ EGKRRT::EGKtree::EGKpath::Circunference::Circunference(RobotState* ap_init, Robo
 	}
 }
 
-bool EGKRRT::EGKtree::EGKpath::Circunference::StateBelongs(RobotState* ap_init) const
+CurveZone EGKRRT::EGKtree::EGKpath::Circunference::StateZone(RobotState* ap_init) const
 {
+	CurveZone the_zone = CurveZone::Outer;
+
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 
 	if (!p_EGK_init)
-		return false;
+		throw ERRORNULL;
 
-	return std::abs((Vector2D(p_EGK_init->getPose().x, p_EGK_init->getPose().y) - _center).module() - _radius) < CIRC_TOL;
+	//! Calculamos la distancia a la circunferencia
+	double distance = getDistance(p_EGK_init);
+
+	//! Pertenece a la circunferencia
+	if (distance < CIRC_TOL_INNER)
+		the_zone = CurveZone::Inner;
+
+	else
+	{
+		//! Pertenece a la zona intermedia
+		if (distance < CIRC_TOL_OUTER)
+			the_zone = CurveZone::Medium;
+	}
+
+	return the_zone;
 }
 
 std::pair<double, bool> EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_init) const
