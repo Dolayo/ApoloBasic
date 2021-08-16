@@ -76,7 +76,7 @@ protected:
 						Circunference() = delete;
 						~Circunference() = default;
 
-						CurveZone StateZone(RobotState* ap_init) const;
+						std::pair <CurveZone, bool> StateZone(RobotState* ap_init) const;
 
 						std::pair<double, bool> getRelativeAng(RobotState* ap_init) const;
 
@@ -117,7 +117,7 @@ protected:
 				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter = 100, bool b_ensure_yaw = false);
 				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState, 
 														double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw = false);
-				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, std::vector<double>& ar_ctrl_act);
+				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
 				//virtual std::vector<double> navigationOrient(RobotState* ap_initState, Circunference* ap_circ);
 				bool isGhostThere(ShipState* donkey, ShipState* carrot);
 				void drawGL();

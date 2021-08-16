@@ -6,6 +6,7 @@
 #define THETA2 10*PI/180 // 5º para 20º(10º vale tambien), 10º para 45º, 10º para 30º
 #define THETA3 1*PI/6 // 30º para 20º, 30º y 40º
 
+//! Orientacion inicial, usado para testeo
 #define TEST_YAW -PI/2//-PI / 6
 
 #define DIST1 8//8 valor seguro 20º, 30º y 40º
@@ -43,7 +44,7 @@ constexpr double VEL_TOL = 0.5;
 constexpr double YAW_TOL = PI / 36;//5º
 
 //! Pertenencia a la circunferencia
-constexpr double CIRC_TOL_INNER = 1;//0.5
+constexpr double CIRC_TOL_INNER = 0.5;//0.5
 
 //! Entrada en la circunferencia
 constexpr double CIRC_TOL_OUTER = 3;

@@ -701,7 +701,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 
 	if(b_yaw_ensured)//b_yaw_ensured
 	{
-		generateCtrlActCirc(p_ShipInitState, quad, v_auxCtrlAct);
+		generateCtrlActCirc(p_ShipInitState, quad, zone, v_auxCtrlAct);
 		if(v_auxCtrlAct.size()==0)
 		{
 			v_auxCtrlAct.push_back(0.);
@@ -1019,122 +1019,211 @@ double EGKRRT::EGKtree::EGKpath::getLength()
 	return ret;
 }
 
-bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, std::vector<double>& ar_ctrl_act)
+bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act)
 {
-	//! Pertenecemos a la circunferencia
-	if (_p_circ->StateBelongs(ap_initState))// USA LA FUNCION PARA SABER EN QUE ZONA ESTAMOS Y DEFINE ESA NUEVA ZONA
-	{
-		double relative_ang = (_p_circ->getRelativeAng(ap_initState)).first;
-		bool relative_sgn = (_p_circ->getRelativeAng(ap_initState)).second;
-		
+	//! Determinamos la posicion del robot respecto a la curva
+	CurveZone the_zone = _p_circ->StateZone(ap_initState).first;
+	bool b_outside = _p_circ->StateZone(ap_initState).second;
 
-		if (std::abs(relative_ang) < YAW_TOL)
+	switch(the_zone)
+	{
+		case CurveZone::Inner:
 		{
-			//! avance recto
-			ar_ctrl_act.push_back(THRUSTX);
-			ar_ctrl_act.push_back(0.);
-			ar_ctrl_act.push_back(0.);
-			return true;
-		}
-		else
-		{
-			if (!relative_sgn)// Mirando hacia afuera
+			double relative_ang = (_p_circ->getRelativeAng(ap_initState)).first;
+			bool relative_sgn = (_p_circ->getRelativeAng(ap_initState)).second;
+		
+			if (std::abs(relative_ang) < YAW_TOL)
 			{
-				//! giro derecha
+				//! avance recto
 				ar_ctrl_act.push_back(THRUSTX);
 				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(-THRUSTW);
+				ar_ctrl_act.push_back(0.);
 				return true;
 			}
 			else
 			{
-				//! giro izquierda
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(THRUSTW);
-				return true;
-			}
-		}
-	}
-	//! No pertenecemos a la circunferencia
-	else
-	{
-		double distance = _p_circ->getDistance(ap_initState);
-		
-		if (distance > 0)
-		{
-			//! Fuera de la circunferencia
-			switch (ar_quad)
-			{
-			case Quadrant::fourth: // Punto final a la derecha
+				if (!relative_sgn)// Mirando hacia afuera
 				{
-					//! Giro a la derecha
+					//! giro derecha
 					ar_ctrl_act.push_back(THRUSTX);
 					ar_ctrl_act.push_back(0.);
 					ar_ctrl_act.push_back(-THRUSTW);
 					return true;
-					break;
 				}
-			case Quadrant::first: // Punto final a la izquierda
+				else
 				{
-					//! Giro a la izquierda
+					//! giro izquierda
 					ar_ctrl_act.push_back(THRUSTX);
 					ar_ctrl_act.push_back(0.);
 					ar_ctrl_act.push_back(THRUSTW);
 					return true;
-					break;
 				}
-			default:
+			}
+			break;
+		}
+		case CurveZone::Medium:
+		{
+			//! Fuera de la circunferencia
+			if (b_outside)
+			{
+				switch (ar_zone)
 				{
-					return false;
-					break;
+				case ZoneType::central: // Punto final en frente
+					{
+						//! Avance recto
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+						return true;
+						break;
+					}
+					case ZoneType::right: // Punto final a la derecha
+					{
+						//! Giro a la izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+						return true;
+						break;
+					}
+					//! Punto final detras a la izquierda
+					case ZoneType::left:
+					{
+						//! Giro a la izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+						break;
+					}
+				}
+			}
+			//! Dentro de la circunferencia
+			else
+			{
+				switch (ar_zone)
+				{
+					case ZoneType::central: // Punto final en frente
+					{
+						//! Avance recto
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+						return true;
+						break;
+					}
+					case ZoneType::right: // Punto final a la derecha
+					{
+						//! Giro a la izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+						return true;
+						break;
+					}
+					//! Punto final detras a la izquierda
+					case ZoneType::left:
+					{
+						//! Giro a la izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+						break;
+					}
+				}
+			}
+
+			break;
+		}
+		case CurveZone::Outer:
+		{
+			//! Fuera de la circunferencia
+			if (b_outside)
+			{
+				switch (ar_quad)
+				{
+					case Quadrant::fourth: // Punto final a la derecha
+					{
+						//! Giro a la derecha
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+						return true;
+						break;
+					}
+					case Quadrant::first: // Punto final a la izquierda
+					{
+						//! Giro a la izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+						return true;
+						break;
+					}
+					//! Punto final detras a la derecha
+					case Quadrant::third:
+					{
+						//! Giro a la izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+						break;
+					}
+					//! Punto final detras a la izquierda
+					case Quadrant::second:
+					{
+						//! Giro a la derecha
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+						break;
+					}
+				}
+			}
+			//! Dentro de la circunferencia
+			else
+			{
+				switch (ar_quad)
+				{
+					//! Punto final a la derecha
+					case Quadrant::fourth:
+					{
+						//! Giro a la izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+						break;
+					}
+					//! Punto final a la izquierda
+					case Quadrant::first:
+					{
+						//! Giro a la derecha
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+						break;
+					}
+					//! Punto final detras a la derecha
+					case Quadrant::third:
+					{
+						//! Giro a la izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+						break;
+					}
+					//! Punto final detras a la izquierda
+					case Quadrant::second:
+					{
+						//! Giro a la derecha
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+						break;
+					}
 				}
 			}
 			
-				
-		}
-		else
-		{
-			//! Dentro de la circunferencia
-			switch (ar_quad)
-			{
-			//! Punto final a la derecha
-			case Quadrant::fourth:
-				{
-					//! Giro a la izquierda
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
-					break;
-				}
-			//! Punto final a la izquierda
-			case Quadrant::first:
-				{
-					//! Giro a la derecha
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW);
-					break;
-				}
-			//! Punto final detras a la derecha
-			case Quadrant::third:
-				{
-					//! Giro a la izquierda
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
-					break;
-				}
-			//! Punto final detras a la izquierda
-			case Quadrant::second:
-				{
-					//! Giro a la derecha
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW);
-					break;
-				}
-			}
+			break;
 		}
 	}
 }
@@ -1224,7 +1313,8 @@ EGKRRT::EGKtree::EGKpath::Circunference::Circunference(RobotState* ap_init, Robo
 	}
 }
 
-CurveZone EGKRRT::EGKtree::EGKpath::Circunference::StateZone(RobotState* ap_init) const
+//! Zona: dentro, cerca, lejos. Si es positivo es fuera de la circunferencia y si es negativo es dentro.
+std::pair <CurveZone, bool> EGKRRT::EGKtree::EGKpath::Circunference::StateZone(RobotState* ap_init) const
 {
 	CurveZone the_zone = CurveZone::Outer;
 
@@ -1247,7 +1337,7 @@ CurveZone EGKRRT::EGKtree::EGKpath::Circunference::StateZone(RobotState* ap_init
 			the_zone = CurveZone::Medium;
 	}
 
-	return the_zone;
+	return std::make_pair(the_zone, distance > 0.0);
 }
 
 std::pair<double, bool> EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_init) const
@@ -1255,13 +1345,13 @@ std::pair<double, bool> EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 
 	if (!p_EGK_init)
-		return std::make_pair(9999, false);
+		throw ERRORNULL;
 
 	Vector3D init_pos = p_EGK_init->getPose();
 
 	double init_yaw = p_EGK_init->getYaw();
 
-	if (StateBelongs(ap_init))
+	if (StateZone(p_EGK_init).first == CurveZone::Inner)
 	{
 		//! Vector tangente a la circunferencia que pasa por init
 
