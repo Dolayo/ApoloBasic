@@ -203,8 +203,8 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// este segmento sera el que una al nuevo nodo con el segmento que contiene al nodo de 
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
-	dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 4000, true);//500
+	//dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success, NUM_ITER_PATH, true);
 
 	//SOlo para debugeo
 	double yaw = dynamic_cast<ShipState*>(newPath->_end)->getYaw() * 180/PI;
@@ -583,6 +583,79 @@ void EGKRRT::EGKtree::PopulateVertexes()
 }
 
 //! -------------------------------------- Path -------------------------------------- 
+//! 
+EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_init, RobotState* p_end, bool& b_success, int niter, bool b_ensure_yaw)
+{
+	EGKpath* p_newPath = new EGKpath();
+	ShipState* p_initState = dynamic_cast<ShipState*>(p_init);
+	ShipState* p_finalState = dynamic_cast<ShipState*>(p_end);
+
+	if (!p_initState || !p_finalState)
+			return nullptr;
+
+
+	p_newPath->appendState(p_initState);
+
+	p_newPath->_init = p_initState;
+
+	
+	
+	p_initState->placeRobot();
+
+	ShipState* p_newState = nullptr;/* , * p_prevState = p_init;*/
+
+	b_success = false; //solo se pone a true si se logra la solucion
+
+	// Registramos el valor relativo inicial de la orientacion
+	double init_yaw = p_finalState->getYaw() - p_initState->getYaw();
+
+	bool b_yaw_ensured = false;
+
+	for (int n = 0; n < niter; ++n)
+	{
+		if (p_initState->isSamePos(p_finalState))
+		{
+			b_success = true;
+			p_newPath->appendState(p_initState);
+			p_newPath->_end = p_newState;
+			return p_newPath;
+		}
+
+		// Obtain the control action
+		// Si el angulo de alejamiento ya se ha conseguido, no hace falta seguir usando la opcion de asegurar yaw
+		if (b_yaw_ensured)
+			b_ensure_yaw = false;
+
+		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState, init_yaw, b_yaw_ensured, b_ensure_yaw);
+
+		//if (p_newPath->isGhostThere(p_initState, p_finalState))
+		//{
+		//	v_ctrlAct[0] = 0.0;
+		//	v_ctrlAct[1] = 0.0;
+		//	v_ctrlAct[2] = 0.0;//Just for simple dynamics
+		//} 
+
+		// Propagate the control action
+		bool b_success_prop = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
+
+		if (b_success_prop)
+		{
+			//ShipState* auxtemp = new ShipState();
+			p_newState->setCost(p_newState->distanceTo(p_initState) + p_initState->getCost());
+
+			
+			p_newPath->appendState(p_newState);
+			p_newPath->_end = p_newState;
+			p_newPath->appendCtrlAct(v_ctrlAct);
+
+			p_initState = p_newState;
+		}
+		else
+			return p_newPath;
+	}
+
+	return p_newPath;
+}
 
 std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState, RobotState* p_finalState, double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw)
 {
@@ -886,79 +959,6 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	//return v_auxCtrlAct;
 }
 
-EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_init, RobotState* p_end, bool& b_success, int niter, bool b_ensure_yaw)
-{
-	EGKpath* p_newPath = new EGKpath();
-	ShipState* p_initState = dynamic_cast<ShipState*>(p_init);
-	ShipState* p_finalState = dynamic_cast<ShipState*>(p_end);
-
-	if (!p_initState || !p_finalState)
-			return nullptr;
-
-
-	p_newPath->appendState(p_initState);
-
-	p_newPath->_init = p_initState;
-
-	
-	
-	p_initState->placeRobot();
-
-	ShipState* p_newState = nullptr;/* , * p_prevState = p_init;*/
-
-	b_success = false; //solo se pone a true si se logra la solucion
-
-	// Registramos el valor relativo inicial de la orientacion
-	double init_yaw = p_finalState->getYaw() - p_initState->getYaw();
-
-	bool b_yaw_ensured = false;
-
-	for (int n = 0; n < niter; ++n)
-	{
-		if (p_initState->isSamePos(p_finalState))
-		{
-			b_success = true;
-			p_newPath->appendState(p_initState);
-			p_newPath->_end = p_newState;
-			return p_newPath;
-		}
-
-		// Obtain the control action
-		// Si el angulo de alejamiento ya se ha conseguido, no hace falta seguir usando la opcion de asegurar yaw
-		if (b_yaw_ensured)
-			b_ensure_yaw = false;
-
-		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState, init_yaw, b_yaw_ensured, b_ensure_yaw);
-
-		//if (p_newPath->isGhostThere(p_initState, p_finalState))
-		//{
-		//	v_ctrlAct[0] = 0.0;
-		//	v_ctrlAct[1] = 0.0;
-		//	v_ctrlAct[2] = 0.0;//Just for simple dynamics
-		//} 
-
-		// Propagate the control action
-		bool b_success_prop = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
-
-		if (b_success_prop)
-		{
-			//ShipState* auxtemp = new ShipState();
-			p_newState->setCost(p_newState->distanceTo(p_initState) + p_initState->getCost());
-
-			
-			p_newPath->appendState(p_newState);
-			p_newPath->_end = p_newState;
-			p_newPath->appendCtrlAct(v_ctrlAct);
-
-			p_initState = p_newState;
-		}
-		else
-			return p_newPath;
-	}
-
-	return p_newPath;
-}
-
 bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot)
 {
 	bool b_ret = false;
@@ -1029,8 +1029,14 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 	{
 		case CurveZone::Inner:
 		{
-			double relative_ang = (_p_circ->getRelativeAng(ap_initState)).first;
-			bool relative_sgn = (_p_circ->getRelativeAng(ap_initState)).second;
+			std::tuple<double, bool, bool> tuple_rel_ang = _p_circ->getRelativeAng(ap_initState);
+
+			double relative_ang = std::get<0>(tuple_rel_ang);
+
+			bool b_pointing_outside = std::get<1>(tuple_rel_ang);
+
+			bool b_is_center_left = std::get<2>(tuple_rel_ang);
+
 		
 			if (std::abs(relative_ang) < YAW_TOL)
 			{
@@ -1042,20 +1048,47 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 			}
 			else
 			{
-				if (!relative_sgn)// Mirando hacia afuera
+				//! Mirando hacia afuera
+				if (b_pointing_outside)
 				{
-					//! giro derecha
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW);
+					//! Centro a la izquierda
+					if (b_is_center_left)
+					{
+						//! giro izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+					}
+					//!Centro a la derecha
+					else
+					{
+						//! giro derecha
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+					}
+					
 					return true;
 				}
+				//! Mirando hacia dentro
 				else
 				{
-					//! giro izquierda
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
+					//! Centro a la izquierda
+					if (b_is_center_left)
+					{
+						//! giro derecha
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+					}
+					//!Centro a la derecha
+					else
+					{
+						//! giro izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+					}
 					return true;
 				}
 			}
@@ -1340,7 +1373,8 @@ std::pair <CurveZone, bool> EGKRRT::EGKtree::EGKpath::Circunference::StateZone(R
 	return std::make_pair(the_zone, distance > 0.0);
 }
 
-std::pair<double, bool> EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_init) const
+//! El retorno es el angulo relativo, si mira hacia afura, y si el centro esta a la izquierda
+std::tuple<double, bool, bool> EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(RobotState* ap_init) const
 {
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 
@@ -1367,9 +1401,19 @@ std::pair<double, bool> EGKRRT::EGKtree::EGKpath::Circunference::getRelativeAng(
 
 		//! Producto escalar
 		double ang = acos((init_tan.x * init_dir.x + init_tan.y * init_dir.y) / (init_tan.module() * init_dir.module()));
-		bool sgn = (init_dir.x * init_tan.y - init_tan.x * init_dir.y) > 0.0; //! Producto vectorial: V x U: Vx.Uy - Ux.Vy
+		
+		//! Producto vectorial: vector direccion por vector tangente V x U: Vx.Uy - Ux.Vy
+		bool sgn1 = (init_dir.x * init_tan.y - init_tan.x * init_dir.y) > 0.0; 
 
-		return std::make_pair(ang, sgn);
+		//!Producto vectorial: vector direccion por vector  init_2_center V x U: Vx.Uy - Ux.Vy
+		bool sgn2 = (init_dir.x * init_2_center.y - init_2_center.x * init_dir.y) > 0.0;
+
+		//! Si sgn2 es positivo el centro esta a la izquierda, -> Si sgn1 es positivo la direccion apunta hacia fuera de la circunferencia
+		//!													   -> Si sgn1 es negativo la direccion apunta hacia dentro de la circunferencia
+		//! Si sgn2 es negativo el centro esta a la derecha, -> Si sgn1 es positivo la direccion apunta hacia dentro de la circunferencia
+		//!													 -> Si sgn1 es negativo la direccion apunta hacia fuera de la circunferencia
+		
+		return std::make_tuple(ang, sgn1&&sgn2, sgn2);
 	}
 }
 
@@ -1378,7 +1422,7 @@ double EGKRRT::EGKtree::EGKpath::Circunference::getDistance(RobotState* ap_init)
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 
 	if (!p_EGK_init)
-		return 9999;
+		throw ERRORNULL;
 
 	Vector2D init_pose(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
 

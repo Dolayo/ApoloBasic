@@ -78,7 +78,7 @@ protected:
 
 						std::pair <CurveZone, bool> StateZone(RobotState* ap_init) const;
 
-						std::pair<double, bool> getRelativeAng(RobotState* ap_init) const;
+						std::tuple<double, bool, bool> getRelativeAng(RobotState* ap_init) const;
 
 						double getDistance(RobotState* ap_init) const;
 

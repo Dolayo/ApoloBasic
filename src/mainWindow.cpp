@@ -245,7 +245,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 
 			_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
 			//_myship->setRelativeOrientation(0,0,0);
-			_myship->setVels(Vector3D(V_MAX,0,0));
+			_myship->setVels(Vector3D(VX_INIT,0,0));
 			_myship->setState(_x_start, _y_start, _yaw_start/*-PI / 2*/);
 
 			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_start, _y_start, _yaw_start));

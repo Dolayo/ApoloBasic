@@ -22,7 +22,7 @@
 #define XP 5
 #define S_AIR 15
 #define S_WATER 2.5
-#define V_MAX 1.4//2.7
+#define V_MAX 2.7//2.7
 #define A_MAX 0.3857
 #define M_ARM 1
 #define TRUE_WIND_DIR PI
@@ -34,6 +34,9 @@
 #define RO_WATER 1000
 #define RO_AIR 1.225
 
+//! Numero de iteraciones a efectuar al crear un nuevo path
+constexpr int NUM_ITER_PATH = 300;//500
+
 //! Tolerancia de posicion
 constexpr double POSE_TOL = 1;
 
@@ -41,10 +44,10 @@ constexpr double POSE_TOL = 1;
 constexpr double VEL_TOL = 0.5;
 
 //! Tolerancia de orientacion con respecto a la recta tangente a la curva
-constexpr double YAW_TOL = PI / 36;//5º
+constexpr double YAW_TOL = PI / 36;//5º(/36)
 
 //! Pertenencia a la circunferencia
-constexpr double CIRC_TOL_INNER = 0.5;//0.5
+constexpr double CIRC_TOL_INNER = 1;//0.5
 
 //! Entrada en la circunferencia
 constexpr double CIRC_TOL_OUTER = 3;
@@ -61,9 +64,11 @@ constexpr double YAW_START = 0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 30.0;
-constexpr double Y_GOAL = 0.0;
+constexpr double X_GOAL = 20.0;//30
+constexpr double Y_GOAL = 7.0;//0
 
+//! Velocidad incial de avance
+constexpr double VX_INIT = 0.0;//V_MAX
 
 //! Radio de reconexion para el RRT*
 constexpr double radius = 8;
