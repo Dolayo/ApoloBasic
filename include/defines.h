@@ -35,7 +35,7 @@
 #define RO_AIR 1.225
 
 //! Numero de iteraciones a efectuar al crear un nuevo path
-constexpr int NUM_ITER_PATH = 300;//500
+constexpr int NUM_ITER_PATH = 500;//500
 
 //! Tolerancia de posicion
 constexpr double POSE_TOL = 1;
@@ -57,15 +57,15 @@ constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
 constexpr double X_START = 0.0;
-constexpr double Y_START = 30.0;
+constexpr double Y_START = 0.0;
 
 //! Orientacion relativa del robot en el punto de incio
 constexpr double YAW_START = 0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 20.0;//30
-constexpr double Y_GOAL = 7.0;//0
+constexpr double X_GOAL = 30.0;//30
+constexpr double Y_GOAL = 30.0;//0
 
 //! Velocidad incial de avance
 constexpr double VX_INIT = 0.0;//V_MAX

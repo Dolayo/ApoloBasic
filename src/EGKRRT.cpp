@@ -206,7 +206,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	//dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
 	EGKpath* newPath = EGKpath::createPath(initNode, n, success, NUM_ITER_PATH, true);
 
-	//SOlo para debugeo
+	//SOlo para debugeo, para ver con que angulo acaba
 	double yaw = dynamic_cast<ShipState*>(newPath->_end)->getYaw() * 180/PI;
 	//~SOlo para debugeo
 	// 
@@ -1054,18 +1054,43 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 					//! Centro a la izquierda
 					if (b_is_center_left)
 					{
-						//! giro izquierda
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(THRUSTW);
+						//! Ligeramente fuera de la circunferencia
+						if (b_outside)
+						{
+							//! giro izquierda
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW);
+						}
+						//! Ligeramente dentro de la circunferencia
+						else
+						{
+							//! Avance recto
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(0.);
+						}
+						
 					}
 					//!Centro a la derecha
 					else
 					{
-						//! giro derecha
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(-THRUSTW);
+							//! Ligeramente fuera de la circunferencia
+							if (b_outside)
+							{
+								//! giro derecha
+								ar_ctrl_act.push_back(THRUSTX);
+								ar_ctrl_act.push_back(0.);
+								ar_ctrl_act.push_back(-THRUSTW);
+							}
+							//! Ligeramente dentro de la circunferencia
+							else
+							{
+								//! Avance recto
+								ar_ctrl_act.push_back(THRUSTX);
+								ar_ctrl_act.push_back(0.);
+								ar_ctrl_act.push_back(0.);
+							}
 					}
 					
 					return true;
@@ -1076,18 +1101,42 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 					//! Centro a la izquierda
 					if (b_is_center_left)
 					{
-						//! giro derecha
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(-THRUSTW);
+						//! Ligeramente fuera de la circunferencia
+						if (b_outside)
+						{
+							//! Avance recto
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(0.);
+						}
+						//! Ligeramente dentro de la circunferencia
+						else
+						{
+							//! giro derecha
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(0.);
+						}
 					}
 					//!Centro a la derecha
 					else
 					{
-						//! giro izquierda
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(THRUSTW);
+						//! Ligeramente fuera de la circunferencia
+						if (b_outside)
+						{
+							//! Avance recto
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(0.);
+						}
+						//! Ligeramente dentro de la circunferencia
+						else
+						{
+							//! giro izquierda
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW);
+						}
 					}
 					return true;
 				}
@@ -1195,19 +1244,19 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 					//! Punto final detras a la derecha
 					case Quadrant::third:
 					{
-						//! Giro a la izquierda
+						//! Giro a la derecha
 						ar_ctrl_act.push_back(THRUSTX);
 						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(THRUSTW);
+						ar_ctrl_act.push_back(-THRUSTW);
 						break;
 					}
 					//! Punto final detras a la izquierda
 					case Quadrant::second:
 					{
-						//! Giro a la derecha
+						//! Giro a la izquierda
 						ar_ctrl_act.push_back(THRUSTX);
 						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(-THRUSTW);
+						ar_ctrl_act.push_back(THRUSTW);
 						break;
 					}
 				}
@@ -1389,18 +1438,27 @@ std::tuple<double, bool, bool> EGKRRT::EGKtree::EGKpath::Circunference::getRelat
 	{
 		//! Vector tangente a la circunferencia que pasa por init
 
-		Vector2D init_2_center(init_pos.x - _center.x, init_pos.y - _center.y);
+		Vector2D init_2_center( _center.x - init_pos.x, _center.y - init_pos.y);
 
-		init_2_center = init_2_center.normalize();
+		//init_2_center = init_2_center.normalize();
 
 		Vector2D init_tan = init_2_center.perpendicularVector();
 
 		Vector2D init_dir(cos(init_yaw), sin(init_yaw));
 
-		init_dir = init_dir.normalize();
+		//init_dir = init_dir.normalize();
 
 		//! Producto escalar
 		double ang = acos((init_tan.x * init_dir.x + init_tan.y * init_dir.y) / (init_tan.module() * init_dir.module()));
+
+		if (ang > (PI / 2))
+		{
+			ang = PI - ang;
+			init_tan.x = -init_tan.x;
+			init_tan.y = -init_tan.y;
+
+		}
+			
 		
 		//! Producto vectorial: vector direccion por vector tangente V x U: Vx.Uy - Ux.Vy
 		bool sgn1 = (init_dir.x * init_tan.y - init_tan.x * init_dir.y) > 0.0; 
