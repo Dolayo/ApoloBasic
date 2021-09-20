@@ -769,6 +769,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	{
 		b_yaw_ensured = true;
 		_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+		_p_spline = new Spline(p_ShipInitState, p_ShipFinalState);
 	}
 	//! //! +++++++++++++++++++++ ONLY for testing purposes
 
@@ -1486,8 +1487,91 @@ double EGKRRT::EGKtree::EGKpath::Circunference::getDistance(RobotState* ap_init)
 
 	return (init_pose - _center).module() - _radius;
 }
+//! -------------------------------------- Spline -------------------------------------- 
 
-//! -------------------------------------- Drawing methods --------------------------------------
+EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goal)
+{
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+	ShipState* p_EGK_goal = dynamic_cast<ShipState*>(ap_goal);
+
+	if (!(p_EGK_init) || (!p_EGK_goal))
+		_b_is_Ok = false;
+
+	//! Construcción de la Spline
+	if (_b_is_Ok)
+	{
+		//! Extraemos las posiciones inicial y final
+		Vector3D pos_init = p_EGK_init->getPose();
+		Vector3D pos_goal = p_EGK_goal->getPose();
+
+		//! Extraemos las direcciones inicial y final
+		double yaw_init = p_EGK_init->getYaw();
+		double yaw_goal = p_EGK_goal->getYaw();
+		Vector2D unit_yaw_init(cos(yaw_init), sin(yaw_init));
+		Vector2D unit_yaw_goal(cos(yaw_goal), sin(yaw_goal));
+
+		//! Extraemos las velocidades inicial y final
+		Vector3D vel_init = p_EGK_init->getVels();
+		Vector3D vel_goal = p_EGK_goal->getVels();
+		
+		//! Utilizamos el factor de longitud de los puntos de control 
+		//! en funcion de las velocidades
+		double factor_init;
+		double factor_goal;
+
+		if (vel_init.x < V_MAX / 3.0)
+			factor_init = 1.0;
+		else
+			if (vel_init.x < (V_MAX / (2.0/3.0)))
+				factor_init = 2.0;
+			else
+				factor_init = 3.0;
+
+		if (vel_goal.x < V_MAX / 3)
+			factor_goal = 1.0;
+		else
+			if (vel_goal.x < V_MAX / (2.0 / 3.0))
+				factor_goal = 2.0;
+			else
+				factor_goal = 3.0;
+
+		//! Calculo del corte de las rectas que forman las direcciones inicial y final
+		//! implementar la puta mierda esta
+		//! debugea para ver si los puntos de control se hacen donde deben
+
+		//! Calculo de los puntos de control
+		_p0.x = pos_init.x;
+		_p0.y = pos_init.y;
+		_p1.x = pos_init.x + unit_yaw_init.x * factor_init;//esto no vale, hay que hacerlo en funcion de el corte de las rectas yaw
+		_p1.y = pos_init.y + unit_yaw_init.y * factor_init;
+		_p2.x = pos_goal.x - unit_yaw_goal.x * factor_goal;
+		_p2.x = pos_goal.y - unit_yaw_goal.y * factor_goal;
+		_p3.x = pos_goal.x;
+		_p3.y = pos_goal.y;
+
+		//! Calculamos los coeficientes del polinomio del tercer grado
+		_cx = 3.0 * (_p1.x - _p0.x);
+		_bx = 3.0 * (_p2.x - _p1.x) - _cx;
+		_ax = _p3.x - _p0.x - _cx - _bx;
+
+		_cy = 3.0 * (_p1.y - _p0.y);
+		_by = 3.0 * (_p2.y - _p1.y) - _cy;
+		_ay = _p3.y - _p0.y - _cy - _by;
+	}
+}
+
+Vector2D EGKRRT::EGKtree::EGKpath::Spline::Spfunction(double a_t)
+{
+	double tSquared = a_t * a_t;
+	double tCubed = tSquared * a_t;
+
+	double x = (_ax * tCubed) + (_bx * tSquared) + (_cx * a_t) + _p0.x;
+	double y = (_ay * tCubed) + (_by * tSquared) + (_cy * a_t) + _p0.y;
+
+	return Vector2D(x, y);
+}
+
+//! ----------------- Drawing methods --------------------------------------
 
 void EGKRRT::drawGL()
 {
@@ -1517,6 +1601,9 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 {
 	if (_p_circ)
 		_p_circ->drawGL();
+
+	if (_p_spline)
+		_p_spline->drawGL();
 
 	if (this->_init == nullptr || this->_end == nullptr)
 		return;
@@ -1556,6 +1643,22 @@ void EGKRRT::EGKtree::EGKpath::Circunference::drawGL()
 		double x = _center.x + _radius * cos(i * PI / 180);
 		double y = _center.y + _radius * sin(i * PI / 180);// dale una vuelta a como pintar la circunferencia entera
 		glVertex3f(x, y, 0.0);
+	}
+	glEnd();
+	glEnable(GL_LIGHTING);
+}
+
+void EGKRRT::EGKtree::EGKpath::Spline::drawGL()
+{
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINE_STRIP);
+	glColor3f(0.8F, 0.1F, 0.1F);
+	glLineWidth(5);
+
+	for (int i = 0; i < 100; ++i)
+	{
+		Vector2D point = Spfunction(i);
+		glVertex3f(point.x, point.y, 0.0);
 	}
 	glEnd();
 	glEnable(GL_LIGHTING);

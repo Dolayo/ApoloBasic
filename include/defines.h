@@ -57,7 +57,7 @@ constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
 constexpr double X_START = 0.0;
-constexpr double Y_START = 0.0;
+constexpr double Y_START = 30.0;
 
 //! Orientacion relativa del robot en el punto de incio
 constexpr double YAW_START = 0;
@@ -65,7 +65,7 @@ constexpr double YAW_START = 0;
 
 //! Coordenadas absolutas X e Y del punto destino
 constexpr double X_GOAL = 30.0;//30
-constexpr double Y_GOAL = 30.0;//0
+constexpr double Y_GOAL = 0.0;//0
 
 //! Velocidad incial de avance
 constexpr double VX_INIT = 0.0;//V_MAX
@@ -75,6 +75,10 @@ constexpr double radius = 8;
 
 //!??????
 constexpr unsigned int NUM_ITERS = 6;
+
+//! Distancias usadas para calcular la distancia de los puntos de control respecto a los puntos inicial y final
+constexpr double FACTOR_INIT = 8;
+constexpr double FACTOR_GOAL = 8;
 
 //! Zona en la que se encuentra el punto goal con respecto al robot
 enum class ZoneType { central, left, right };

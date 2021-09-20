@@ -96,6 +96,33 @@ protected:
 						Vector2D _center{ 0, 0 };
 						bool _b_is_Ok{true};
 				};
+				class Spline{
+
+				public:
+					Spline(RobotState* ap_init, RobotState* ap_goal);
+					Spline() = delete;
+					~Spline() = default;
+					Vector2D Spfunction(double t);
+					void drawGL();
+				private:
+
+					Vector2D _p0;// Punto inicial
+					Vector2D _p1;// Punto de control 1
+					Vector2D _p2;// Punto de control 2
+					Vector2D _p3;// Punto final
+
+					double _cx{ 0.0 };
+					double _bx{ 0.0 };
+					double _ax{ 0.0 };
+
+					double _cy{ 0.0 };
+					double _by{ 0.0 };
+					double _ay{ 0.0 };
+
+					std::vector<Vector2D> _pointList;
+
+					bool _b_is_Ok{ true };
+				};
 			public:
 
 
@@ -124,6 +151,7 @@ protected:
 
 		private:
 			Circunference* _p_circ{nullptr};
+			Spline* _p_spline{ nullptr };
 		};
 
 	public:
