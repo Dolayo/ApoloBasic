@@ -1382,7 +1382,7 @@ EGKRRT::EGKtree::EGKpath::Circunference::Circunference(RobotState* ap_init, Robo
 		double M = tan(unit_yaw_perp.y / unit_yaw_perp.x); 
 
 		//! Anclaje de la recta que pasa por goal y el centro de la circunferencia
-		double n = M * pos_goal.x - pos_goal.y;
+		double n = pos_goal.y - M * pos_goal.x;
 
 		//! Coordenada X del centro de la circunferencia
 		_center.x = ((pos_goal.x)*(pos_goal.x) - (pos_init.x)*(pos_init.x) + (pos_goal.y)*(pos_goal.y) - (pos_init.y)*(pos_init.y) - 2*(pos_goal.y - pos_init.y) * n) /
@@ -1495,7 +1495,7 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 	ShipState* p_EGK_goal = dynamic_cast<ShipState*>(ap_goal);
 
 	if (!(p_EGK_init) || (!p_EGK_goal))
-		_b_is_Ok = false;
+		throw ERRORNULL;
 
 	//! Construcción de la Spline
 	if (_b_is_Ok)
@@ -1508,46 +1508,62 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		double yaw_init = p_EGK_init->getYaw();
 		double yaw_goal = p_EGK_goal->getYaw();
 		Vector2D unit_yaw_init(cos(yaw_init), sin(yaw_init));
-		Vector2D unit_yaw_goal(cos(yaw_goal), sin(yaw_goal));
+		Vector2D unit_yaw_goal(-cos(yaw_goal), -sin(yaw_goal));
 
 		//! Extraemos las velocidades inicial y final
 		Vector3D vel_init = p_EGK_init->getVels();
 		Vector3D vel_goal = p_EGK_goal->getVels();
-		
+
+		//! Calculo del corte de las rectas que forman las direcciones inicial y final
+		//! Calculamos las rectas que forman los puntos inicial y final y sus direcciones: y = Mx + n
+		double M_init = tan(unit_yaw_init.y / unit_yaw_init.x);
+		double n_init = pos_init.y - M_init * pos_init.x;
+
+		double M_goal = tan(unit_yaw_goal.y / unit_yaw_goal.x);
+		double n_goal = pos_goal.y - M_goal * pos_goal.x;
+		//! y = m1x +n1
+		//! y = m2x + n2
+		//! m2x - m1x = n1-n2
+		//! x = n1-n2 / m2-m1
+		Vector2D intersec_point((n_init - n_goal)/(M_goal - M_init), M_init*pos_init.x + n_init);
+
+		//! Distancias del punto de interseccion a los puntos inicial y final
+		double dist_intersec1 = intersec_point.distance(Vector2D(pos_init.x, pos_init.y));
+		double dist_intersec2 = intersec_point.distance(Vector2D(pos_goal.x, pos_goal.y));
+
+
 		//! Utilizamos el factor de longitud de los puntos de control 
 		//! en funcion de las velocidades
 		double factor_init;
 		double factor_goal;
 
-		if (vel_init.x < V_MAX / 3.0)
-			factor_init = 1.0;
-		else
-			if (vel_init.x < (V_MAX / (2.0/3.0)))
-				factor_init = 2.0;
-			else
-				factor_init = 3.0;
+		double factor_vel_init = vel_init.x / V_MAX;
+		double factor_vel_goal = vel_goal.x / V_MAX;
 
-		if (vel_goal.x < V_MAX / 3)
-			factor_goal = 1.0;
-		else
-			if (vel_goal.x < V_MAX / (2.0 / 3.0))
-				factor_goal = 2.0;
-			else
-				factor_goal = 3.0;
+		//! Distancia desde los puntos inicial y final a la que se colocaran los puntos de control p1 y p2 respectivamente
+		double dist_p1 = factor_vel_init * dist_intersec1;
+		double dist_p2 = factor_vel_goal * dist_intersec2;
 
-		//! Calculo del corte de las rectas que forman las direcciones inicial y final
-		//! implementar la puta mierda esta
-		//! debugea para ver si los puntos de control se hacen donde deben
+		//!Pensar si añadir una comprobacion de que la distancia no sea 0
 
 		//! Calculo de los puntos de control
 		_p0.x = pos_init.x;
 		_p0.y = pos_init.y;
-		_p1.x = pos_init.x + unit_yaw_init.x * factor_init;//esto no vale, hay que hacerlo en funcion de el corte de las rectas yaw
-		_p1.y = pos_init.y + unit_yaw_init.y * factor_init;
-		_p2.x = pos_goal.x - unit_yaw_goal.x * factor_goal;
-		_p2.x = pos_goal.y - unit_yaw_goal.y * factor_goal;
+		_p1.x = pos_init.x + dist_p1 * unit_yaw_init.x;
+		_p1.y = pos_init.y + dist_p1 * unit_yaw_init.y;
+		_p2.x = pos_goal.x - dist_p2 * unit_yaw_goal.x;
+		_p2.y = pos_goal.y - dist_p2 * unit_yaw_goal.y;
 		_p3.x = pos_goal.x;
 		_p3.y = pos_goal.y;
+		
+		_p0.x = 0.0;
+		_p0.y = 30.0;
+		_p1.x = 20.0;
+		_p1.y = 30.0;
+		_p2.x = 30.0;
+		_p2.y = 20.0;
+		_p3.x = 30.0;
+		_p3.y = 0.0;
 
 		//! Calculamos los coeficientes del polinomio del tercer grado
 		_cx = 3.0 * (_p1.x - _p0.x);
@@ -1557,6 +1573,7 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_cy = 3.0 * (_p1.y - _p0.y);
 		_by = 3.0 * (_p2.y - _p1.y) - _cy;
 		_ay = _p3.y - _p0.y - _cy - _by;
+
 	}
 }
 
@@ -1655,7 +1672,7 @@ void EGKRRT::EGKtree::EGKpath::Spline::drawGL()
 	glColor3f(0.8F, 0.1F, 0.1F);
 	glLineWidth(5);
 
-	for (int i = 0; i < 100; ++i)
+	for (double i = -100.0; i < 100.0; i+=0.01)
 	{
 		Vector2D point = Spfunction(i);
 		glVertex3f(point.x, point.y, 0.0);
