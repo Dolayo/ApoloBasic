@@ -1566,14 +1566,34 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_p3.y = 0.0;
 
 		//! Calculamos los coeficientes del polinomio del tercer grado
-		_cx = 3.0 * (_p1.x - _p0.x);
+		/*_cx = 3.0 * (_p1.x - _p0.x);
 		_bx = 3.0 * (_p2.x - _p1.x) - _cx;
 		_ax = _p3.x - _p0.x - _cx - _bx;
 
 		_cy = 3.0 * (_p1.y - _p0.y);
 		_by = 3.0 * (_p2.y - _p1.y) - _cy;
-		_ay = _p3.y - _p0.y - _cy - _by;
+		_ay = _p3.y - _p0.y - _cy - _by;*/
 
+
+		
+		/*_ax = 2 * (_p0.x - _p3.x) + unit_yaw_init.x + unit_yaw_goal.x;
+		_bx = 3 * (_p3.x - _p0.x) - (2 * unit_yaw_init.x + unit_yaw_goal.x);
+		_cx = unit_yaw_init.x;
+
+		_ay = 2 * (_p0.y - _p3.y) + unit_yaw_init.y + unit_yaw_goal.y;
+		_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
+		_cy = unit_yaw_init.y;*/
+
+		double mx1 = 200.0, mx2 = 0.0;
+		double my1 = 0.0, my2 = -200.0;
+
+		_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
+		_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);
+		_cx = mx1;
+
+		_ay = 2 * (_p0.y - _p3.y) + my1 + my2;
+		_by = 3 * (_p3.y - _p0.y) - (2 * my1 + my2);
+		_cy = my1;
 	}
 }
 
@@ -1586,6 +1606,20 @@ Vector2D EGKRRT::EGKtree::EGKpath::Spline::Spfunction(double a_t)
 	double y = (_ay * tCubed) + (_by * tSquared) + (_cy * a_t) + _p0.y;
 
 	return Vector2D(x, y);
+}
+
+double EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotState* ap_init)
+{
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+
+	if (!p_EGK_init)
+		throw ERRORNULL;
+
+	double ret_distance = -1.0;
+
+	Vector2D pos(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
+
+	return sqrt(4);
 }
 
 //! ----------------- Drawing methods --------------------------------------
@@ -1672,7 +1706,7 @@ void EGKRRT::EGKtree::EGKpath::Spline::drawGL()
 	glColor3f(0.8F, 0.1F, 0.1F);
 	glLineWidth(5);
 
-	for (double i = -100.0; i < 100.0; i+=0.01)
+	for (double i = 0.0; i < 1.0; i+=0.001)
 	{
 		Vector2D point = Spfunction(i);
 		glVertex3f(point.x, point.y, 0.0);

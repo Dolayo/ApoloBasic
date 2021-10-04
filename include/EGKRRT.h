@@ -103,14 +103,16 @@ protected:
 					Spline() = delete;
 					~Spline() = default;
 					Vector2D Spfunction(double t);
+					double getDistance(RobotState* ap_init);
 					void drawGL();
 				private:
 
-					Vector2D _p0;// Punto inicial
-					Vector2D _p1;// Punto de control 1
-					Vector2D _p2;// Punto de control 2
-					Vector2D _p3;// Punto final
+					Vector2D _p0;//! Punto inicial
+					Vector2D _p1;//! Punto de control 1
+					Vector2D _p2;//! Punto de control 2
+					Vector2D _p3;//! Punto final
 
+					//! B(t) = _a.t3 + _b.t2 + _c.t + _p0;
 					double _cx{ 0.0 };
 					double _bx{ 0.0 };
 					double _ax{ 0.0 };
