@@ -776,6 +776,8 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	if(b_yaw_ensured)//b_yaw_ensured
 	{
 		generateCtrlActCirc(p_ShipInitState, quad, zone, v_auxCtrlAct);
+		double dist_test = _p_spline->getDistanceTest(p_ShipInitState);
+		double dist_min_quad = _p_spline->getDistance(p_ShipInitState);
 		if(v_auxCtrlAct.size()==0)
 		{
 			v_auxCtrlAct.push_back(0.);
@@ -1584,8 +1586,8 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
 		_cy = unit_yaw_init.y;*/
 
-		double mx1 = 200.0, mx2 = 0.0;
-		double my1 = 0.0, my2 = -200.0;
+		double mx1 = 70.0, mx2 = 0.0;
+		double my1 = 0.0, my2 = -70.0;
 
 		_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
 		_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);
@@ -1619,7 +1621,104 @@ double EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotState* ap_init)
 
 	Vector2D pos(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
 
-	return sqrt(4);
+	std::vector<double> ts{ 0.0 ,0.5 ,1.0 };
+	int k = 0;
+
+	// t_min es el minimo del polinomio que interpola t1, t2, t3
+	double t_min = QuadraticMin(pos, ts[0], ts[1], ts[2]);
+
+	//double Pt_min = QuadraticPolynom(pos, t_min, ts[0], ts[1], ts[2]); creo que no es necesario
+	double Pt1 = QuadraticPolynom(pos, ts[0], ts[0], ts[1], ts[2]);
+	double Pt2 = QuadraticPolynom(pos, ts[1], ts[0], ts[1], ts[2]);
+	double Pt3 = QuadraticPolynom(pos, ts[2], ts[0], ts[1], ts[2]);
+
+	std::vector<double> Pts{ Pt1 ,Pt2 ,Pt3 };
+
+	while (k < 100)
+	{
+		//! Buscamos el maximo entre P(t1), P(t2), P(t3) para descartarlo en favor de P(t_min)
+		int t_max = 0;
+		double val_max = 0.0;
+
+		for (int i=0;i<Pts.size();++i)
+			if (val_max < Pts[i])
+			{
+				val_max = Pts[i];
+				t_max = i;
+			}
+
+		//! Sustituimos el valor mas alto de las 3 aproximaciones t1, t2, t3 por este valor minimo t_min
+		ts[t_max] = t_min;
+
+		//Pt_min = QuadraticPolynom(pos, t_min, ts[0], ts[1], ts[2]); creo que no es necesario
+		Pt1 = QuadraticPolynom(pos, ts[0], ts[0], ts[1], ts[2]);
+		Pt2 = QuadraticPolynom(pos, ts[1], ts[0], ts[1], ts[2]);
+		Pt3 = QuadraticPolynom(pos, ts[2], ts[0], ts[1], ts[2]);
+		t_min = QuadraticMin(pos, ts[0], ts[1], ts[2]);
+
+		++k;
+	}
+
+	ret_distance = getDistanceT(pos, t_min);
+
+	return ret_distance;
+}
+
+double EGKRRT::EGKtree::EGKpath::Spline::getDistanceTest(RobotState* ap_init)
+{
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+
+	if (!p_EGK_init)
+		throw ERRORNULL;
+
+	double ret_distance = -1.0;
+
+	Vector2D pos(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
+
+	ret_distance = (Spfunction(0) - pos).module();
+
+	for (double i = 0.01; i < 1.0; i+=0.01)
+	{
+		double aux_dist = (Spfunction(i) - pos).module();
+
+		if (aux_dist < ret_distance)
+			ret_distance = aux_dist;
+	}
+
+	return ret_distance;
+}
+
+double EGKRRT::EGKtree::EGKpath::Spline::QuadraticMin(Vector2D& pos, double& t1, double& t2, double& t3)
+{
+	//! En principio creamos una variable para debuguear, pero luego pon return directamente
+	double y23 = t2 * t2 - t3 * t3;
+	double y31 = t3 * t3 - t1 * t1;
+	double y12 = t1 * t1 - t2 * t2;
+	double t23 = t2 - t3;
+	double t31 = t3 - t1;
+	double t12 = t1 - t2;
+	
+	double num = y23 * getDistanceT(pos, t1) + y31 * getDistanceT(pos, t2) + y12 * getDistanceT(pos, t3);
+	double den = t23 * getDistanceT(pos, t1) + t31 * getDistanceT(pos, t2) + t12 * getDistanceT(pos, t3);
+	double ret = 0.5 * (num) / (den);
+
+	return ret;
+}
+
+double EGKRRT::EGKtree::EGKpath::Spline::getDistanceT(Vector2D& pos, double& t)
+{
+	//! En principio creamos una variable para debuguear, pero luego pon return directamente
+	double ret = (Spfunction(t) - pos).module();
+	return ret;
+}
+
+double EGKRRT::EGKtree::EGKpath::Spline::QuadraticPolynom(Vector2D& pos, double& t, double& t1, double& t2, double& t3)
+{
+	//! En principio creamos una variable para debuguear, pero luego pon return directamente
+	double ret = (((t - t2) * (t - t3)) / ((t1 - t2) * (t1 - t3))) * getDistanceT(pos, t1)
+		+ (((t - t1) * (t - t3)) / ((t2 - t1) * (t2 - t3))) * getDistanceT(pos, t2)
+		+ (((t - t1) * (t - t2)) / ((t3 - t1) * (t3 - t2))) * getDistanceT(pos, t3);
+	return ret;
 }
 
 //! ----------------- Drawing methods --------------------------------------

@@ -104,6 +104,10 @@ protected:
 					~Spline() = default;
 					Vector2D Spfunction(double t);
 					double getDistance(RobotState* ap_init);
+					double getDistanceTest(RobotState* ap_init);
+					double QuadraticMin(Vector2D& pos, double& t1, double& t2, double& t3);
+					double getDistanceT(Vector2D& pos, double& t);
+					double QuadraticPolynom(Vector2D& pos, double& t, double& t1, double& t2, double& t3);
 					void drawGL();
 				private:
 
