@@ -2,9 +2,9 @@
 #define __DEFINES_
 
 #define DELTA_T 0.1 //seconds
-#define THETA1 3*PI/180 // 1º para 20º,30º y 40º
-#define THETA2 10*PI/180 // 5º para 20º(10º vale tambien), 10º para 45º, 10º para 30º
-#define THETA3 1*PI/6 // 30º para 20º, 30º y 40º
+#define THETA1 2*PI/180 // 5º normal, 2º spline
+#define THETA2 5*PI/180 // 10º normal, 5º spline
+#define THETA3 20*PI/180 // 30º normal, 20º spline
 
 //! Orientacion inicial, usado para testeo
 #define TEST_YAW -PI/2//-PI / 6
@@ -12,8 +12,11 @@
 #define DIST1 8//8 valor seguro 20º, 30º y 40º
 #define DIST2 18//16 valor seguro 20º, 30º y 40º
 #define THRUSTX 28000
+#define THRUSTX_spline THRUSTX*0.95
 #define THRUSTY 28000
+#define THRUSTY_spline THRUSTY*0.95
 #define THRUSTW 192000
+#define THRUSTW_spline THRUSTW/0.95
 #define N_ITER 100
 #define WIDTH 3
 #define LENGTH 10
@@ -47,24 +50,24 @@ constexpr double VEL_TOL = 0.5;
 constexpr double YAW_TOL = PI / 90;//5º(/36)
 
 //! Pertenencia a la circunferencia
-constexpr double CIRC_TOL_INNER = 1.0;//0.5
+constexpr double CIRC_TOL_INNER = 0.5;//0.5
 
 //! Entrada en la circunferencia
-constexpr double CIRC_TOL_OUTER = 3;
+constexpr double CIRC_TOL_OUTER = 10;
 
 //!????
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 0.0;
-constexpr double Y_START = 30.0;
+constexpr double X_START = 0.0;//0
+constexpr double Y_START = 10.0;//30
 
 //! Orientacion relativa del robot en el punto de incio
 constexpr double YAW_START = 0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 30.0;//30
+constexpr double X_GOAL = 10.0;//30
 constexpr double Y_GOAL = 0.0;//0
 
 //! Velocidad incial de avance

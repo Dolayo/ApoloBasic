@@ -40,7 +40,6 @@ bool EGKRRT::testingPlan()
 	return false;
 }
 
-
 bool EGKRRT::computePlan(int maxiterations)
 {
 	if (solved)return true;
@@ -618,6 +617,7 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 			b_success = true;
 			p_newPath->appendState(p_initState);
 			p_newPath->_end = p_newState;
+			double ang = 180*(p_initState->getYaw())/PI;//DEBUG
 			return p_newPath;
 		}
 
@@ -1562,12 +1562,12 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_p3.y = pos_goal.y;
 		
 		_p0.x = 0.0;
-		_p0.y = 30.0;
+		_p0.y = 10.0;
 		_p1.x = 20.0;
 		_p1.y = 30.0;
 		_p2.x = 30.0;
 		_p2.y = 20.0;
-		_p3.x = 30.0;
+		_p3.x = 10.0;
 		_p3.y = 0.0;
 
 		//! Calculamos los coeficientes del polinomio del tercer grado
@@ -1589,8 +1589,8 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
 		_cy = unit_yaw_init.y;*/
 
-		double mx1 = 70.0, mx2 = 0.0;
-		double my1 = 0.0, my2 = -70.0;
+		double mx1 = 30.0, mx2 = 0.0;
+		double my1 = 0.0, my2 = -30.0;
 
 		_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
 		_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);
@@ -1625,9 +1625,20 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 		if (std::abs(relative_ang) < YAW_TOL)
 		{
 			//! avance recto
-			ar_ctrl_act.push_back(THRUSTX);
-			ar_ctrl_act.push_back(0.);
-			ar_ctrl_act.push_back(0.);
+			double t_near = _p_spline->getTnear();
+			if (t_near > 0.4 && t_near < 0.6)
+			{
+				ar_ctrl_act.push_back(THRUSTX_spline);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(0.);
+			}
+			else
+			{
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(0.);
+			}
+
 			return true;
 		}
 		else
@@ -1642,17 +1653,37 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					if (b_outside)
 					{
 						//! giro izquierda
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(THRUSTW);
+						double t_near = _p_spline->getTnear();
+						if (t_near > 0.4 && t_near < 0.6)
+						{
+							ar_ctrl_act.push_back(THRUSTX_spline);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW_spline);
+						}
+						else
+						{
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW);
+						}
 					}
 					//! Ligeramente dentro de la circunferencia
 					else
 					{
 						//! Avance recto
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(0.);
+						double t_near = _p_spline->getTnear();
+						if (t_near > 0.4 && t_near < 0.6)
+						{
+							ar_ctrl_act.push_back(THRUSTX_spline);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(0.);
+						}
+						else
+						{
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(0.);
+						}
 					}
 
 				}
@@ -1663,17 +1694,37 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					if (b_outside)
 					{
 						//! giro derecha
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(-THRUSTW);
+						double t_near = _p_spline->getTnear();
+						if (t_near > 0.4 && t_near < 0.6)
+						{
+							ar_ctrl_act.push_back(THRUSTX_spline);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(-THRUSTW_spline);
+						}
+						else
+						{
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(-THRUSTW);
+						}
 					}
 					//! Ligeramente dentro de la circunferencia
 					else
 					{
 						//! Avance recto
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(0.);
+						double t_near = _p_spline->getTnear();
+						if (t_near > 0.4 && t_near < 0.6)
+						{
+							ar_ctrl_act.push_back(THRUSTX_spline);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(0.);
+						}
+						else
+						{
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(0.);
+						}
 					}
 				}
 
@@ -1689,17 +1740,37 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					if (b_outside)
 					{
 						//! giro derecha
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(-THRUSTW);
+						double t_near = _p_spline->getTnear();
+						if (t_near > 0.4 && t_near < 0.6)
+						{
+							ar_ctrl_act.push_back(THRUSTX_spline);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(-THRUSTW_spline);
+						}
+						else
+						{
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(-THRUSTW);
+						}
 					}
 					//! Ligeramente dentro de la circunferencia
 					else
 					{
 						//! giro derecha
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(-THRUSTW);
+						double t_near = _p_spline->getTnear();
+						if (t_near > 0.4 && t_near < 0.6)
+						{
+							ar_ctrl_act.push_back(THRUSTX_spline);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(-THRUSTW_spline);
+						}
+						else
+						{
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(-THRUSTW);
+						}
 					}
 				}
 				//!Centro a la derecha
@@ -1709,17 +1780,37 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					if (b_outside)
 					{
 						//! giro izquierda
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(THRUSTW);
+						double t_near = _p_spline->getTnear();
+						if (t_near > 0.4 && t_near < 0.6)
+						{
+							ar_ctrl_act.push_back(THRUSTX_spline);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW_spline);
+						}
+						else
+						{
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW);
+						}
 					}
 					//! Ligeramente dentro de la circunferencia
 					else
 					{
 						//! giro izquierda
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(THRUSTW);
+						double t_near = _p_spline->getTnear();
+						if (t_near > 0.4 && t_near < 0.6)
+						{
+							ar_ctrl_act.push_back(THRUSTX_spline);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW_spline);
+						}
+						else
+						{
+							ar_ctrl_act.push_back(THRUSTX);
+							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW);
+						}
 					}
 				}
 				return true;
@@ -1737,18 +1828,38 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			case ZoneType::central: // Punto final en frente
 			{
 				//! Avance recto
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(0.);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(0.);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(0.);
+				}
 				return true;
 				break;
 			}
 			case ZoneType::right: // Punto final a la derecha
 			{
 				//! Giro a la derecha
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(-THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW);
+				}
 				return true;
 				break;
 			}
@@ -1756,9 +1867,19 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			case ZoneType::left:
 			{
 				//! Giro a la izquierda
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+				}
 				break;
 			}
 			}
@@ -1771,18 +1892,38 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			case ZoneType::central: // Punto final en frente
 			{
 				//! Avance recto
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(0.);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(0.);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(0.);
+				}
 				return true;
 				break;
 			}
 			case ZoneType::right: // Punto final a la derecha
 			{
 				//! Giro a la izquierda
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(-THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+				}
 				return true;
 				break;
 			}
@@ -1790,9 +1931,19 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			case ZoneType::left:
 			{
 				//! Giro a la izquierda
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+				}
 				break;
 			}
 			}
@@ -1810,18 +1961,38 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			case Quadrant::fourth: // Punto final a la derecha
 			{
 				//! Giro a la derecha
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(-THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW);
+				}
 				return true;
 				break;
 			}
 			case Quadrant::first: // Punto final a la izquierda
 			{
 				//! Giro a la izquierda
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+				}
 				return true;
 				break;
 			}
@@ -1829,18 +2000,38 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			case Quadrant::third:
 			{
 				//! Giro a la derecha
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(-THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW);
+				}
 				break;
 			}
 			//! Punto final detras a la izquierda
 			case Quadrant::second:
 			{
 				//! Giro a la izquierda
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+				}
 				break;
 			}
 			}
@@ -1854,36 +2045,76 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			case Quadrant::fourth:
 			{
 				//! Giro a la izquierda
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+				}
 				break;
 			}
 			//! Punto final a la izquierda
 			case Quadrant::first:
 			{
 				//! Giro a la derecha
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(-THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW);
+				}
 				break;
 			}
 			//! Punto final detras a la derecha
 			case Quadrant::third:
 			{
 				//! Giro a la izquierda
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTW);
+				}
 				break;
 			}
 			//! Punto final detras a la izquierda
 			case Quadrant::second:
 			{
 				//! Giro a la derecha
-				ar_ctrl_act.push_back(THRUSTX);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(-THRUSTW);
+				double t_near = _p_spline->getTnear();
+				if (t_near > 0.4 && t_near < 0.6)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW_spline);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(THRUSTX);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(-THRUSTW);
+				}
 				break;
 			}
 			}
@@ -1923,10 +2154,6 @@ std::pair<double , double> EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotSt
 
 	// t_min es el minimo del polinomio que interpola t1, t2, t3
 	double t_min = QuadraticMin(pos, ts[0], ts[1], ts[2]);
-	if (t_min < 0.0)
-		t_min = 0.000001;
-	if (t_min > 1.0)
-		t_min = 0.999999;
 
 	//double Pt_min = QuadraticPolynom(pos, t_min, ts[0], ts[1], ts[2]); creo que no es necesario
 	double Pt1 = QuadraticPolynom(pos, ts[0], ts[0], ts[1], ts[2]);
@@ -1959,10 +2186,10 @@ std::pair<double , double> EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotSt
 		Pt2 = QuadraticPolynom(pos, ts[1], ts[0], ts[1], ts[2]);
 		Pt3 = QuadraticPolynom(pos, ts[2], ts[0], ts[1], ts[2]);
 		t_min = QuadraticMin(pos, ts[0], ts[1], ts[2]);
-		if (t_min < 0.0)
+		/*if (t_min < 0.0)
 			t_min = 0.000001;
 		if (t_min > 1.0)
-			t_min = 0.999999;
+			t_min = 0.999999;*/
 		aux_debug.push_back(t_min);
 		++k;
 	}
@@ -1977,9 +2204,13 @@ std::pair<double , double> EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotSt
 		++nr;
 	}
 
+	if (t_min < 0.0)
+		t_min = 0.000001;
+	if (t_min > 1.0)
+		t_min = 0.999999;
 
 	ret_distance = getDistanceT(pos, t_min);
-
+	_t_near = t_min;
 	return std::pair<double, double>(ret_distance, t_min);
 }
 
@@ -2026,10 +2257,10 @@ double EGKRRT::EGKtree::EGKpath::Spline::QuadraticMin(Vector2D& pos, double& t1,
 	double den = t23 * getDistanceT(pos, t1) + t31 * getDistanceT(pos, t2) + t12 * getDistanceT(pos, t3);
 	double ret = 0.5 * (num) / (den);
 
-	if (ret < 0.0)
+	/*if (ret < 0.0)
 		ret = 0.000001;
 	if (ret > 1.0)
-		ret = 0.999999;
+		ret = 0.999999;*/
 
 	return ret;
 }
@@ -2037,7 +2268,9 @@ double EGKRRT::EGKtree::EGKpath::Spline::QuadraticMin(Vector2D& pos, double& t1,
 double EGKRRT::EGKtree::EGKpath::Spline::getDistanceT(Vector2D& pos, double& t)
 {
 	//! En principio creamos una variable para debuguear, pero luego pon return directamente
-	double ret = (Spfunction(t) - pos).module();
+	// double ret = (Spfunction(t) - pos).module();
+	Vector2D point = Spfunction(t);
+	double ret = (point.x - pos.x)* (point.x - pos.x) + (point.y - pos.y)* (point.y - pos.y);
 	return ret;
 }
 

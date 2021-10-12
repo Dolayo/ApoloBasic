@@ -114,7 +114,9 @@ protected:
 					bool IsInside(RobotState* ap_init);
 					std::tuple<double, bool, bool> getRelativeAng(RobotState* ap_init);
 					Vector2D SpfirstD(double&& t);
+					double getTnear(void) const { return _t_near; }
 					void drawGL();
+					
 				private:
 
 					Vector2D _p0;//! Punto inicial
@@ -134,6 +136,8 @@ protected:
 					std::vector<Vector2D> _pointList;
 
 					bool _b_is_Ok{ true };
+
+					double _t_near{ 0.0 };
 				};
 			public:
 
