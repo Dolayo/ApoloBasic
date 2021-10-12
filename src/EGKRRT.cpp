@@ -768,16 +768,18 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	if (b_ensure_yaw)
 	{
 		b_yaw_ensured = true;
-		_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+		//_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
 		_p_spline = new Spline(p_ShipInitState, p_ShipFinalState);
 	}
 	//! //! +++++++++++++++++++++ ONLY for testing purposes
 
 	if(b_yaw_ensured)//b_yaw_ensured
 	{
-		generateCtrlActCirc(p_ShipInitState, quad, zone, v_auxCtrlAct);
-		double dist_test = _p_spline->getDistanceTest(p_ShipInitState);
-		double dist_min_quad = _p_spline->getDistance(p_ShipInitState);
+		//generateCtrlActCirc(p_ShipInitState, quad, zone, v_auxCtrlAct);
+		generateCtrlActSpline(p_ShipInitState, quad, zone, v_auxCtrlAct);
+		//TEST double dist_test = _p_spline->getDistanceTest(p_ShipInitState);
+		//TEST double dist_min_quad = _p_spline->getDistance(p_ShipInitState).first;
+		//TEST bool inside = _p_spline->IsInside(p_ShipInitState);
 		if(v_auxCtrlAct.size()==0)
 		{
 			v_auxCtrlAct.push_back(0.);
@@ -1489,6 +1491,7 @@ double EGKRRT::EGKtree::EGKpath::Circunference::getDistance(RobotState* ap_init)
 
 	return (init_pose - _center).module() - _radius;
 }
+
 //! -------------------------------------- Spline -------------------------------------- 
 
 EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goal)
@@ -1599,6 +1602,298 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 	}
 }
 
+bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act)
+{
+	//! Determinamos la posicion del robot respecto a la curva
+	std::pair<CurveZone, bool> state_zone = _p_spline->StateZone(ap_initState);
+	CurveZone the_zone = state_zone.first;
+	bool b_outside = !(state_zone.second);
+
+	switch (the_zone)
+	{
+	case CurveZone::Inner:
+	{
+		std::tuple<double, bool, bool> tuple_rel_ang = _p_spline->getRelativeAng(ap_initState);
+
+		double relative_ang = std::get<0>(tuple_rel_ang);
+
+		bool b_pointing_outside = std::get<1>(tuple_rel_ang);
+
+		bool b_is_center_left = std::get<2>(tuple_rel_ang);
+
+
+		if (std::abs(relative_ang) < YAW_TOL)
+		{
+			//! avance recto
+			ar_ctrl_act.push_back(THRUSTX);
+			ar_ctrl_act.push_back(0.);
+			ar_ctrl_act.push_back(0.);
+			return true;
+		}
+		else
+		{
+			//! Mirando hacia afuera
+			if (b_pointing_outside)
+			{
+				//! Centro a la izquierda
+				if (b_is_center_left)
+				{
+					//! Ligeramente fuera de la circunferencia
+					if (b_outside)
+					{
+						//! giro izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+					}
+					//! Ligeramente dentro de la circunferencia
+					else
+					{
+						//! Avance recto
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+					}
+
+				}
+				//!Centro a la derecha
+				else
+				{
+					//! Ligeramente fuera de la circunferencia
+					if (b_outside)
+					{
+						//! giro derecha
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+					}
+					//! Ligeramente dentro de la circunferencia
+					else
+					{
+						//! Avance recto
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+					}
+				}
+
+				return true;
+			}
+			//! Mirando hacia dentro
+			else
+			{
+				//! Centro a la izquierda
+				if (b_is_center_left)
+				{
+					//! Ligeramente fuera de la circunferencia
+					if (b_outside)
+					{
+						//! giro derecha
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+					}
+					//! Ligeramente dentro de la circunferencia
+					else
+					{
+						//! giro derecha
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(-THRUSTW);
+					}
+				}
+				//!Centro a la derecha
+				else
+				{
+					//! Ligeramente fuera de la circunferencia
+					if (b_outside)
+					{
+						//! giro izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+					}
+					//! Ligeramente dentro de la circunferencia
+					else
+					{
+						//! giro izquierda
+						ar_ctrl_act.push_back(THRUSTX);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(THRUSTW);
+					}
+				}
+				return true;
+			}
+		}
+		break;
+	}
+	case CurveZone::Medium:
+	{
+		//! Fuera de la circunferencia
+		if (b_outside)
+		{
+			switch (ar_zone)
+			{
+			case ZoneType::central: // Punto final en frente
+			{
+				//! Avance recto
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(0.);
+				return true;
+				break;
+			}
+			case ZoneType::right: // Punto final a la derecha
+			{
+				//! Giro a la derecha
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(-THRUSTW);
+				return true;
+				break;
+			}
+			//! Punto final detras a la izquierda
+			case ZoneType::left:
+			{
+				//! Giro a la izquierda
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(THRUSTW);
+				break;
+			}
+			}
+		}
+		//! Dentro de la circunferencia
+		else
+		{
+			switch (ar_zone)
+			{
+			case ZoneType::central: // Punto final en frente
+			{
+				//! Avance recto
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(0.);
+				return true;
+				break;
+			}
+			case ZoneType::right: // Punto final a la derecha
+			{
+				//! Giro a la izquierda
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(-THRUSTW);
+				return true;
+				break;
+			}
+			//! Punto final detras a la izquierda
+			case ZoneType::left:
+			{
+				//! Giro a la izquierda
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(THRUSTW);
+				break;
+			}
+			}
+		}
+
+		break;
+	}
+	case CurveZone::Outer:
+	{
+		//! Fuera de la circunferencia
+		if (b_outside)
+		{
+			switch (ar_quad)
+			{
+			case Quadrant::fourth: // Punto final a la derecha
+			{
+				//! Giro a la derecha
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(-THRUSTW);
+				return true;
+				break;
+			}
+			case Quadrant::first: // Punto final a la izquierda
+			{
+				//! Giro a la izquierda
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(THRUSTW);
+				return true;
+				break;
+			}
+			//! Punto final detras a la derecha
+			case Quadrant::third:
+			{
+				//! Giro a la derecha
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(-THRUSTW);
+				break;
+			}
+			//! Punto final detras a la izquierda
+			case Quadrant::second:
+			{
+				//! Giro a la izquierda
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(THRUSTW);
+				break;
+			}
+			}
+		}
+		//! Dentro de la circunferencia
+		else
+		{
+			switch (ar_quad)
+			{
+				//! Punto final a la derecha
+			case Quadrant::fourth:
+			{
+				//! Giro a la izquierda
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(THRUSTW);
+				break;
+			}
+			//! Punto final a la izquierda
+			case Quadrant::first:
+			{
+				//! Giro a la derecha
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(-THRUSTW);
+				break;
+			}
+			//! Punto final detras a la derecha
+			case Quadrant::third:
+			{
+				//! Giro a la izquierda
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(THRUSTW);
+				break;
+			}
+			//! Punto final detras a la izquierda
+			case Quadrant::second:
+			{
+				//! Giro a la derecha
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(-THRUSTW);
+				break;
+			}
+			}
+		}
+
+		break;
+	}
+	}
+}
+
 Vector2D EGKRRT::EGKtree::EGKpath::Spline::Spfunction(double a_t)
 {
 	double tSquared = a_t * a_t;
@@ -1610,7 +1905,7 @@ Vector2D EGKRRT::EGKtree::EGKpath::Spline::Spfunction(double a_t)
 	return Vector2D(x, y);
 }
 
-double EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotState* ap_init)
+std::pair<double , double> EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotState* ap_init)
 {
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 
@@ -1621,11 +1916,17 @@ double EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotState* ap_init)
 
 	Vector2D pos(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
 
+	//! MINIMOS CUADRADOS
+	//! Primeras 3 estimaciones para interpolar el polinomio cuadratico de la distancia al cuadrado
 	std::vector<double> ts{ 0.0 ,0.5 ,1.0 };
 	int k = 0;
 
 	// t_min es el minimo del polinomio que interpola t1, t2, t3
 	double t_min = QuadraticMin(pos, ts[0], ts[1], ts[2]);
+	if (t_min < 0.0)
+		t_min = 0.000001;
+	if (t_min > 1.0)
+		t_min = 0.999999;
 
 	//double Pt_min = QuadraticPolynom(pos, t_min, ts[0], ts[1], ts[2]); creo que no es necesario
 	double Pt1 = QuadraticPolynom(pos, ts[0], ts[0], ts[1], ts[2]);
@@ -1634,7 +1935,10 @@ double EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotState* ap_init)
 
 	std::vector<double> Pts{ Pt1 ,Pt2 ,Pt3 };
 
-	while (k < 100)
+	std::vector<double> aux_debug;
+	aux_debug.push_back(t_min);
+
+	while (k < 4)
 	{
 		//! Buscamos el maximo entre P(t1), P(t2), P(t3) para descartarlo en favor de P(t_min)
 		int t_max = 0;
@@ -1655,13 +1959,28 @@ double EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotState* ap_init)
 		Pt2 = QuadraticPolynom(pos, ts[1], ts[0], ts[1], ts[2]);
 		Pt3 = QuadraticPolynom(pos, ts[2], ts[0], ts[1], ts[2]);
 		t_min = QuadraticMin(pos, ts[0], ts[1], ts[2]);
-
+		if (t_min < 0.0)
+			t_min = 0.000001;
+		if (t_min > 1.0)
+			t_min = 0.999999;
+		aux_debug.push_back(t_min);
 		++k;
 	}
 
+	//! NEWYON-RAPHSON
+	int nr = 0;
+	 
+	while (nr < 4)
+	{
+		t_min = t_min - (Newton1(t_min, pos)) / (Newton2(t_min, pos));
+		aux_debug.push_back(t_min);
+		++nr;
+	}
+
+
 	ret_distance = getDistanceT(pos, t_min);
 
-	return ret_distance;
+	return std::pair<double, double>(ret_distance, t_min);
 }
 
 double EGKRRT::EGKtree::EGKpath::Spline::getDistanceTest(RobotState* ap_init)
@@ -1675,14 +1994,19 @@ double EGKRRT::EGKtree::EGKpath::Spline::getDistanceTest(RobotState* ap_init)
 
 	Vector2D pos(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
 
-	ret_distance = (Spfunction(0) - pos).module();
-
+	double guardalai = 0.0;
+	ret_distance = getDistanceT(pos, guardalai);
+	
 	for (double i = 0.01; i < 1.0; i+=0.01)
 	{
-		double aux_dist = (Spfunction(i) - pos).module();
+		double aux_dist = getDistanceT(pos, i);
 
 		if (aux_dist < ret_distance)
+		{
 			ret_distance = aux_dist;
+			guardalai = i;
+		}
+			
 	}
 
 	return ret_distance;
@@ -1702,6 +2026,11 @@ double EGKRRT::EGKtree::EGKpath::Spline::QuadraticMin(Vector2D& pos, double& t1,
 	double den = t23 * getDistanceT(pos, t1) + t31 * getDistanceT(pos, t2) + t12 * getDistanceT(pos, t3);
 	double ret = 0.5 * (num) / (den);
 
+	if (ret < 0.0)
+		ret = 0.000001;
+	if (ret > 1.0)
+		ret = 0.999999;
+
 	return ret;
 }
 
@@ -1719,6 +2048,148 @@ double EGKRRT::EGKtree::EGKpath::Spline::QuadraticPolynom(Vector2D& pos, double&
 		+ (((t - t1) * (t - t3)) / ((t2 - t1) * (t2 - t3))) * getDistanceT(pos, t2)
 		+ (((t - t1) * (t - t2)) / ((t3 - t1) * (t3 - t2))) * getDistanceT(pos, t3);
 	return ret;
+}
+
+double EGKRRT::EGKtree::EGKpath::Spline::Newton1(double& t, Vector2D& pos)
+{
+	Vector2D aux = Spfunction(t);
+	return 2 * ( 3 * _ax * t * t + 2 * _bx * t + _cx) * (aux.x - pos.x) +
+		   2 * ( 3 * _ay * t * t + 2 * _by * t + _cy) * (aux.y - pos.y);
+}
+
+double EGKRRT::EGKtree::EGKpath::Spline::Newton2(double& t, Vector2D& pos)
+{
+	Vector2D aux = Spfunction(t);
+	return 2 * ((6 * _ax * t + 2 * _bx) * (aux.x - pos.x) + (3 * _ax * t * t + 2 * _bx * t + _cx) * (3 * _ax * t * t + 2 * _bx * t + _cx)) +
+		   2 * ((6 * _ay * t + 2 * _by) * (aux.y - pos.y) + (3 * _ay * t * t + 2 * _by * t + _cy) * (3 * _ay * t * t + 2 * _by * t + _cy));
+}
+
+std::pair <CurveZone, bool> EGKRRT::EGKtree::EGKpath::Spline::StateZone(RobotState* ap_init)
+{
+	CurveZone the_zone = CurveZone::Outer;
+
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+
+	if (!p_EGK_init)
+		throw ERRORNULL;
+
+	//! Calculamos la distancia a la curva
+	double distance = getDistance(ap_init).first;
+	double distance_test = getDistanceTest(ap_init);
+	//! Pertenece a la curva
+	if (distance < CIRC_TOL_INNER)
+		the_zone = CurveZone::Inner;
+
+	else
+	{
+		//! Pertenece a la zona intermedia
+		if (distance < CIRC_TOL_OUTER)
+			the_zone = CurveZone::Medium;
+	}
+
+	bool b_inside = IsInside(ap_init);
+
+	return std::make_pair(the_zone, b_inside);
+}
+
+bool EGKRRT::EGKtree::EGKpath::Spline::IsInside(RobotState* ap_init)
+{
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+
+	if (!p_EGK_init)
+		throw ERRORNULL;
+
+	Vector2D pos(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
+
+	double t_min = getDistance(ap_init).second;
+
+	double t_aux = t_min + 0.3;
+	if (t_aux > 1.0)
+	{
+		t_aux = t_min - 0.3;
+	}
+
+	Vector2D min_point = Spfunction(t_min);
+	Vector2D aux_point = Spfunction(t_aux);
+
+	Vector2D min2aux = aux_point - min_point;
+	Vector2D min2pos = pos - min_point;
+
+	double angle = std::acos((min2aux.x * min2pos.x + min2aux.y * min2pos.y) / (min2aux.module() * min2pos.module()));
+
+	return angle < PI / 2.0;
+
+}
+
+std::tuple<double, bool, bool> EGKRRT::EGKtree::EGKpath::Spline::getRelativeAng(RobotState* ap_init)
+{
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+
+	if (!p_EGK_init)
+		throw ERRORNULL;
+
+	Vector3D init_pos = p_EGK_init->getPose();
+
+	double init_yaw = p_EGK_init->getYaw();
+
+	if (StateZone(p_EGK_init).first == CurveZone::Inner)
+	{
+		//! Vector tangente a la circunferencia que pasa por init
+
+		Vector2D init_tan = SpfirstD(getDistance(ap_init).second);
+
+		Vector2D init_dir(cos(init_yaw), sin(init_yaw));
+
+		//init_dir = init_dir.normalize();
+
+		//! Producto escalar
+		double ang = acos((init_tan.x * init_dir.x + init_tan.y * init_dir.y) / (init_tan.module() * init_dir.module()));
+
+		if (ang > (PI / 2))
+		{
+			ang = PI - ang;
+			init_tan.x = -init_tan.x;
+			init_tan.y = -init_tan.y;
+
+		}
+		Vector2D perp_init_tan = init_tan.perpendicularVector();
+
+		//! Producto vectorial: vector direccion por vector tangente V x U: Vx.Uy - Ux.Vy
+		bool sgn1 = (init_dir.x * init_tan.y - init_tan.x * init_dir.y) > 0.0;
+
+		//!Producto vectorial: vector direccion por vector  init_2_center V x U: Vx.Uy - Ux.Vy
+		bool sgn2 = (init_dir.x * perp_init_tan.y - perp_init_tan.x * init_dir.y) > 0.0;
+
+		//!--------------- A veces apuntara a fuera de la Splie y a veces a dentro, hay que ver como hacer que siempre apunte a dentro ---------------
+
+		//! Si sgn2 es positivo el centro esta a la izquierda, -> Si sgn1 es positivo la direccion apunta hacia fuera de la curva
+		//!													   -> Si sgn1 es negativo la direccion apunta hacia dentro de la curva
+		//! Si sgn2 es negativo el centro esta a la derecha, -> Si sgn1 es positivo la direccion apunta hacia dentro de la curva
+		//!													 -> Si sgn1 es negativo la direccion apunta hacia fuera de la curva
+		bool pointing_outside = false;
+		if (sgn2)
+		{
+			if (sgn1)
+				pointing_outside = true;
+		}
+			
+		else
+		{
+			if (!sgn1)
+				pointing_outside = true;
+		}
+			
+
+		return std::make_tuple(ang, pointing_outside, sgn2);
+	}
+}
+
+Vector2D EGKRRT::EGKtree::EGKpath::Spline::SpfirstD(double&& t)
+{
+	double firstD_x = 3 * _ax * t * t + 2 * _bx * t + _cx;
+	double firstD_y = 3 * _ay * t * t + 2 * _by * t + _cy;
+
+	return Vector2D(firstD_x, firstD_y);
 }
 
 //! ----------------- Drawing methods --------------------------------------
@@ -1764,7 +2235,7 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	if (v.size() < 2)return;
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINE_STRIP);
-
+	glColor3f(0.1F, 0.1F, 0.8F);
 	glVertex3f(v[0], v[1], 0);
 
 	for (int i = 0; i < (int)_inter.size(); i++)

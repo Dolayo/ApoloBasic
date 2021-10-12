@@ -35,7 +35,7 @@
 #define RO_AIR 1.225
 
 //! Numero de iteraciones a efectuar al crear un nuevo path
-constexpr int NUM_ITER_PATH = 500;//500
+constexpr int NUM_ITER_PATH = 500;//500,  339 fin para el banco de pruebas de distancia30 
 
 //! Tolerancia de posicion
 constexpr double POSE_TOL = 1;
@@ -44,10 +44,10 @@ constexpr double POSE_TOL = 1;
 constexpr double VEL_TOL = 0.5;
 
 //! Tolerancia de orientacion con respecto a la recta tangente a la curva
-constexpr double YAW_TOL = PI / 36;//5º(/36)
+constexpr double YAW_TOL = PI / 90;//5º(/36)
 
 //! Pertenencia a la circunferencia
-constexpr double CIRC_TOL_INNER = 1;//0.5
+constexpr double CIRC_TOL_INNER = 1.0;//0.5
 
 //! Entrada en la circunferencia
 constexpr double CIRC_TOL_OUTER = 3;
