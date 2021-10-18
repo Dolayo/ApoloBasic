@@ -107,6 +107,7 @@ protected:
 					double getDistanceTest(RobotState* ap_init);
 					double QuadraticMin(Vector2D& pos, double& t1, double& t2, double& t3);
 					double getDistanceT(Vector2D& pos, double& t);
+					double getSqDistanceT(Vector2D& pos, double& t);
 					double QuadraticPolynom(Vector2D& pos, double& t, double& t1, double& t2, double& t3);
 					double Newton1(double& t, Vector2D& pos);
 					double Newton2(double& t, Vector2D& pos);
@@ -115,6 +116,8 @@ protected:
 					std::tuple<double, bool, bool> getRelativeAng(RobotState* ap_init);
 					Vector2D SpfirstD(double&& t);
 					double getTnear(void) const { return _t_near; }
+					int getGO() const{ return _go; }
+					void setGO(int a_go) { _go = a_go; }
 					void drawGL();
 					
 				private:
@@ -138,6 +141,8 @@ protected:
 					bool _b_is_Ok{ true };
 
 					double _t_near{ 0.0 };
+
+					int _go{0};
 				};
 			public:
 

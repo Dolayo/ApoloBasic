@@ -1561,14 +1561,14 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_p3.x = pos_goal.x;
 		_p3.y = pos_goal.y;
 		
-		_p0.x = 0.0;
-		_p0.y = 10.0;
-		_p1.x = 20.0;
+		_p0.x = X_START;
+		_p0.y = Y_START;
+		/*_p1.x = 20.0;
 		_p1.y = 30.0;
 		_p2.x = 30.0;
-		_p2.y = 20.0;
-		_p3.x = 10.0;
-		_p3.y = 0.0;
+		_p2.y = 20.0;*/
+		_p3.x = X_GOAL;
+		_p3.y = Y_GOAL;
 
 		//! Calculamos los coeficientes del polinomio del tercer grado
 		/*_cx = 3.0 * (_p1.x - _p0.x);
@@ -1589,8 +1589,8 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
 		_cy = unit_yaw_init.y;*/
 
-		double mx1 = 30.0, mx2 = 0.0;
-		double my1 = 0.0, my2 = -30.0;
+		double mx1 = 30.0, mx2 = 90.0 * cos(-PI / 6);
+		double my1 = 0.0, my2 = 90.0*sin(-PI/6);
 
 		_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
 		_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);
@@ -1600,6 +1600,7 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_by = 3 * (_p3.y - _p0.y) - (2 * my1 + my2);
 		_cy = my1;
 	}
+
 }
 
 bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act)
@@ -1626,11 +1627,22 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 		{
 			//! avance recto
 			double t_near = _p_spline->getTnear();
-			if (t_near > 0.4 && t_near < 0.6)
+			if (t_near > T_LOW && t_near < T_TOP)
 			{
-				ar_ctrl_act.push_back(THRUSTX_spline);
-				ar_ctrl_act.push_back(0.);
-				ar_ctrl_act.push_back(0.);
+				int go = _p_spline->getGO();
+				if (go % N_GO == 0)
+				{
+					ar_ctrl_act.push_back(THRUSTX_spline);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(0.);
+				}
+				else
+				{
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(0.);
+				}
+				_p_spline->setGO(++go);
 			}
 			else
 			{
@@ -1654,7 +1666,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					{
 						//! giro izquierda
 						double t_near = _p_spline->getTnear();
-						if (t_near > 0.4 && t_near < 0.6)
+						if (t_near > T_LOW && t_near < T_TOP)
 						{
 							ar_ctrl_act.push_back(THRUSTX_spline);
 							ar_ctrl_act.push_back(0.);
@@ -1670,19 +1682,19 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					//! Ligeramente dentro de la circunferencia
 					else
 					{
-						//! Avance recto
+						//! giro izquierda
 						double t_near = _p_spline->getTnear();
-						if (t_near > 0.4 && t_near < 0.6)
+						if (t_near > T_LOW && t_near < T_TOP)
 						{
 							ar_ctrl_act.push_back(THRUSTX_spline);
 							ar_ctrl_act.push_back(0.);
-							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW_spline);
 						}
 						else
 						{
 							ar_ctrl_act.push_back(THRUSTX);
 							ar_ctrl_act.push_back(0.);
-							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(THRUSTW);
 						}
 					}
 
@@ -1695,7 +1707,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					{
 						//! giro derecha
 						double t_near = _p_spline->getTnear();
-						if (t_near > 0.4 && t_near < 0.6)
+						if (t_near > T_LOW && t_near < T_TOP)
 						{
 							ar_ctrl_act.push_back(THRUSTX_spline);
 							ar_ctrl_act.push_back(0.);
@@ -1711,19 +1723,19 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					//! Ligeramente dentro de la circunferencia
 					else
 					{
-						//! Avance recto
+						//! giro derecha
 						double t_near = _p_spline->getTnear();
-						if (t_near > 0.4 && t_near < 0.6)
+						if (t_near > T_LOW && t_near < T_TOP)
 						{
 							ar_ctrl_act.push_back(THRUSTX_spline);
 							ar_ctrl_act.push_back(0.);
-							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(-THRUSTW_spline);
 						}
 						else
 						{
 							ar_ctrl_act.push_back(THRUSTX);
 							ar_ctrl_act.push_back(0.);
-							ar_ctrl_act.push_back(0.);
+							ar_ctrl_act.push_back(-THRUSTW);
 						}
 					}
 				}
@@ -1741,7 +1753,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					{
 						//! giro derecha
 						double t_near = _p_spline->getTnear();
-						if (t_near > 0.4 && t_near < 0.6)
+						if (t_near > T_LOW && t_near < T_TOP)
 						{
 							ar_ctrl_act.push_back(THRUSTX_spline);
 							ar_ctrl_act.push_back(0.);
@@ -1759,7 +1771,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					{
 						//! giro derecha
 						double t_near = _p_spline->getTnear();
-						if (t_near > 0.4 && t_near < 0.6)
+						if (t_near > T_LOW && t_near < T_TOP)
 						{
 							ar_ctrl_act.push_back(THRUSTX_spline);
 							ar_ctrl_act.push_back(0.);
@@ -1781,7 +1793,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					{
 						//! giro izquierda
 						double t_near = _p_spline->getTnear();
-						if (t_near > 0.4 && t_near < 0.6)
+						if (t_near > T_LOW && t_near < T_TOP)
 						{
 							ar_ctrl_act.push_back(THRUSTX_spline);
 							ar_ctrl_act.push_back(0.);
@@ -1799,7 +1811,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					{
 						//! giro izquierda
 						double t_near = _p_spline->getTnear();
-						if (t_near > 0.4 && t_near < 0.6)
+						if (t_near > T_LOW && t_near < T_TOP)
 						{
 							ar_ctrl_act.push_back(THRUSTX_spline);
 							ar_ctrl_act.push_back(0.);
@@ -1829,11 +1841,22 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Avance recto
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(0.);
+					int go = _p_spline->getGO();
+					if (go % N_GO == 0)
+					{
+						ar_ctrl_act.push_back(THRUSTX_spline);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+					}
+					else
+					{
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+					}
+					_p_spline->setGO(++go);
 				}
 				else
 				{
@@ -1848,7 +1871,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la derecha
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -1868,7 +1891,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la izquierda
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -1893,11 +1916,22 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Avance recto
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(0.);
+					int go = _p_spline->getGO();
+					if (go % N_GO == 0)
+					{
+						ar_ctrl_act.push_back(THRUSTX_spline);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+					}
+					else
+					{
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+						ar_ctrl_act.push_back(0.);
+					}
+					_p_spline->setGO(++go);
 				}
 				else
 				{
@@ -1912,7 +1946,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la izquierda
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -1932,7 +1966,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la izquierda
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -1962,7 +1996,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la derecha
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -1981,7 +2015,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la izquierda
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -2001,7 +2035,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la derecha
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -2020,7 +2054,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la izquierda
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -2046,7 +2080,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la izquierda
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -2065,7 +2099,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la derecha
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -2084,7 +2118,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la izquierda
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -2103,7 +2137,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				//! Giro a la derecha
 				double t_near = _p_spline->getTnear();
-				if (t_near > 0.4 && t_near < 0.6)
+				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -2186,10 +2220,7 @@ std::pair<double , double> EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotSt
 		Pt2 = QuadraticPolynom(pos, ts[1], ts[0], ts[1], ts[2]);
 		Pt3 = QuadraticPolynom(pos, ts[2], ts[0], ts[1], ts[2]);
 		t_min = QuadraticMin(pos, ts[0], ts[1], ts[2]);
-		/*if (t_min < 0.0)
-			t_min = 0.000001;
-		if (t_min > 1.0)
-			t_min = 0.999999;*/
+
 		aux_debug.push_back(t_min);
 		++k;
 	}
@@ -2253,15 +2284,9 @@ double EGKRRT::EGKtree::EGKpath::Spline::QuadraticMin(Vector2D& pos, double& t1,
 	double t31 = t3 - t1;
 	double t12 = t1 - t2;
 	
-	double num = y23 * getDistanceT(pos, t1) + y31 * getDistanceT(pos, t2) + y12 * getDistanceT(pos, t3);
-	double den = t23 * getDistanceT(pos, t1) + t31 * getDistanceT(pos, t2) + t12 * getDistanceT(pos, t3);
+	double num = y23 * getSqDistanceT(pos, t1) + y31 * getSqDistanceT(pos, t2) + y12 * getSqDistanceT(pos, t3);
+	double den = t23 * getSqDistanceT(pos, t1) + t31 * getSqDistanceT(pos, t2) + t12 * getSqDistanceT(pos, t3);
 	double ret = 0.5 * (num) / (den);
-
-	/*if (ret < 0.0)
-		ret = 0.000001;
-	if (ret > 1.0)
-		ret = 0.999999;*/
-
 	return ret;
 }
 
@@ -2270,16 +2295,25 @@ double EGKRRT::EGKtree::EGKpath::Spline::getDistanceT(Vector2D& pos, double& t)
 	//! En principio creamos una variable para debuguear, pero luego pon return directamente
 	// double ret = (Spfunction(t) - pos).module();
 	Vector2D point = Spfunction(t);
-	double ret = (point.x - pos.x)* (point.x - pos.x) + (point.y - pos.y)* (point.y - pos.y);
+	double ret = std::sqrt((point.x - pos.x)* (point.x - pos.x) + (point.y - pos.y)* (point.y - pos.y));
+	return ret;
+}
+
+double EGKRRT::EGKtree::EGKpath::Spline::getSqDistanceT(Vector2D& pos, double& t)
+{
+	//! En principio creamos una variable para debuguear, pero luego pon return directamente
+	// double ret = (Spfunction(t) - pos).module();
+	Vector2D point = Spfunction(t);
+	double ret = (point.x - pos.x) * (point.x - pos.x) + (point.y - pos.y) * (point.y - pos.y);
 	return ret;
 }
 
 double EGKRRT::EGKtree::EGKpath::Spline::QuadraticPolynom(Vector2D& pos, double& t, double& t1, double& t2, double& t3)
 {
 	//! En principio creamos una variable para debuguear, pero luego pon return directamente
-	double ret = (((t - t2) * (t - t3)) / ((t1 - t2) * (t1 - t3))) * getDistanceT(pos, t1)
-		+ (((t - t1) * (t - t3)) / ((t2 - t1) * (t2 - t3))) * getDistanceT(pos, t2)
-		+ (((t - t1) * (t - t2)) / ((t3 - t1) * (t3 - t2))) * getDistanceT(pos, t3);
+	double ret = (((t - t2) * (t - t3)) / ((t1 - t2) * (t1 - t3))) * getSqDistanceT(pos, t1)
+		+ (((t - t1) * (t - t3)) / ((t2 - t1) * (t2 - t3))) * getSqDistanceT(pos, t2)
+		+ (((t - t1) * (t - t2)) / ((t3 - t1) * (t3 - t2))) * getSqDistanceT(pos, t3);
 	return ret;
 }
 
@@ -2468,7 +2502,7 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	if (v.size() < 2)return;
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINE_STRIP);
-	glColor3f(0.1F, 0.1F, 0.8F);
+	glColor3f(0.1F, 0.8F, 0.1F);
 	glVertex3f(v[0], v[1], 0);
 
 	for (int i = 0; i < (int)_inter.size(); i++)
