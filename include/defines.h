@@ -50,8 +50,8 @@ constexpr double VEL_TOL = 0.5;
 constexpr double YAW_TOL = 2*PI / 180;//5º(/36)
 
 //! Pertenencia a la circunferencia
-constexpr double CIRC_TOL_INNER_OUTSIDE = 0.5;//0.5
-constexpr double CIRC_TOL_INNER_INSIDE = 1.0;//0.5
+constexpr double CIRC_TOL_INNER_OUTSIDE = 1.0;//0.5
+constexpr double CIRC_TOL_INNER_INSIDE = 1.5;//0.5
 
 //! Entrada en la circunferencia
 constexpr double CIRC_TOL_OUTER = 10;
@@ -80,14 +80,13 @@ constexpr double radius = 8;
 //!??????
 constexpr unsigned int NUM_ITERS = 6;
 
-//! Distancias usadas para calcular la distancia de los puntos de control respecto a los puntos inicial y final
-constexpr double FACTOR_INIT = 8;
-constexpr double FACTOR_GOAL = 8;
 
-constexpr double T_TOP = 0.9;//0.9
-constexpr double T_LOW = 0.1;//0.2
+constexpr double T_TOP = 0.7;//0.9
+constexpr double T_LOW = 0.01;//0.2
 
-constexpr int N_GO = 1;
+//! Velocidad de frenado apra tomar la curva
+constexpr double VX_SLOW= 1.0;//V_MAX
+
 
 //! Zona en la que se encuentra el punto goal con respecto al robot
 enum class ZoneType { central, left, right };

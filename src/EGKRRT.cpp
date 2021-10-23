@@ -1590,8 +1590,8 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_cy = unit_yaw_init.y;*/
 		double dist_init_goal = (pos_goal - pos_init).module();
 		double ang_debug = -90.0;
-		double mx1 = 2*dist_init_goal, mx2 = 1 * dist_init_goal * cos(ang_debug * PI / 180);//-180 * PI / 180
-		double my1 = 0.0,              my2 = 1 * dist_init_goal * sin(ang_debug * PI / 180);
+		double mx1 = 2*dist_init_goal, mx2 = 2 * dist_init_goal * cos(ang_debug * PI / 180);//-180 * PI / 180
+		double my1 = 0.0,              my2 = 2 * dist_init_goal * sin(ang_debug * PI / 180);
 
 		_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
 		_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);
@@ -1633,7 +1633,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			{
 				double vel_surge = ap_initState->getVels().x;
 
-				if (vel_surge > 0.1)
+				if ((vel_surge > VX_SLOW) && (_p_spline->getSTOP()))
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -1641,6 +1641,8 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 				}
 				else
 				{
+					_p_spline->setSTOP(false);
+
 					ar_ctrl_act.push_back(THRUSTX);
 					ar_ctrl_act.push_back(0.);
 					ar_ctrl_act.push_back(0.);
@@ -1845,8 +1847,9 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 				double t_near = _p_spline->getTnear();
 				if (t_near > T_LOW && t_near < T_TOP)
 				{
-					int go = _p_spline->getGO();
-					if (go % N_GO == 0)
+					double vel_surge = ap_initState->getVels().x;
+
+					if ((vel_surge > VX_SLOW) && (_p_spline->getSTOP()))
 					{
 						ar_ctrl_act.push_back(THRUSTX_spline);
 						ar_ctrl_act.push_back(0.);
@@ -1854,11 +1857,12 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					}
 					else
 					{
-						ar_ctrl_act.push_back(0.);
+						_p_spline->setSTOP(false);
+
+						ar_ctrl_act.push_back(THRUSTX);
 						ar_ctrl_act.push_back(0.);
 						ar_ctrl_act.push_back(0.);
 					}
-					_p_spline->setGO(++go);
 				}
 				else
 				{
@@ -1920,8 +1924,9 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 				double t_near = _p_spline->getTnear();
 				if (t_near > T_LOW && t_near < T_TOP)
 				{
-					int go = _p_spline->getGO();
-					if (go % N_GO == 0)
+					double vel_surge = ap_initState->getVels().x;
+
+					if ((vel_surge > VX_SLOW) && (_p_spline->getSTOP()))
 					{
 						ar_ctrl_act.push_back(THRUSTX_spline);
 						ar_ctrl_act.push_back(0.);
@@ -1929,11 +1934,12 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 					}
 					else
 					{
-						ar_ctrl_act.push_back(0.);
+						_p_spline->setSTOP(false);
+
+						ar_ctrl_act.push_back(THRUSTX);
 						ar_ctrl_act.push_back(0.);
 						ar_ctrl_act.push_back(0.);
 					}
-					_p_spline->setGO(++go);
 				}
 				else
 				{

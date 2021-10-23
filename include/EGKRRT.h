@@ -116,8 +116,8 @@ protected:
 					std::tuple<double, bool, bool> getRelativeAng(RobotState* ap_init);
 					Vector2D SpfirstD(double&& t);
 					double getTnear(void) const { return _t_near; }
-					int getGO() const{ return _go; }
-					void setGO(int a_go) { _go = a_go; }
+					bool getSTOP() const{ return _stop; }
+					void setSTOP(bool ab_stop) { _stop = ab_stop; }
 					void drawGL();
 					
 				private:
@@ -142,7 +142,7 @@ protected:
 
 					double _t_near{ 0.0 };
 
-					int _go{0};
+					bool _stop{true};
 				};
 			public:
 
