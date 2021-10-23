@@ -12,9 +12,9 @@
 #define DIST1 5//8
 #define DIST2 10//18
 #define THRUSTX 28000
-#define THRUSTX_spline 27500 //HRUSTX*1.0
+#define THRUSTX_spline 0 //27500 esta va bien para v_init = 0, 
 #define THRUSTY 28000
-#define THRUSTY_spline THRUSTY*0.95
+#define THRUSTY_spline THRUSTY
 #define THRUSTW 192000
 #define THRUSTW_spline THRUSTW*1.0//La idea del giro no es muy buena, valio para 10 de chiripa, mejor bajar la velocidad en X
 #define N_ITER 100
@@ -50,7 +50,8 @@ constexpr double VEL_TOL = 0.5;
 constexpr double YAW_TOL = 2*PI / 180;//5º(/36)
 
 //! Pertenencia a la circunferencia
-constexpr double CIRC_TOL_INNER = 0.5;//0.5
+constexpr double CIRC_TOL_INNER_OUTSIDE = 0.5;//0.5
+constexpr double CIRC_TOL_INNER_INSIDE = 1.0;//0.5
 
 //! Entrada en la circunferencia
 constexpr double CIRC_TOL_OUTER = 10;
@@ -60,10 +61,10 @@ constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
 constexpr double X_START = 0.0;//0
-constexpr double Y_START = 30.0;//30
+constexpr double Y_START = 30;//30
 
 //! Orientacion relativa del robot en el punto de incio
-constexpr double YAW_START = 0;
+constexpr double YAW_START = 0.0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
@@ -71,7 +72,7 @@ constexpr double X_GOAL = 30.0;//30
 constexpr double Y_GOAL = 30.0;//0
 
 //! Velocidad incial de avance
-constexpr double VX_INIT = 0.0;//V_MAX
+constexpr double VX_INIT = V_MAX;//V_MAX
 
 //! Radio de reconexion para el RRT*
 constexpr double radius = 8;

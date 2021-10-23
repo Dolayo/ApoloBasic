@@ -1414,7 +1414,7 @@ std::pair <CurveZone, bool> EGKRRT::EGKtree::EGKpath::Circunference::StateZone(R
 	double distance = getDistance(p_EGK_init);
 
 	//! Pertenece a la circunferencia
-	if (distance < CIRC_TOL_INNER)
+	if (distance < CIRC_TOL_INNER_OUTSIDE)
 		the_zone = CurveZone::Inner;
 
 	else
@@ -1588,9 +1588,10 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_ay = 2 * (_p0.y - _p3.y) + unit_yaw_init.y + unit_yaw_goal.y;
 		_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
 		_cy = unit_yaw_init.y;*/
-
-		double mx1 = 30.0, mx2 = 90.0 * cos(-PI / 6);
-		double my1 = 0.0, my2 = 90.0*sin(-PI/6);
+		double dist_init_goal = (pos_goal - pos_init).module();
+		double ang_debug = -90.0;
+		double mx1 = 2*dist_init_goal, mx2 = 1 * dist_init_goal * cos(ang_debug * PI / 180);//-180 * PI / 180
+		double my1 = 0.0,              my2 = 1 * dist_init_goal * sin(ang_debug * PI / 180);
 
 		_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
 		_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);
@@ -1609,6 +1610,7 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 	std::pair<CurveZone, bool> state_zone = _p_spline->StateZone(ap_initState);
 	CurveZone the_zone = state_zone.first;
 	bool b_outside = !(state_zone.second);
+
 
 	switch (the_zone)
 	{
@@ -1629,8 +1631,9 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			double t_near = _p_spline->getTnear();
 			if (t_near > T_LOW && t_near < T_TOP)
 			{
-				int go = _p_spline->getGO();
-				if (go % N_GO == 0)
+				double vel_surge = ap_initState->getVels().x;
+
+				if (vel_surge > 0.1)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
@@ -1638,11 +1641,10 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 				}
 				else
 				{
-					ar_ctrl_act.push_back(0.);
+					ar_ctrl_act.push_back(THRUSTX);
 					ar_ctrl_act.push_back(0.);
 					ar_ctrl_act.push_back(0.);
 				}
-				_p_spline->setGO(++go);
 			}
 			else
 			{
@@ -1944,19 +1946,19 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 			}
 			case ZoneType::right: // Punto final a la derecha
 			{
-				//! Giro a la izquierda
+				//! Giro a la derecha
 				double t_near = _p_spline->getTnear();
 				if (t_near > T_LOW && t_near < T_TOP)
 				{
 					ar_ctrl_act.push_back(THRUSTX_spline);
 					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW_spline);
+					ar_ctrl_act.push_back(-THRUSTW_spline);
 				}
 				else
 				{
 					ar_ctrl_act.push_back(THRUSTX);
 					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
+					ar_ctrl_act.push_back(-THRUSTW);
 				}
 				return true;
 				break;
@@ -2340,21 +2342,35 @@ std::pair <CurveZone, bool> EGKRRT::EGKtree::EGKpath::Spline::StateZone(RobotSta
 	if (!p_EGK_init)
 		throw ERRORNULL;
 
+	bool b_inside = IsInside(ap_init);
+
+	//! Usamos la distancia de pertenencia en funcion de si estamos dentro o fuera de la spline
+	double dist_belong_spline = CIRC_TOL_INNER_INSIDE;
+
+	if (!b_inside)
+		dist_belong_spline = CIRC_TOL_INNER_OUTSIDE;
+
 	//! Calculamos la distancia a la curva
 	double distance = getDistance(ap_init).first;
 	double distance_test = getDistanceTest(ap_init);
+
+	double dif_dist = std::abs(distance - distance_test);
+	double dif_percent = std::abs(distance - distance_test) / distance_test;
+	if (dif_percent > 2 * distance_test)
+		distance = distance_test;
+
 	//! Pertenece a la curva
-	if (distance < CIRC_TOL_INNER)
+	if (distance < dist_belong_spline)
 		the_zone = CurveZone::Inner;
 
 	else
 	{
 		//! Pertenece a la zona intermedia
-		if (distance < CIRC_TOL_OUTER)
+		//if (distance < CIRC_TOL_OUTER)
 			the_zone = CurveZone::Medium;
 	}
 
-	bool b_inside = IsInside(ap_init);
+	
 
 	return std::make_pair(the_zone, b_inside);
 }
@@ -2370,10 +2386,10 @@ bool EGKRRT::EGKtree::EGKpath::Spline::IsInside(RobotState* ap_init)
 
 	double t_min = getDistance(ap_init).second;
 
-	double t_aux = t_min + 0.3;
+	double t_aux = t_min + 0.1;
 	if (t_aux > 1.0)
 	{
-		t_aux = t_min - 0.3;
+		t_aux = t_min - 0.1;
 	}
 
 	Vector2D min_point = Spfunction(t_min);
@@ -2404,7 +2420,7 @@ std::tuple<double, bool, bool> EGKRRT::EGKtree::EGKpath::Spline::getRelativeAng(
 		//! Vector tangente a la circunferencia que pasa por init
 
 		Vector2D init_tan = SpfirstD(getDistance(ap_init).second);
-
+		//init_tan = init_tan.normalize();
 		Vector2D init_dir(cos(init_yaw), sin(init_yaw));
 
 		//init_dir = init_dir.normalize();
@@ -2502,7 +2518,7 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	if (v.size() < 2)return;
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINE_STRIP);
-	glColor3f(0.1F, 0.8F, 0.1F);
+	glColor3f(0.1F, 0.1F, 0.8F);
 	glVertex3f(v[0], v[1], 0);
 
 	for (int i = 0; i < (int)_inter.size(); i++)

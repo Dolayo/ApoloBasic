@@ -141,7 +141,7 @@ void MainWindow::createShipEnvironment()
 {
 	//Intializing test environment Faces included in a FacePart
 	Face deep(Transformation3D(0, 0, 0), 0, -50, 50, 50);
-	deep.setColor(0.1451, 0.1569, 0.3137,1);
+	deep.setColor(0.18, 0.67, 0.80,1);//0.1451, 0.1569, 0.3137,1
 
 	Face land1;
 	Face land2;
@@ -250,7 +250,7 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 
 			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_start, _y_start, _yaw_start));
 			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_goal, _y_goal, 0));
-
+			start->setVels(Vector3D(VX_INIT, 0, 0));
 			solution.path.clear();
 			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
 			delete start;
