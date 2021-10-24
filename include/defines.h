@@ -50,8 +50,8 @@ constexpr double VEL_TOL = 0.5;
 constexpr double YAW_TOL = 2*PI / 180;//5º(/36)
 
 //! Pertenencia a la circunferencia
-constexpr double CIRC_TOL_INNER_OUTSIDE = 2.0;//1.0 
-constexpr double CIRC_TOL_INNER_INSIDE = 1.5;//1.5
+constexpr double CIRC_TOL_INNER_OUTSIDE = 0.5;//1.0 
+constexpr double CIRC_TOL_INNER_INSIDE = 0.5;//1.5
 // He cambiado a 0.5 porque le he puesto que vuelva a la curva en medium si esta dentro, si no vuelve a ponerlo en 1.5
 
 //! Entrada en la circunferencia

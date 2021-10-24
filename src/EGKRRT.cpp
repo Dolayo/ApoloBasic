@@ -1836,331 +1836,199 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Qu
 	}
 	case CurveZone::Medium:
 	{
-		//! Fuera de la circunferencia
-		if (b_outside)
+		bool t_near_left = _p_spline->IsTNearLeft(ap_initState);
+		//! La curva esta a la izquierda
+		if (t_near_left)
 		{
-			switch (ar_zone)
+			//! Giro a la izquierda
+			double t_near = _p_spline->getTnear();
+			if (t_near > T_LOW && t_near < T_TOP)
 			{
-			case ZoneType::central: // Punto final en frente
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(THRUSTW_spline);
+			}
+			else
 			{
-				//! Avance recto
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					double vel_surge = ap_initState->getVels().x;
-
-					if ((vel_surge > VX_SLOW) && (_p_spline->getSTOP()))
-					{
-						ar_ctrl_act.push_back(THRUSTX_spline);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(0.);
-					}
-					else
-					{
-						_p_spline->setSTOP(false);
-
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(0.);
-					}
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(0.);
-				}
-				return true;
-				break;
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(THRUSTW);
 			}
-			case ZoneType::right: // Punto final a la derecha
-			{
-				//! Giro a la derecha
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW);
-				}
-				return true;
-				break;
-			}
-			//! Punto final detras a la izquierda
-			case ZoneType::left:
-			{
-				//! Giro a la izquierda
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
-				}
-				break;
-			}
-			}
+			return true;
+			break;
 		}
-		//! Dentro de la circunferencia
+		//! la curva esta a la derecha
 		else
 		{
-			switch (ar_zone)
+			//! Giro a la derecha
+			double t_near = _p_spline->getTnear();
+			if (t_near > T_LOW && t_near < T_TOP)
 			{
-			case ZoneType::central: // Punto final en frente
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(-THRUSTW_spline);
+			}
+			else
 			{
-				//! Avance recto
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					double vel_surge = ap_initState->getVels().x;
-
-					if ((vel_surge > VX_SLOW) && (_p_spline->getSTOP()))
-					{
-						ar_ctrl_act.push_back(THRUSTX_spline);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(0.);
-					}
-					else
-					{
-						_p_spline->setSTOP(false);
-
-						ar_ctrl_act.push_back(THRUSTX);
-						ar_ctrl_act.push_back(0.);
-						ar_ctrl_act.push_back(0.);
-					}
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(0.);
-				}
-				return true;
-				break;
+				ar_ctrl_act.push_back(THRUSTX);
+				ar_ctrl_act.push_back(0.);
+				ar_ctrl_act.push_back(-THRUSTW);
 			}
-			case ZoneType::right: // Punto final a la derecha
-			{
-				//! Giro a la derecha
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW);
-				}
-				return true;
-				break;
-			}
-			//! Punto final detras a la izquierda
-			case ZoneType::left:
-			{
-				//! Giro a la izquierda
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
-				}
-				break;
-			}
-			}
+			return true;
+			break;
 		}
 
-		break;
-	}
-	case CurveZone::Outer:
-	{
 		//! Fuera de la circunferencia
-		if (b_outside)
-		{
-			switch (ar_quad)
-			{
-			case Quadrant::fourth: // Punto final a la derecha
-			{
-				//! Giro a la derecha
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW);
-				}
-				return true;
-				break;
-			}
-			case Quadrant::first: // Punto final a la izquierda
-			{
-				//! Giro a la izquierda
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
-				}
-				return true;
-				break;
-			}
-			//! Punto final detras a la derecha
-			case Quadrant::third:
-			{
-				//! Giro a la derecha
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW);
-				}
-				break;
-			}
-			//! Punto final detras a la izquierda
-			case Quadrant::second:
-			{
-				//! Giro a la izquierda
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
-				}
-				break;
-			}
-			}
-		}
-		//! Dentro de la circunferencia
-		else
-		{
-			switch (ar_quad)
-			{
-				//! Punto final a la derecha
-			case Quadrant::fourth:
-			{
-				//! Giro a la izquierda
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
-				}
-				break;
-			}
-			//! Punto final a la izquierda
-			case Quadrant::first:
-			{
-				//! Giro a la derecha
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW);
-				}
-				break;
-			}
-			//! Punto final detras a la derecha
-			case Quadrant::third:
-			{
-				//! Giro a la izquierda
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(THRUSTW);
-				}
-				break;
-			}
-			//! Punto final detras a la izquierda
-			case Quadrant::second:
-			{
-				//! Giro a la derecha
-				double t_near = _p_spline->getTnear();
-				if (t_near > T_LOW && t_near < T_TOP)
-				{
-					ar_ctrl_act.push_back(THRUSTX_spline);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW_spline);
-				}
-				else
-				{
-					ar_ctrl_act.push_back(THRUSTX);
-					ar_ctrl_act.push_back(0.);
-					ar_ctrl_act.push_back(-THRUSTW);
-				}
-				break;
-			}
-			}
-		}
+		//if (b_outside)
+		//{
+		//	
+		//	switch (ar_zone)
+		//	{
+		//	case ZoneType::central: // Punto final en frente
+		//	{
+		//		//! Avance recto
+		//		double t_near = _p_spline->getTnear();
+		//		if (t_near > T_LOW && t_near < T_TOP)
+		//		{
+		//			double vel_surge = ap_initState->getVels().x;
+		//			if ((vel_surge > VX_SLOW) && (_p_spline->getSTOP()))
+		//			{
+		//				ar_ctrl_act.push_back(THRUSTX_spline);
+		//				ar_ctrl_act.push_back(0.);
+		//				ar_ctrl_act.push_back(0.);
+		//			}
+		//			else
+		//			{
+		//				_p_spline->setSTOP(false);
+		//				ar_ctrl_act.push_back(THRUSTX);
+		//				ar_ctrl_act.push_back(0.);
+		//				ar_ctrl_act.push_back(0.);
+		//			}
+		//		}
+		//		else
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(0.);
+		//		}
+		//		return true;
+		//		break;
+		//	}
+		//	case ZoneType::right: // Punto final a la derecha
+		//	{
+		//		//! Giro a la derecha
+		//		double t_near = _p_spline->getTnear();
+		//		if (t_near > T_LOW && t_near < T_TOP)
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX_spline);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(-THRUSTW_spline);
+		//		}
+		//		else
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(-THRUSTW);
+		//		}
+		//		return true;
+		//		break;
+		//	}
+		//	//! Punto final detras a la izquierda
+		//	case ZoneType::left:
+		//	{
+		//		//! Giro a la izquierda
+		//		double t_near = _p_spline->getTnear();
+		//		if (t_near > T_LOW && t_near < T_TOP)
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX_spline);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(THRUSTW_spline);
+		//		}
+		//		else
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(THRUSTW);
+		//		}
+		//		break;
+		//	}
+		//	}
+		//}
+		////! Dentro de la circunferencia
+		//else
+		//{
+		//	switch (ar_zone)
+		//	{
+		//	case ZoneType::central: // Punto final en frente
+		//	{
+		//		//! Avance recto
+		//		double t_near = _p_spline->getTnear();
+		//		if (t_near > T_LOW && t_near < T_TOP)
+		//		{
+		//			double vel_surge = ap_initState->getVels().x;
+		//			if ((vel_surge > VX_SLOW) && (_p_spline->getSTOP()))
+		//			{
+		//				ar_ctrl_act.push_back(THRUSTX_spline);
+		//				ar_ctrl_act.push_back(0.);
+		//				ar_ctrl_act.push_back(0.);
+		//			}
+		//			else
+		//			{
+		//				_p_spline->setSTOP(false);
+		//				ar_ctrl_act.push_back(THRUSTX);
+		//				ar_ctrl_act.push_back(0.);
+		//				ar_ctrl_act.push_back(0.);
+		//			}
+		//		}
+		//		else
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(0.);
+		//		}
+		//		return true;
+		//		break;
+		//	}
+		//	case ZoneType::right: // Punto final a la derecha
+		//	{
+		//		//! Giro a la derecha
+		//		double t_near = _p_spline->getTnear();
+		//		if (t_near > T_LOW && t_near < T_TOP)
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX_spline);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(-THRUSTW_spline);
+		//		}
+		//		else
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(-THRUSTW);
+		//		}
+		//		return true;
+		//		break;
+		//	}
+		//	//! Punto final detras a la izquierda
+		//	case ZoneType::left:
+		//	{
+		//		//! Giro a la izquierda
+		//		double t_near = _p_spline->getTnear();
+		//		if (t_near > T_LOW && t_near < T_TOP)
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX_spline);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(THRUSTW_spline);
+		//		}
+		//		else
+		//		{
+		//			ar_ctrl_act.push_back(THRUSTX);
+		//			ar_ctrl_act.push_back(0.);
+		//			ar_ctrl_act.push_back(THRUSTW);
+		//		}
+		//		break;
+		//	}
+		//	}
+		//}
 
 		break;
 	}
