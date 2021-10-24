@@ -38,7 +38,7 @@
 #define RO_AIR 1.225
 
 //! Numero de iteraciones a efectuar al crear un nuevo path
-constexpr int NUM_ITER_PATH = 5000;//500,  339 fin para el banco de pruebas de distancia30 
+constexpr int NUM_ITER_PATH = 2000;//600,  339 fin para el banco de pruebas de distancia30 
 
 //! Tolerancia de posicion
 constexpr double POSE_TOL = 1;
@@ -50,8 +50,9 @@ constexpr double VEL_TOL = 0.5;
 constexpr double YAW_TOL = 2*PI / 180;//5º(/36)
 
 //! Pertenencia a la circunferencia
-constexpr double CIRC_TOL_INNER_OUTSIDE = 1.0;//0.5
-constexpr double CIRC_TOL_INNER_INSIDE = 1.5;//0.5
+constexpr double CIRC_TOL_INNER_OUTSIDE = 2.0;//1.0 
+constexpr double CIRC_TOL_INNER_INSIDE = 1.5;//1.5
+// He cambiado a 0.5 porque le he puesto que vuelva a la curva en medium si esta dentro, si no vuelve a ponerlo en 1.5
 
 //! Entrada en la circunferencia
 constexpr double CIRC_TOL_OUTER = 10;
@@ -60,7 +61,7 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 0.0;//0
+constexpr double X_START = 0.0 + 1.0;//0
 constexpr double Y_START = 30;//30
 
 //! Orientacion relativa del robot en el punto de incio
@@ -68,7 +69,7 @@ constexpr double YAW_START = 0.0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 30.0;//30
+constexpr double X_GOAL = 60.0 + 1.0;//30
 constexpr double Y_GOAL = 30.0;//0
 
 //! Velocidad incial de avance
@@ -85,7 +86,7 @@ constexpr double T_TOP = 0.7;//0.9
 constexpr double T_LOW = 0.01;//0.2
 
 //! Velocidad de frenado apra tomar la curva
-constexpr double VX_SLOW= 1.0;//V_MAX
+constexpr double VX_SLOW= 1.0;//1.0
 
 
 //! Zona en la que se encuentra el punto goal con respecto al robot

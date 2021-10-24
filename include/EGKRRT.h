@@ -103,9 +103,10 @@ protected:
 					Spline() = delete;
 					~Spline() = default;
 					Vector2D Spfunction(double t);
-					std::pair<double, double> getDistance(RobotState* ap_init);
-					double getDistanceTest(RobotState* ap_init);
+					void CalculateDistance(RobotState* ap_init);
+					std::pair<double, double> getDistanceTest(RobotState* ap_init);
 					double QuadraticMin(Vector2D& pos, double& t1, double& t2, double& t3);
+					double getDistance() const { return _distance; }
 					double getDistanceT(Vector2D& pos, double& t);
 					double getSqDistanceT(Vector2D& pos, double& t);
 					double QuadraticPolynom(Vector2D& pos, double& t, double& t1, double& t2, double& t3);
@@ -113,12 +114,14 @@ protected:
 					double Newton2(double& t, Vector2D& pos);
 					std::pair<CurveZone, bool> StateZone(RobotState* ap_init);
 					bool IsInside(RobotState* ap_init);
+					bool IsTNearLeft(RobotState* ap_init);
 					std::tuple<double, bool, bool> getRelativeAng(RobotState* ap_init);
 					Vector2D SpfirstD(double&& t);
 					double getTnear(void) const { return _t_near; }
 					bool getSTOP() const{ return _stop; }
 					void setSTOP(bool ab_stop) { _stop = ab_stop; }
 					void drawGL();
+					bool IsOk() const { return _b_is_Ok; }
 					
 				private:
 
@@ -141,6 +144,7 @@ protected:
 					bool _b_is_Ok{ true };
 
 					double _t_near{ 0.0 };
+					double _distance{ 0.0 };
 
 					bool _stop{true};
 				};
@@ -165,9 +169,9 @@ protected:
 				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter = 100, bool b_ensure_yaw = false);
 				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState, 
 														double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw = false);
+				static bool isGhostThere(ShipState* donkey, ShipState* carrot, Vector2D& newPos);
 				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
 				//virtual std::vector<double> navigationOrient(RobotState* ap_initState, Circunference* ap_circ);
-				bool isGhostThere(ShipState* donkey, ShipState* carrot);
 				bool generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
 				void drawGL();
 

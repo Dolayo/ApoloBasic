@@ -776,10 +776,14 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	if(b_yaw_ensured)//b_yaw_ensured
 	{
 		//generateCtrlActCirc(p_ShipInitState, quad, zone, v_auxCtrlAct);
-		generateCtrlActSpline(p_ShipInitState, quad, zone, v_auxCtrlAct);
-		//TEST double dist_test = _p_spline->getDistanceTest(p_ShipInitState);
-		//TEST double dist_min_quad = _p_spline->getDistance(p_ShipInitState).first;
-		//TEST bool inside = _p_spline->IsInside(p_ShipInitState);
+
+		if(_p_spline->IsOk())
+			generateCtrlActSpline(p_ShipInitState, quad, zone, v_auxCtrlAct);
+		else
+		{
+			bool nope = true;
+		}
+
 		if(v_auxCtrlAct.size()==0)
 		{
 			v_auxCtrlAct.push_back(0.);
@@ -964,7 +968,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	//return v_auxCtrlAct;
 }
 
-bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot)
+bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot, Vector2D& newPos)
 {
 	bool b_ret = false;
 
@@ -1003,6 +1007,7 @@ bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot
 	double new_pos_x = pos.x + vabs_x * t_stop + 0.5 * aabs_x * t_stop * t_stop;
 	double new_pos_y = pos.y + vabs_y * t_stop + 0.5 * aabs_y * t_stop * t_stop;
 
+	newPos = Vector2D(new_pos_x, new_pos_y);
 
 	//std::vector<double> empty_ctrlAct {0, 0, 0};
 	//ShipState* p_auxState = nullptr;
@@ -1503,63 +1508,58 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		throw ERRORNULL;
 
 	//! Construcción de la Spline
+	
+	//! Extraemos las posiciones inicial y final
+	Vector2D pos_init(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
+	Vector2D pos_goal(p_EGK_goal->getPose().x, p_EGK_goal->getPose().y);
+
+	//! Extraemos las direcciones inicial y final
+	double yaw_init = p_EGK_init->getYaw();
+	double yaw_goal = p_EGK_goal->getYaw();
+	Vector2D unit_yaw_init(cos(yaw_init), sin(yaw_init));
+	Vector2D unit_yaw_goal(-cos(yaw_goal), -sin(yaw_goal));
+
+	//! Extraemos las velocidades inicial y final
+	Vector3D vel_init = p_EGK_init->getVels();
+	Vector3D vel_goal = p_EGK_goal->getVels();
+
+	//! Calculo del corte de las rectas que forman las direcciones inicial y final
+	//! Calculamos las rectas que forman los puntos inicial y final y sus direcciones: y = Mx + n
+	double M_init = tan(unit_yaw_init.y / unit_yaw_init.x);
+	double n_init = pos_init.y - M_init * pos_init.x;
+
+	double M_goal = tan(unit_yaw_goal.y / unit_yaw_goal.x);
+	double n_goal = pos_goal.y - M_goal * pos_goal.x;
+	//! y = m1x +n1
+	//! y = m2x + n2
+	//! m2x - m1x = n1-n2
+	//! x = n1-n2 / m2-m1
+	Vector2D intersec_point((n_init - n_goal)/(M_goal - M_init), M_init*pos_init.x + n_init);
+
+	//! Distancias del punto de interseccion al punto inicial
+	double dist_intersec = intersec_point.distance(Vector2D(pos_init.x, pos_init.y));
+
+	Vector2D ghost_pos;
+
+	EGKRRT::EGKtree::EGKpath::isGhostThere(p_EGK_init, p_EGK_goal, ghost_pos);
+
+	double dist_ghost = (ghost_pos - pos_init).module();
+
+	if (dist_ghost > (dist_intersec*0.8))
+		_b_is_Ok = false;
+
 	if (_b_is_Ok)
 	{
-		//! Extraemos las posiciones inicial y final
-		Vector3D pos_init = p_EGK_init->getPose();
-		Vector3D pos_goal = p_EGK_goal->getPose();
-
-		//! Extraemos las direcciones inicial y final
-		double yaw_init = p_EGK_init->getYaw();
-		double yaw_goal = p_EGK_goal->getYaw();
-		Vector2D unit_yaw_init(cos(yaw_init), sin(yaw_init));
-		Vector2D unit_yaw_goal(-cos(yaw_goal), -sin(yaw_goal));
-
-		//! Extraemos las velocidades inicial y final
-		Vector3D vel_init = p_EGK_init->getVels();
-		Vector3D vel_goal = p_EGK_goal->getVels();
-
-		//! Calculo del corte de las rectas que forman las direcciones inicial y final
-		//! Calculamos las rectas que forman los puntos inicial y final y sus direcciones: y = Mx + n
-		double M_init = tan(unit_yaw_init.y / unit_yaw_init.x);
-		double n_init = pos_init.y - M_init * pos_init.x;
-
-		double M_goal = tan(unit_yaw_goal.y / unit_yaw_goal.x);
-		double n_goal = pos_goal.y - M_goal * pos_goal.x;
-		//! y = m1x +n1
-		//! y = m2x + n2
-		//! m2x - m1x = n1-n2
-		//! x = n1-n2 / m2-m1
-		Vector2D intersec_point((n_init - n_goal)/(M_goal - M_init), M_init*pos_init.x + n_init);
-
-		//! Distancias del punto de interseccion a los puntos inicial y final
-		double dist_intersec1 = intersec_point.distance(Vector2D(pos_init.x, pos_init.y));
-		double dist_intersec2 = intersec_point.distance(Vector2D(pos_goal.x, pos_goal.y));
-
-
-		//! Utilizamos el factor de longitud de los puntos de control 
-		//! en funcion de las velocidades
-		double factor_init;
-		double factor_goal;
-
-		double factor_vel_init = vel_init.x / V_MAX;
-		double factor_vel_goal = vel_goal.x / V_MAX;
-
-		//! Distancia desde los puntos inicial y final a la que se colocaran los puntos de control p1 y p2 respectivamente
-		double dist_p1 = factor_vel_init * dist_intersec1;
-		double dist_p2 = factor_vel_goal * dist_intersec2;
-
-		//!Pensar si añadir una comprobacion de que la distancia no sea 0
-
+		//! El codigo comentado corresponde con la construccion de la obsoleta spline en funcion de 2 puntos de control
 		//! Calculo de los puntos de control
-		_p0.x = pos_init.x;
+		/*_p0.x = pos_init.x;
 		_p0.y = pos_init.y;
 		_p1.x = pos_init.x + dist_p1 * unit_yaw_init.x;
 		_p1.y = pos_init.y + dist_p1 * unit_yaw_init.y;
 		_p2.x = pos_goal.x - dist_p2 * unit_yaw_goal.x;
 		_p2.y = pos_goal.y - dist_p2 * unit_yaw_goal.y;
 		_p3.x = pos_goal.x;
-		_p3.y = pos_goal.y;
+		_p3.y = pos_goal.y;*/
 		
 		_p0.x = X_START;
 		_p0.y = Y_START;
@@ -1588,10 +1588,11 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_ay = 2 * (_p0.y - _p3.y) + unit_yaw_init.y + unit_yaw_goal.y;
 		_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
 		_cy = unit_yaw_init.y;*/
+
 		double dist_init_goal = (pos_goal - pos_init).module();
 		double ang_debug = -90.0;
-		double mx1 = 2*dist_init_goal, mx2 = 2 * dist_init_goal * cos(ang_debug * PI / 180);//-180 * PI / 180
-		double my1 = 0.0,              my2 = 2 * dist_init_goal * sin(ang_debug * PI / 180);
+		double mx1 = 2 * dist_init_goal, mx2 = 2 * dist_init_goal * cos(ang_debug * PI / 180);//-180 * PI / 180
+		double my1 = 0.0,                my2 = 2 * dist_init_goal * sin(ang_debug * PI / 180);
 
 		_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
 		_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);
@@ -1601,16 +1602,15 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		_by = 3 * (_p3.y - _p0.y) - (2 * my1 + my2);
 		_cy = my1;
 	}
-
 }
 
 bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act)
 {
+	_p_spline->CalculateDistance(ap_initState);
 	//! Determinamos la posicion del robot respecto a la curva
 	std::pair<CurveZone, bool> state_zone = _p_spline->StateZone(ap_initState);
 	CurveZone the_zone = state_zone.first;
 	bool b_outside = !(state_zone.second);
-
 
 	switch (the_zone)
 	{
@@ -2178,20 +2178,36 @@ Vector2D EGKRRT::EGKtree::EGKpath::Spline::Spfunction(double a_t)
 	return Vector2D(x, y);
 }
 
-std::pair<double , double> EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotState* ap_init)
+void EGKRRT::EGKtree::EGKpath::Spline::CalculateDistance(RobotState* ap_init)
 {
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 
 	if (!p_EGK_init)
 		throw ERRORNULL;
 
-	double ret_distance = -1.0;
-
 	Vector2D pos(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
 
 	//! MINIMOS CUADRADOS
 	//! Primeras 3 estimaciones para interpolar el polinomio cuadratico de la distancia al cuadrado
-	std::vector<double> ts{ 0.0 ,0.5 ,1.0 };
+	double approx1 = _t_near;
+	double approx2 = _t_near + 0.05;
+	double approx3 = _t_near + 0.1;
+
+	if (approx3 > 1.0)
+	{
+		approx1 = _t_near;
+		approx2 = _t_near + 0.05;
+		approx3 = 1.0;
+	}
+
+	if (approx2 > 1.0)
+	{
+		approx1 = _t_near - 0.05;
+		approx2 = _t_near;
+		approx3 = 1.0;
+	}
+		
+	std::vector<double> ts{ approx1, approx2, approx3 };
 	int k = 0;
 
 	// t_min es el minimo del polinomio que interpola t1, t2, t3
@@ -2248,12 +2264,21 @@ std::pair<double , double> EGKRRT::EGKtree::EGKpath::Spline::getDistance(RobotSt
 	if (t_min > 1.0)
 		t_min = 0.999999;
 
-	ret_distance = getDistanceT(pos, t_min);
+	_distance = getDistanceT(pos, t_min);
 	_t_near = t_min;
-	return std::pair<double, double>(ret_distance, t_min);
+
+	std::pair<double, double> distance_test = getDistanceTest(ap_init);
+
+	double dif_dist = std::abs(_distance - distance_test.first);
+	double dif_percent = std::abs(_distance - distance_test.first) / distance_test.first;
+	if (dif_percent > 1.0)
+	{
+		_distance = distance_test.first;
+		_t_near = distance_test.second;
+	}
 }
 
-double EGKRRT::EGKtree::EGKpath::Spline::getDistanceTest(RobotState* ap_init)
+std::pair<double, double> EGKRRT::EGKtree::EGKpath::Spline::getDistanceTest(RobotState* ap_init)
 {
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 
@@ -2276,10 +2301,10 @@ double EGKRRT::EGKtree::EGKpath::Spline::getDistanceTest(RobotState* ap_init)
 			ret_distance = aux_dist;
 			guardalai = i;
 		}
-			
 	}
+	_t_near = guardalai;
 
-	return ret_distance;
+	return std::pair<double, double>(ret_distance, guardalai);
 }
 
 double EGKRRT::EGKtree::EGKpath::Spline::QuadraticMin(Vector2D& pos, double& t1, double& t2, double& t3)
@@ -2348,6 +2373,7 @@ std::pair <CurveZone, bool> EGKRRT::EGKtree::EGKpath::Spline::StateZone(RobotSta
 	if (!p_EGK_init)
 		throw ERRORNULL;
 
+	//! Preguntamos si el punto esta en la parte concava de la spline
 	bool b_inside = IsInside(ap_init);
 
 	//! Usamos la distancia de pertenencia en funcion de si estamos dentro o fuera de la spline
@@ -2357,26 +2383,15 @@ std::pair <CurveZone, bool> EGKRRT::EGKtree::EGKpath::Spline::StateZone(RobotSta
 		dist_belong_spline = CIRC_TOL_INNER_OUTSIDE;
 
 	//! Calculamos la distancia a la curva
-	double distance = getDistance(ap_init).first;
-	double distance_test = getDistanceTest(ap_init);
-
-	double dif_dist = std::abs(distance - distance_test);
-	double dif_percent = std::abs(distance - distance_test) / distance_test;
-	if (dif_percent > 2 * distance_test)
-		distance = distance_test;
+	double distance = getDistance();
 
 	//! Pertenece a la curva
 	if (distance < dist_belong_spline)
 		the_zone = CurveZone::Inner;
 
+	//! no pertenece a la curva
 	else
-	{
-		//! Pertenece a la zona intermedia
-		//if (distance < CIRC_TOL_OUTER)
-			the_zone = CurveZone::Medium;
-	}
-
-	
+		the_zone = CurveZone::Medium;
 
 	return std::make_pair(the_zone, b_inside);
 }
@@ -2390,7 +2405,7 @@ bool EGKRRT::EGKtree::EGKpath::Spline::IsInside(RobotState* ap_init)
 
 	Vector2D pos(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
 
-	double t_min = getDistance(ap_init).second;
+	double t_min = _t_near;
 
 	double t_aux = t_min + 0.1;
 	if (t_aux > 1.0)
@@ -2410,6 +2425,29 @@ bool EGKRRT::EGKtree::EGKpath::Spline::IsInside(RobotState* ap_init)
 
 }
 
+bool EGKRRT::EGKtree::EGKpath::Spline::IsTNearLeft(RobotState* ap_init)
+{
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+
+	if (!p_EGK_init)
+		throw ERRORNULL;
+
+	Vector2D pos(p_EGK_init->getPose().x, p_EGK_init->getPose().y);
+
+	Vector2D t_near_pos = Spfunction(_t_near);
+
+	Vector2D pos2near = t_near_pos - pos;
+
+	double yaw_init = p_EGK_init->getYaw();
+
+	Vector2D unit_yaw_init(cos(yaw_init), sin(yaw_init));
+
+	bool sgn = (unit_yaw_init.x * pos2near.y - pos2near.x * unit_yaw_init.y) > 0.0;
+
+	return sgn;
+	
+}
+
 std::tuple<double, bool, bool> EGKRRT::EGKtree::EGKpath::Spline::getRelativeAng(RobotState* ap_init)
 {
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
@@ -2425,7 +2463,7 @@ std::tuple<double, bool, bool> EGKRRT::EGKtree::EGKpath::Spline::getRelativeAng(
 	{
 		//! Vector tangente a la circunferencia que pasa por init
 
-		Vector2D init_tan = SpfirstD(getDistance(ap_init).second);
+		Vector2D init_tan = SpfirstD(getTnear());
 		//init_tan = init_tan.normalize();
 		Vector2D init_dir(cos(init_yaw), sin(init_yaw));
 
