@@ -776,13 +776,13 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	if(b_yaw_ensured)//b_yaw_ensured
 	{
 		//generateCtrlActCirc(p_ShipInitState, quad, zone, v_auxCtrlAct);
-
-		if(_p_spline->IsOk())
+		generateCtrlActSpline(p_ShipInitState, quad, zone, v_auxCtrlAct);
+		/*if(_p_spline->IsOk())
 			generateCtrlActSpline(p_ShipInitState, quad, zone, v_auxCtrlAct);
 		else
 		{
 			bool nope = true;
-		}
+		}*/
 
 		if(v_auxCtrlAct.size()==0)
 		{
@@ -1548,6 +1548,8 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 	if (dist_ghost > (dist_intersec*0.8))
 		_b_is_Ok = false;
 
+	_b_is_Ok = true;
+
 	if (_b_is_Ok)
 	{
 		//! El codigo comentado corresponde con la construccion de la obsoleta spline en funcion de 2 puntos de control
@@ -1574,25 +1576,21 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 		/*_cx = 3.0 * (_p1.x - _p0.x);
 		_bx = 3.0 * (_p2.x - _p1.x) - _cx;
 		_ax = _p3.x - _p0.x - _cx - _bx;
-
 		_cy = 3.0 * (_p1.y - _p0.y);
 		_by = 3.0 * (_p2.y - _p1.y) - _cy;
-		_ay = _p3.y - _p0.y - _cy - _by;*/
-
-
-		
-		/*_ax = 2 * (_p0.x - _p3.x) + unit_yaw_init.x + unit_yaw_goal.x;
+		_ay = _p3.y - _p0.y - _cy - _by;
+		_ax = 2 * (_p0.x - _p3.x) + unit_yaw_init.x + unit_yaw_goal.x;
 		_bx = 3 * (_p3.x - _p0.x) - (2 * unit_yaw_init.x + unit_yaw_goal.x);
 		_cx = unit_yaw_init.x;
-
 		_ay = 2 * (_p0.y - _p3.y) + unit_yaw_init.y + unit_yaw_goal.y;
 		_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
 		_cy = unit_yaw_init.y;*/
 
 		double dist_init_goal = (pos_goal - pos_init).module();
-		double ang_debug = -90.0;
-		double mx1 = 2 * dist_init_goal, mx2 = 2 * dist_init_goal * cos(ang_debug * PI / 180);//-180 * PI / 180
-		double my1 = 0.0,                my2 = 2 * dist_init_goal * sin(ang_debug * PI / 180);
+
+		double mx1 = K_DEBUG_INIT * dist_init_goal * cos(yaw_init), my1 = K_DEBUG_INIT * dist_init_goal * sin(yaw_init),
+			   mx2 = K_DEBUG_GOAL * dist_init_goal * cos(yaw_goal), my2 = K_DEBUG_GOAL * dist_init_goal * sin(yaw_goal);
+		                
 
 		_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
 		_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);

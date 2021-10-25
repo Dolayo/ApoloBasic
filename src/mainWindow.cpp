@@ -140,7 +140,7 @@ void MainWindow::createEnvironment()
 void MainWindow::createShipEnvironment()
 {
 	//Intializing test environment Faces included in a FacePart
-	Face deep(Transformation3D(0, 0, 0), 0, -50, 50, 50);
+	Face deep(Transformation3D(0, 0, 0), 0, -60, 60, 60);
 	deep.setColor(0.18, 0.67, 0.80,1);//0.1451, 0.1569, 0.3137,1
 
 	Face land1;
@@ -179,10 +179,10 @@ void MainWindow::createShipEnvironment()
 
 	FaceSetPart* shore = new FaceSetPart;
 	shore->addFace(deep);
-	shore->addFace(land1);
+	/*shore->addFace(land1);
 	shore->addFace(land2);
 	shore->addFace(land3);
-	shore->addFace(land4);
+	shore->addFace(land4);*/
 
 	world += shore;
 }

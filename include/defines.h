@@ -6,8 +6,7 @@
 #define THETA2 10*PI/180 // 10º normal, 5º spline
 #define THETA3 30*PI/180 // 30º normal, 20º spline
 
-//! Orientacion goal, usado para testeo
-#define TEST_YAW -PI/2
+
 
 #define DIST1 5//8
 #define DIST2 10//18
@@ -38,7 +37,7 @@
 #define RO_AIR 1.225
 
 //! Numero de iteraciones a efectuar al crear un nuevo path
-constexpr int NUM_ITER_PATH = 2000;//600,  339 fin para el banco de pruebas de distancia30 
+constexpr int NUM_ITER_PATH = 3000;//2000,  339 fin para el banco de pruebas de distancia30 
 
 //! Tolerancia de posicion
 constexpr double POSE_TOL = 1;
@@ -47,7 +46,7 @@ constexpr double POSE_TOL = 1;
 constexpr double VEL_TOL = 0.5;
 
 //! Tolerancia de orientacion con respecto a la recta tangente a la curva
-constexpr double YAW_TOL = 2*PI / 180;//5º(/36)
+constexpr double YAW_TOL = 2*PI / 180;//2º
 
 //! Pertenencia a la circunferencia
 constexpr double CIRC_TOL_INNER_OUTSIDE = 0.5;//1.0 
@@ -61,16 +60,19 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 0.0 + 1.0;//0
+constexpr double X_START = 0.0 + 20.0;//0
 constexpr double Y_START = 30;//30
 
 //! Orientacion relativa del robot en el punto de incio
-constexpr double YAW_START = 0.0;
+constexpr double YAW_START = PI/2;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 60.0 + 1.0;//30
+constexpr double X_GOAL = 30.0 + 20.0;//30
 constexpr double Y_GOAL = 30.0;//0
+
+//! Orientacion goal, usado para testeo
+constexpr double TEST_YAW = -90.0 * PI / 180.0;
 
 //! Velocidad incial de avance
 constexpr double VX_INIT = V_MAX;//V_MAX
@@ -82,12 +84,16 @@ constexpr double radius = 8;
 constexpr unsigned int NUM_ITERS = 6;
 
 
-constexpr double T_TOP = 0.7;//0.9
+constexpr double T_TOP = 0.9;//0.7
 constexpr double T_LOW = 0.01;//0.2
 
 //! Velocidad de frenado apra tomar la curva
-constexpr double VX_SLOW= 1.0;//1.0
+constexpr double VX_SLOW= 0.1;//1.0
 
+//! K init spline solo para debug 
+constexpr double K_DEBUG_INIT = 3.0;
+//! K goal spline solo para debug 
+constexpr double K_DEBUG_GOAL = 3.0;
 
 //! Zona en la que se encuentra el punto goal con respecto al robot
 enum class ZoneType { central, left, right };
