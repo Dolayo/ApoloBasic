@@ -2,9 +2,9 @@
 #define __DEFINES_
 
 #define DELTA_T 0.1 //seconds
-#define THETA1 5*PI/180 // 5º normal, 2º spline Si el punto esta a la D/I usamos los estrictos, si esta en el centro los laxos
-#define THETA2 10*PI/180 // 10º normal, 5º spline
-#define THETA3 30*PI/180 // 30º normal, 20º spline
+#define THETA1 5*PI/180 // 5º normal, 
+#define THETA2 10*PI/180 // 10º normal, 
+#define THETA3 30*PI/180 // 30º normal, 
 
 
 
@@ -49,8 +49,8 @@ constexpr double VEL_TOL = 0.5;
 constexpr double YAW_TOL = 2*PI / 180;//2º
 
 //! Pertenencia a la circunferencia
-constexpr double CIRC_TOL_INNER_OUTSIDE = 0.5;//1.0 
-constexpr double CIRC_TOL_INNER_INSIDE = 0.5;//1.5
+constexpr double CIRC_TOL_INNER_OUTSIDE = 0.5;//0.5
+constexpr double CIRC_TOL_INNER_INSIDE = 0.5;//0.5
 // He cambiado a 0.5 porque le he puesto que vuelva a la curva en medium si esta dentro, si no vuelve a ponerlo en 1.5
 
 //! Entrada en la circunferencia
@@ -60,19 +60,19 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 0.0 + 20.0;//0
-constexpr double Y_START = 30;//30
+constexpr double X_START = 0.0 + 25.0;//0
+constexpr double Y_START = 20;//30
 
 //! Orientacion relativa del robot en el punto de incio
-constexpr double YAW_START = PI/2;
+constexpr double YAW_START = 0.0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 30.0 + 20.0;//30
-constexpr double Y_GOAL = 30.0;//0
+constexpr double X_GOAL = 30 + 25.0;//30
+constexpr double Y_GOAL = 20.0;//0
 
 //! Orientacion goal, usado para testeo
-constexpr double TEST_YAW = -90.0 * PI / 180.0;
+constexpr double TEST_YAW = -160.0 * PI / 180.0;
 
 //! Velocidad incial de avance
 constexpr double VX_INIT = V_MAX;//V_MAX
@@ -87,13 +87,20 @@ constexpr unsigned int NUM_ITERS = 6;
 constexpr double T_TOP = 0.9;//0.7
 constexpr double T_LOW = 0.01;//0.2
 
-//! Velocidad de frenado apra tomar la curva
+//! Velocidad de frenado para tomar la curva
 constexpr double VX_SLOW= 0.1;//1.0
 
-//! K init spline solo para debug 
-constexpr double K_DEBUG_INIT = 3.0;
-//! K goal spline solo para debug 
-constexpr double K_DEBUG_GOAL = 3.0;
+//! K spline center
+constexpr double K_CENTER = 2.0;
+
+//! K spline side
+constexpr double K_SIDE = 3.0;
+
+//! Maximo angulo de factibilidad para seguir la curva
+constexpr double MAX_ANG = 25.0;
+
+//! Maximo angulo de tolerancia para llegada al nodo goal
+constexpr double MAX_ANG_TOL = 8.0;
 
 //! Zona en la que se encuentra el punto goal con respecto al robot
 enum class ZoneType { central, left, right };

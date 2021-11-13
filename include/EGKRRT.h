@@ -99,7 +99,7 @@ protected:
 				class Spline{
 
 				public:
-					Spline(RobotState* ap_init, RobotState* ap_goal);
+					Spline(RobotState* ap_init, RobotState* ap_goal, ZoneType& ar_zone);
 					Spline() = delete;
 					~Spline() = default;
 					Vector2D Spfunction(double t);
@@ -116,7 +116,8 @@ protected:
 					bool IsInside(RobotState* ap_init);
 					bool IsTNearLeft(RobotState* ap_init);
 					std::tuple<double, bool, bool> getRelativeAng(RobotState* ap_init);
-					Vector2D SpfirstD(double&& t);
+					Vector2D SpfirstD(double t);
+					bool IsFeasible(ShipState* ap_init, ShipState* ap_goal);
 					double getTnear(void) const { return _t_near; }
 					bool getSTOP() const{ return _stop; }
 					void setSTOP(bool ab_stop) { _stop = ab_stop; }
@@ -147,6 +148,7 @@ protected:
 					double _distance{ 0.0 };
 
 					bool _stop{true};
+					std::vector<double> ang_list;
 				};
 			public:
 
@@ -167,11 +169,9 @@ protected:
 				virtual void appendState(RobotState* p_aux){_inter.push_back(p_aux);}
 				void appendCtrlAct(std::vector<double> v_aux) { _sequence.push_back(v_aux); }
 				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter = 100, bool b_ensure_yaw = false);
-				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState, 
-														double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw = false);
+				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState, bool b_ensure_yaw = false);
 				static bool isGhostThere(ShipState* donkey, ShipState* carrot, Vector2D& newPos);
 				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
-				//virtual std::vector<double> navigationOrient(RobotState* ap_initState, Circunference* ap_circ);
 				bool generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
 				void drawGL();
 

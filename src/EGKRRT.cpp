@@ -597,18 +597,11 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 
 	p_newPath->_init = p_initState;
 
-	
-	
 	p_initState->placeRobot();
 
 	ShipState* p_newState = nullptr;/* , * p_prevState = p_init;*/
 
 	b_success = false; //solo se pone a true si se logra la solucion
-
-	// Registramos el valor relativo inicial de la orientacion
-	double init_yaw = p_finalState->getYaw() - p_initState->getYaw();
-
-	bool b_yaw_ensured = false;
 
 	for (int n = 0; n < niter; ++n)
 	{
@@ -617,33 +610,27 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 			b_success = true;
 			p_newPath->appendState(p_initState);
 			p_newPath->_end = p_newState;
-			double ang = 180*(p_initState->getYaw())/PI;//DEBUG
+			if (b_ensure_yaw)
+			{
+				double ang = 180*(std::abs(p_finalState->getYaw() - p_initState->getYaw()))/PI;
+				if (ang > MAX_ANG_TOL)
+					b_success = false;
+			}
+			
 			return p_newPath;
 		}
 
 		// Obtain the control action
-		// Si el angulo de alejamiento ya se ha conseguido, no hace falta seguir usando la opcion de asegurar yaw
-		if (b_yaw_ensured)
-			b_ensure_yaw = false;
 
-		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState, init_yaw, b_yaw_ensured, b_ensure_yaw);
-
-		//if (p_newPath->isGhostThere(p_initState, p_finalState))
-		//{
-		//	v_ctrlAct[0] = 0.0;
-		//	v_ctrlAct[1] = 0.0;
-		//	v_ctrlAct[2] = 0.0;//Just for simple dynamics
-		//} 
+		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState, b_ensure_yaw); 
 
 		// Propagate the control action
 		bool b_success_prop = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
 
 		if (b_success_prop)
 		{
-			//ShipState* auxtemp = new ShipState();
 			p_newState->setCost(p_newState->distanceTo(p_initState) + p_initState->getCost());
 
-			
 			p_newPath->appendState(p_newState);
 			p_newPath->_end = p_newState;
 			p_newPath->appendCtrlAct(v_ctrlAct);
@@ -657,7 +644,7 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 	return p_newPath;
 }
 
-std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState, RobotState* p_finalState, double& ar_init_yaw, bool& b_yaw_ensured, bool b_ensure_yaw)
+std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState, RobotState* p_finalState, bool b_ensure_yaw)
 {
 	std::vector<double> v_auxCtrlAct;
 
@@ -764,208 +751,62 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 		}
 	}
 
-	//! +++++++++++++++++++++ ONLY for testing purposes
-	if (b_ensure_yaw)
+	if (b_ensure_yaw && !_p_spline)
 	{
-		b_yaw_ensured = true;
 		//_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
-		_p_spline = new Spline(p_ShipInitState, p_ShipFinalState);
+		_p_spline = new Spline(p_ShipInitState, p_ShipFinalState, zone);
 	}
-	//! //! +++++++++++++++++++++ ONLY for testing purposes
 
-	if(b_yaw_ensured)//b_yaw_ensured
+
+	if(b_ensure_yaw)
 	{
-		//generateCtrlActCirc(p_ShipInitState, quad, zone, v_auxCtrlAct);
-		generateCtrlActSpline(p_ShipInitState, quad, zone, v_auxCtrlAct);
-		/*if(_p_spline->IsOk())
-			generateCtrlActSpline(p_ShipInitState, quad, zone, v_auxCtrlAct);
-		else
-		{
-			bool nope = true;
-		}*/
+		if(_p_circ)
+			generateCtrlActCirc(p_ShipInitState, quad, zone, v_auxCtrlAct);
 
+		if (_p_spline && _p_spline->IsOk())
+		{
+			generateCtrlActSpline(p_ShipInitState, quad, zone, v_auxCtrlAct);
+			return v_auxCtrlAct;
+		}
+			
 		if(v_auxCtrlAct.size()==0)
 		{
 			v_auxCtrlAct.push_back(0.);
 			v_auxCtrlAct.push_back(0.);
 			v_auxCtrlAct.push_back(0.);
+			return v_auxCtrlAct;
 		}
-		return v_auxCtrlAct;// dale una vuelta a como es el flujo trambolico de toda esta funcion
+		
 	}
 	
 
-	//switch (zone)
-	//{
-	//case ZoneType::right:
-	//	{
-	//	if (b_ensure_yaw)
-	//	{
-	//		double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
+	switch (zone)
+	{
+	case ZoneType::right:
+		{
+			v_auxCtrlAct.push_back(THRUSTX);
+			v_auxCtrlAct.push_back(0.);
+			v_auxCtrlAct.push_back(-THRUSTW);
+			break;
+		}
 
-	//		if (std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
-	//		{
-	//			if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
-	//			{
-	//				v_auxCtrlAct.push_back(THRUSTX);
-	//				v_auxCtrlAct.push_back(0.);
-	//				v_auxCtrlAct.push_back(-THRUSTW);
-	//			}
-	//			else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
-	//			{
-	//				v_auxCtrlAct.push_back(THRUSTX);
-	//				v_auxCtrlAct.push_back(0.);
-	//				v_auxCtrlAct.push_back(THRUSTW);
-	//			}
-	//		}
-	//		else
-	//		{
-	//			b_yaw_ensured = true;
-	//			_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
+	case ZoneType::central:
+		{
+			v_auxCtrlAct.push_back(THRUSTX);
+			v_auxCtrlAct.push_back(0.);
+			v_auxCtrlAct.push_back(0.);
+			break;
+		}
+	case ZoneType::left:
+		{
+			v_auxCtrlAct.push_back(THRUSTX);
+			v_auxCtrlAct.push_back(0.);
+			v_auxCtrlAct.push_back(THRUSTW);
+	 	   break;
+		}
+	}
 
-	//			v_auxCtrlAct.push_back(THRUSTX);
-	//			v_auxCtrlAct.push_back(0.);
-	//			v_auxCtrlAct.push_back(-THRUSTW);
-	//		}
-
-	//	}
-	//	else
-	//	{
-	//		v_auxCtrlAct.push_back(THRUSTX);
-	//		v_auxCtrlAct.push_back(0.);
-	//		v_auxCtrlAct.push_back(-THRUSTW);
-	//	}
-
-	//	break;
-	//	}
-
-	//case ZoneType::central:
-	//	{
-	//		double distance = p_ShipInitState->distanceTo(p_ShipFinalState);
-	//		double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
-
-	//		if (b_ensure_yaw)
-	//		{
-	//			if(std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
-	//			{
-	//				if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
-	//				{
-	//					v_auxCtrlAct.push_back(THRUSTX);
-	//					v_auxCtrlAct.push_back(0.);
-	//					v_auxCtrlAct.push_back(-THRUSTW);
-	//				}
-	//				else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
-	//				{
-	//					v_auxCtrlAct.push_back(THRUSTX);
-	//					v_auxCtrlAct.push_back(0.);
-	//					v_auxCtrlAct.push_back(THRUSTW);
-	//				}
-	//			}
-	//			else
-	//			{
-	//				b_yaw_ensured = true;
-	//				_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
-
-	//				v_auxCtrlAct.push_back(THRUSTX);
-	//				v_auxCtrlAct.push_back(0.);
-	//				v_auxCtrlAct.push_back(0.);
-	//			}
-	//		}
-	//		else
-	//		{
-	//			if (b_yaw_ensured)
-	//			{
-	//				// MINIAJUSTES
-	//				/*if ((distance < DIST_ADJ2) && (distance > DIST_ADJ1))
-	//				{
-	//					if(yaw_rel > YAW_TOL)
-	//					{
-	//						v_auxCtrlAct.push_back(THRUSTX);
-	//						v_auxCtrlAct.push_back(0.);
-	//						v_auxCtrlAct.push_back(-THRUSTW);
-	//					}
-	//					else
-	//						if (yaw_rel < -YAW_TOL)
-	//						{
-	//							v_auxCtrlAct.push_back(THRUSTX);
-	//							v_auxCtrlAct.push_back(0.);
-	//							v_auxCtrlAct.push_back(THRUSTW);
-	//						}
-	//						else
-	//						{
-	//							v_auxCtrlAct.push_back(THRUSTX);
-	//							v_auxCtrlAct.push_back(0.);
-	//							v_auxCtrlAct.push_back(0.);
-	//						}
-	//					
-	//				}
-	//				else
-	//				{
-	//					v_auxCtrlAct.push_back(THRUSTX);
-	//					v_auxCtrlAct.push_back(0.);
-	//					v_auxCtrlAct.push_back(0.);
-	//				}*/
-	//				/*v_auxCtrlAct.push_back(THRUSTX);
-	//				v_auxCtrlAct.push_back(0.);
-	//				v_auxCtrlAct.push_back(0.);*/
-
-	//				//! Seguimiento de circunferencia
-	//				
-
-	//			}
-	//			else
-	//			{
-	//				v_auxCtrlAct.push_back(THRUSTX);
-	//				v_auxCtrlAct.push_back(0.);
-	//				v_auxCtrlAct.push_back(0.);
-	//			}
-	//		}
-	//			
-	//			break;
-	//	}
-	//case ZoneType::left:
-	//	{
-	//	if (b_ensure_yaw)
-	//	{
-	//		double yaw_rel = p_ShipFinalState->getYaw() - p_ShipInitState->getYaw();
-	//		if (std::abs(yaw_rel) < std::abs(REENTRY_ANGLE_K * ar_init_yaw))
-	//		{
-	//			if (yaw_rel > 0.0)// Si el angulo es positivo, objetivo a la izda, giro a la derecha
-	//			{
-	//				v_auxCtrlAct.push_back(THRUSTX);
-	//				v_auxCtrlAct.push_back(0.);
-	//				v_auxCtrlAct.push_back(-THRUSTW);
-	//			}
-	//			else// Si el angulo es negativo, objetivo a la dcha, giro a la izquierda
-	//			{
-	//				v_auxCtrlAct.push_back(THRUSTX);
-	//				v_auxCtrlAct.push_back(0.);
-	//				v_auxCtrlAct.push_back(THRUSTW);
-	//			}
-	//		}
-	//		else
-	//		{
-	//			b_yaw_ensured = true;
-	//			_p_circ = new Circunference(p_ShipInitState, p_ShipFinalState);
-
-	//			v_auxCtrlAct.push_back(THRUSTX);
-	//			v_auxCtrlAct.push_back(0.);
-	//			v_auxCtrlAct.push_back(THRUSTW);
-	//		}
-
-	//	}
-	//	else
-	//	{
-	//		v_auxCtrlAct.push_back(THRUSTX);
-	//		v_auxCtrlAct.push_back(0.);
-	//		v_auxCtrlAct.push_back(THRUSTW);
-	//	}
-
-	//	break;
-	//	}
-
-	//}
-
-	//return v_auxCtrlAct;
+	return v_auxCtrlAct;
 }
 
 bool EGKRRT::EGKtree::EGKpath::isGhostThere(ShipState* donkey, ShipState* carrot, Vector2D& newPos)
@@ -1320,51 +1161,6 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 	}
 }
 
-//std::vector<double> EGKRRT::EGKtree::EGKpath::navigationOrient(RobotState* ap_initState, circunference* ap_circ)
-//{
-//	std::vector<double> v_auxCtrlAct;
-//
-//	ShipState* p_ShipInitState = dynamic_cast<ShipState*>(ap_initState);
-//	
-//	if (!p_ShipInitState)
-//		return v_auxCtrlAct;
-//	
-//	Vector3D init_pose = p_ShipInitState->getPose();
-//	
-//	if(ap_circ->PointBelongs(init_pose))
-//	{
-//		double angle_rel = ap_circ->getAng(/*No me acuerdo que argumentos tenia*/);
-//		if(std::abs(angle_rel)<YAW_TOL)
-//		{
-//			// Avance recto	
-//		}
-//		else
-//		{
-//			if(angle_rel > 0.0)
-//			{
-//				// Circunferencia a la izquierda, giro a la izquierda
-//			}
-//			else
-//			{
-//			// Circunferencia a la derecha, giro a la derecha
-//			}
-//		}
-//		
-//	}
-//	else
-//	{	
-//		// Giro hacia la circunferencia
-//		ap_circ->IsPointInside(init_pose)
-//		{
-//			// Punto dentro de la circunferencia
-//		}
-//		else
-//		{
-//			// Punto fuera de la circunferencia
-//		}
-//	}
-//}
-
 //! -------------------------------------- Circunference -------------------------------------- 
 
 EGKRRT::EGKtree::EGKpath::Circunference::Circunference(RobotState* ap_init, RobotState* ap_goal)
@@ -1499,7 +1295,7 @@ double EGKRRT::EGKtree::EGKpath::Circunference::getDistance(RobotState* ap_init)
 
 //! -------------------------------------- Spline -------------------------------------- 
 
-EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goal)
+EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goal, ZoneType& ar_zone)
 {
 	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
 	ShipState* p_EGK_goal = dynamic_cast<ShipState*>(ap_goal);
@@ -1516,90 +1312,65 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 	//! Extraemos las direcciones inicial y final
 	double yaw_init = p_EGK_init->getYaw();
 	double yaw_goal = p_EGK_goal->getYaw();
-	Vector2D unit_yaw_init(cos(yaw_init), sin(yaw_init));
-	Vector2D unit_yaw_goal(-cos(yaw_goal), -sin(yaw_goal));
-
-	//! Extraemos las velocidades inicial y final
-	Vector3D vel_init = p_EGK_init->getVels();
-	Vector3D vel_goal = p_EGK_goal->getVels();
-
-	//! Calculo del corte de las rectas que forman las direcciones inicial y final
-	//! Calculamos las rectas que forman los puntos inicial y final y sus direcciones: y = Mx + n
-	double M_init = tan(unit_yaw_init.y / unit_yaw_init.x);
-	double n_init = pos_init.y - M_init * pos_init.x;
-
-	double M_goal = tan(unit_yaw_goal.y / unit_yaw_goal.x);
-	double n_goal = pos_goal.y - M_goal * pos_goal.x;
-	//! y = m1x +n1
-	//! y = m2x + n2
-	//! m2x - m1x = n1-n2
-	//! x = n1-n2 / m2-m1
-	Vector2D intersec_point((n_init - n_goal)/(M_goal - M_init), M_init*pos_init.x + n_init);
-
-	//! Distancias del punto de interseccion al punto inicial
-	double dist_intersec = intersec_point.distance(Vector2D(pos_init.x, pos_init.y));
-
-	Vector2D ghost_pos;
-
-	EGKRRT::EGKtree::EGKpath::isGhostThere(p_EGK_init, p_EGK_goal, ghost_pos);
-
-	double dist_ghost = (ghost_pos - pos_init).module();
-
-	if (dist_ghost > (dist_intersec*0.8))
-		_b_is_Ok = false;
-
-	_b_is_Ok = true;
-
-	if (_b_is_Ok)
-	{
-		//! El codigo comentado corresponde con la construccion de la obsoleta spline en funcion de 2 puntos de control
-		//! Calculo de los puntos de control
-		/*_p0.x = pos_init.x;
-		_p0.y = pos_init.y;
-		_p1.x = pos_init.x + dist_p1 * unit_yaw_init.x;
-		_p1.y = pos_init.y + dist_p1 * unit_yaw_init.y;
-		_p2.x = pos_goal.x - dist_p2 * unit_yaw_goal.x;
-		_p2.y = pos_goal.y - dist_p2 * unit_yaw_goal.y;
-		_p3.x = pos_goal.x;
-		_p3.y = pos_goal.y;*/
+	
+	//! El codigo comentado corresponde con la construccion de la obsoleta spline en funcion de 2 puntos de control
+	//! Calculo de los puntos de control
+	/*_p0.x = pos_init.x;
+	_p0.y = pos_init.y;
+	_p1.x = pos_init.x + dist_p1 * unit_yaw_init.x;
+	_p1.y = pos_init.y + dist_p1 * unit_yaw_init.y;
+	_p2.x = pos_goal.x - dist_p2 * unit_yaw_goal.x;
+	_p2.y = pos_goal.y - dist_p2 * unit_yaw_goal.y;
+	_p3.x = pos_goal.x;
+	_p3.y = pos_goal.y;*/
 		
-		_p0.x = X_START;
-		_p0.y = Y_START;
-		/*_p1.x = 20.0;
-		_p1.y = 30.0;
-		_p2.x = 30.0;
-		_p2.y = 20.0;*/
-		_p3.x = X_GOAL;
-		_p3.y = Y_GOAL;
+	_p0.x = X_START;
+	_p0.y = Y_START;
+	/*_p1.x = 20.0;
+	_p1.y = 30.0;
+	_p2.x = 30.0;
+	_p2.y = 20.0;*/
+	_p3.x = X_GOAL;
+	_p3.y = Y_GOAL;
 
-		//! Calculamos los coeficientes del polinomio del tercer grado
-		/*_cx = 3.0 * (_p1.x - _p0.x);
-		_bx = 3.0 * (_p2.x - _p1.x) - _cx;
-		_ax = _p3.x - _p0.x - _cx - _bx;
-		_cy = 3.0 * (_p1.y - _p0.y);
-		_by = 3.0 * (_p2.y - _p1.y) - _cy;
-		_ay = _p3.y - _p0.y - _cy - _by;
-		_ax = 2 * (_p0.x - _p3.x) + unit_yaw_init.x + unit_yaw_goal.x;
-		_bx = 3 * (_p3.x - _p0.x) - (2 * unit_yaw_init.x + unit_yaw_goal.x);
-		_cx = unit_yaw_init.x;
-		_ay = 2 * (_p0.y - _p3.y) + unit_yaw_init.y + unit_yaw_goal.y;
-		_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
-		_cy = unit_yaw_init.y;*/
+	//! Calculamos los coeficientes del polinomio del tercer grado
+	/*_cx = 3.0 * (_p1.x - _p0.x);
+	_bx = 3.0 * (_p2.x - _p1.x) - _cx;
+	_ax = _p3.x - _p0.x - _cx - _bx;
+	_cy = 3.0 * (_p1.y - _p0.y);
+	_by = 3.0 * (_p2.y - _p1.y) - _cy;
+	_ay = _p3.y - _p0.y - _cy - _by;
+	_ax = 2 * (_p0.x - _p3.x) + unit_yaw_init.x + unit_yaw_goal.x;
+	_bx = 3 * (_p3.x - _p0.x) - (2 * unit_yaw_init.x + unit_yaw_goal.x);
+	_cx = unit_yaw_init.x;
+	_ay = 2 * (_p0.y - _p3.y) + unit_yaw_init.y + unit_yaw_goal.y;
+	_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
+	_cy = unit_yaw_init.y;*/
 
-		double dist_init_goal = (pos_goal - pos_init).module();
+	double k_init = K_SIDE - 1.0 + p_EGK_init->getVels().x / V_MAX;
+	double k_goal = K_SIDE;
 
-		double mx1 = K_DEBUG_INIT * dist_init_goal * cos(yaw_init), my1 = K_DEBUG_INIT * dist_init_goal * sin(yaw_init),
-			   mx2 = K_DEBUG_GOAL * dist_init_goal * cos(yaw_goal), my2 = K_DEBUG_GOAL * dist_init_goal * sin(yaw_goal);
-		                
+	double dist_init_goal = (pos_goal - pos_init).module();
 
-		_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
-		_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);
-		_cx = mx1;
-
-		_ay = 2 * (_p0.y - _p3.y) + my1 + my2;
-		_by = 3 * (_p3.y - _p0.y) - (2 * my1 + my2);
-		_cy = my1;
+	if (ar_zone == ZoneType::central)
+	{
+		k_init = K_CENTER - 1.0 + p_EGK_init->getVels().x / V_MAX;
+		k_goal = K_CENTER;
 	}
+
+	double mx1 = k_init * dist_init_goal * cos(yaw_init), my1 = k_init * dist_init_goal * sin(yaw_init),
+			mx2 = k_goal * dist_init_goal * cos(yaw_goal), my2 = k_goal * dist_init_goal * sin(yaw_goal);
+		                
+	_ax = 2 * (_p0.x - _p3.x) + mx1 + mx2;
+	_bx = 3 * (_p3.x - _p0.x) - (2 * mx1 + mx2);
+	_cx = mx1;
+
+	_ay = 2 * (_p0.y - _p3.y) + my1 + my2;
+	_by = 3 * (_p3.y - _p0.y) - (2 * my1 + my2);
+	_cy = my1;
+
+	_b_is_Ok = IsFeasible(p_EGK_init, p_EGK_goal);
+
 }
 
 bool EGKRRT::EGKtree::EGKpath::generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act)
@@ -2377,12 +2148,74 @@ std::tuple<double, bool, bool> EGKRRT::EGKtree::EGKpath::Spline::getRelativeAng(
 	}
 }
 
-Vector2D EGKRRT::EGKtree::EGKpath::Spline::SpfirstD(double&& t)
+Vector2D EGKRRT::EGKtree::EGKpath::Spline::SpfirstD(double t)
 {
 	double firstD_x = 3 * _ax * t * t + 2 * _bx * t + _cx;
 	double firstD_y = 3 * _ay * t * t + 2 * _by * t + _cy;
 
 	return Vector2D(firstD_x, firstD_y);
+}
+
+bool EGKRRT::EGKtree::EGKpath::Spline::IsFeasible(ShipState* ap_init, ShipState* ap_goal)
+{
+	//! Extraemos las posiciones inicial y final
+	Vector2D pos_init(ap_init->getPose().x, ap_init->getPose().y);
+	Vector2D pos_goal(ap_goal->getPose().x, ap_goal->getPose().y);
+
+	//! Extraemos las direcciones inicial y final
+	double yaw_init = ap_init->getYaw();
+	double yaw_goal = ap_goal->getYaw();
+	Vector2D unit_yaw_init(cos(yaw_init), sin(yaw_init));
+	Vector2D unit_yaw_goal(-cos(yaw_goal), -sin(yaw_goal));
+
+	//! Extraemos las velocidades inicial y final
+	Vector3D vel_init = ap_init->getVels();
+	Vector3D vel_goal = ap_goal->getVels();
+
+	//! Comprobamos si la curva es factible para usarse como guia
+	_b_is_Ok = true;
+
+	//! Calculo del corte de las rectas que forman las direcciones inicial y final
+	//! Calculamos las rectas que forman los puntos inicial y final y sus direcciones: y = Mx + n
+	double M_init = tan(unit_yaw_init.y / unit_yaw_init.x);
+	double n_init = pos_init.y - M_init * pos_init.x;
+
+	double M_goal = tan(unit_yaw_goal.y / unit_yaw_goal.x);
+	double n_goal = pos_goal.y - M_goal * pos_goal.x;
+
+	//! y = m1x +n1
+	//! y = m2x + n2
+	//! m2x - m1x = n1-n2
+	//! x = n1-n2 / m2-m1
+
+	Vector2D intersec_point((n_init - n_goal) / (M_goal - M_init), M_init * pos_init.x + n_init);
+
+	//! Distancias del punto de interseccion al punto inicial
+	double dist_intersec = intersec_point.distance(Vector2D(pos_init.x, pos_init.y));
+
+	Vector2D ghost_pos;
+
+	EGKRRT::EGKtree::EGKpath::isGhostThere(ap_init, ap_goal, ghost_pos);
+
+	double dist_ghost = (ghost_pos - pos_init).module();
+
+	if (dist_ghost > (dist_intersec * 0.9))
+		_b_is_Ok = false;
+
+	Vector2D dir_prev = SpfirstD(0.0);
+	for (double t = 0.01; t<1.0; t=t+0.01)
+	{
+		Vector2D dir_current = SpfirstD(t);
+		double angle = std::acos((dir_current.x * dir_prev.x + dir_current.y * dir_prev.y) / (dir_current.module() * dir_prev.module()));
+		angle = angle * 180 / PI;
+		ang_list.push_back(angle);
+
+		if (std::abs(angle) > MAX_ANG)
+			_b_is_Ok = false;
+
+		dir_prev = dir_current;
+	}
+	return _b_is_Ok;
 }
 
 //! ----------------- Drawing methods --------------------------------------
@@ -2451,11 +2284,11 @@ void EGKRRT::EGKtree::EGKpath::Circunference::drawGL()
 	glBegin(GL_LINE_STRIP);
 
 	glLineWidth(5);
-	glColor3f(0.2, 0.8F, 1.0F);
+	glColor3f(0.8F, 0.1F, 0.1F);
 	for (int i = 0; i < 360; ++i)
 	{
 		double x = _center.x + _radius * cos(i * PI / 180);
-		double y = _center.y + _radius * sin(i * PI / 180);// dale una vuelta a como pintar la circunferencia entera
+		double y = _center.y + _radius * sin(i * PI / 180);
 		glVertex3f(x, y, 0.0);
 	}
 	glEnd();
