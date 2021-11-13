@@ -126,7 +126,7 @@ protected:
 		virtual PathSegment *getClosestPathSegment(RobotState *n,RobotState **minstate);
 		virtual RobotState *addNode(RobotState *n);
 		virtual RobotPath getPathFromRoot(RobotState *n);
-		virtual void Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew);
+		virtual void Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew, PathSegment* ap_initNodePath = nullptr);
 		virtual PathSegment* findPath4Node( RobotState* node);
 		virtual void getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei);
 		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState **best);

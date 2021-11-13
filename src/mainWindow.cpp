@@ -258,8 +258,8 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 
 			if (dynamic_cast<EGKRRT*>(planner))
 			{
-				dynamic_cast<EGKRRT*>(planner)->testingPlan();
-				//dynamic_cast<EGKRRT*>(planner)->computePlan(_n_iter);
+				//dynamic_cast<EGKRRT*>(planner)->testingPlan();
+				dynamic_cast<EGKRRT*>(planner)->computePlan(_n_iter);
 
 				/*auto solution_plan = planner->getPlan();
 				if (solution_plan)

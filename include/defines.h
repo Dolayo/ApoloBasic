@@ -2,14 +2,14 @@
 #define __DEFINES_
 
 #define DELTA_T 0.1 //seconds
-#define THETA1 5*PI/180 // 5º normal, 
+#define THETA1 3*PI/180 // 3º normal, 
 #define THETA2 10*PI/180 // 10º normal, 
-#define THETA3 30*PI/180 // 30º normal, 
+#define THETA3 15*PI/180 // 15º normal, 
 
 
 
-#define DIST1 5//8
-#define DIST2 10//18
+#define DIST1 5//5
+#define DIST2 10//10
 #define THRUSTX 28000
 #define THRUSTX_spline 0 //27500 esta va bien para v_init = 0, 
 #define THRUSTY 28000
@@ -60,8 +60,8 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 0.0 + 25.0;//0
-constexpr double Y_START = 20;//30
+constexpr double X_START = 1.0;//0
+constexpr double Y_START = 0;//30
 
 //! Orientacion relativa del robot en el punto de incio
 constexpr double YAW_START = 0.0;
@@ -75,13 +75,13 @@ constexpr double Y_GOAL = 20.0;//0
 constexpr double TEST_YAW = -160.0 * PI / 180.0;
 
 //! Velocidad incial de avance
-constexpr double VX_INIT = V_MAX;//V_MAX
+constexpr double VX_INIT = 0;//V_MAX
 
 //! Radio de reconexion para el RRT*
-constexpr double radius = 8;
+constexpr double radius = 0;
 
-//!??????
-constexpr unsigned int NUM_ITERS = 6;
+//! Iteraciones del planificador en fase de puntos controlados
+constexpr unsigned int NUM_ITERS = 3;
 
 
 constexpr double T_TOP = 0.9;//0.7

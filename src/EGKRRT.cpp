@@ -50,11 +50,11 @@ bool EGKRRT::computePlan(int maxiterations)
 
 		//--! Testing purposes !--//
 		if(i==0)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, 9, 0));
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(50, 0, 0));
 		if(i==1)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, 4, 0));
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(15, -35, 0));//-35
 		if (i == 2)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, 2, 0));
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(15, -20, 0));
 		if (i == 3)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, -8, 0));
 		if (i == 4)
@@ -152,6 +152,10 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// La division en dos segmentos solo tiene sentido si el nodo mas cercano es parte intermedia de un segmento
 	// si es el principio o final de un segmento no habra division en dos segmentos
 
+	//! Este segmento sera uno(el anterior a initNode) de los dos en los que quede dividido el
+	//! segmento mas cercano con la inclusion del nuevo segmento 
+	PathSegment* newPathA = nullptr;
+
 	if (closest_path != nullptr)
 	{
 		if (_paths.size() != 0 && !(closest_path->_init->isEqual(initNode)) && !(closest_path->_end->isEqual(initNode)))
@@ -159,7 +163,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 			bool b_aux = false;
 
 			// Creamos el path desde el inicio del antiguo segmento hasta el punto intermedio initNode
-			PathSegment* newPathA = EGKpath::createPath(closest_path->_init, initNode, b_aux);
+			newPathA = EGKpath::createPath(closest_path->_init, initNode, b_aux, NUM_ITER_PATH);
 
 
 			// Agregamos todos los nodos intermedios recien creados del nuevo segmento createPath a la lista global de nodos del arbol
@@ -178,7 +182,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 			//newPathA->_end = closest_path->_init;
 
-			PathSegment* aux_path = EGKpath::createPath(closest_path->_init, closest_path->_end, b_aux);
+			PathSegment* aux_path = EGKpath::createPath(closest_path->_init, closest_path->_end, b_aux, NUM_ITER_PATH);
 		
 
 			closest_path->_inter.assign(aux_path->_inter.begin(), aux_path->_inter.end());
@@ -203,11 +207,8 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
 	//dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success, NUM_ITER_PATH, true);
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success, NUM_ITER_PATH);
 
-	//SOlo para debugeo, para ver con que angulo acaba
-	double yaw = dynamic_cast<ShipState*>(newPath->_end)->getYaw() * 180/PI;
-	//~SOlo para debugeo
 	// 
 	//_vertexes.push_back(newPath->_end);
 
@@ -227,7 +228,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	newPath->_init = initNode;
 
 	//el padre del nuevo segmento es el segmento que contiene al nodo de menor coste
-	newPath->_parent = findPath4Node(initNode);
+	newPath->_parent = newPathA; //findPath4Node(initNode)
 
 	// si no se ha llegado al final destruyo la copia
 	if (!success)
@@ -238,7 +239,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 	if ((_paths.size() != 0) && (neighbors.size() != 0))
 	{
-		Reconnect(neighbors, newPath->_end);
+		//Reconnect(neighbors, newPath->_end, newPath);
 	}
 
 	// devuelvo el extremo del nuevo segmento añadido
@@ -246,7 +247,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 }
 
-void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
+void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, PathSegment* ap_initNodePath)
 {
 	// Ordeno los vecinos de mayor a menor coste
 	sort(
@@ -264,14 +265,17 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 	{
 		ShipState* Xnew = dynamic_cast<ShipState*>(xnew);
 		ShipState* vecino = dynamic_cast<ShipState*>(v);
+
 		if (Xnew && vecino)
 		{
 			bool b_reach = false;
 
 			// El nuevo segmento que une a Xnew con el vecino
-			EGKpath* newRePath = EGKpath::createPath(Xnew, vecino, b_reach);
+			EGKpath* newRePath = EGKpath::createPath(Xnew, vecino, b_reach, NUM_ITER_PATH, true);
+
 			if (newRePath->_inter.empty())
 				continue;
+
 			double distance = newRePath->getLength();
 
 			// Si el coste de un vecino es mayor que la distancia a Xnew mas el coste de Xnew, creo el nuevo segmento de Xnew al vecino
@@ -292,7 +296,7 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 				newRePath->_init = Xnew;
 				oldPath->_init = newRePath->_end;//oldPath->_init = vecino;
 
-				newRePath->_parent = findPath4Node(Xnew);
+				newRePath->_parent = ap_initNodePath; //findPath4Node(Xnew)
 
 				oldPath->_parent = newRePath;
 
@@ -321,7 +325,7 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 				//oldPath->_inter.erase(oldPath->_inter.begin(), oldPath->_inter.begin() + pos_v);
 				bool b_temp = false;
 
-				EGKpath* temp = EGKpath::createPath(oldPath->_init, oldPath->_end, b_temp);
+				EGKpath* temp = EGKpath::createPath(oldPath->_init, oldPath->_end, b_temp, NUM_ITER_PATH);
 
 				oldPath->_inter.assign(temp->_inter.begin(), temp->_inter.end());
 
@@ -338,7 +342,6 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 				//_vertexes.push_back(oldPath->_init);
 				//_vertexes.push_back(oldPath->_end);
 				
-
 				_paths.push_back(newRePath);
 			}
 
@@ -346,8 +349,13 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew)
 			{
 				// Existe un choque o el vecino no tiene un coste interesante
 				delete newRePath;
+
 				continue;
 			}
+		}
+		else
+		{
+			throw ERRORNULL;
 		}
 	}
 }
@@ -1313,39 +1321,11 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 	double yaw_init = p_EGK_init->getYaw();
 	double yaw_goal = p_EGK_goal->getYaw();
 	
-	//! El codigo comentado corresponde con la construccion de la obsoleta spline en funcion de 2 puntos de control
-	//! Calculo de los puntos de control
-	/*_p0.x = pos_init.x;
+	_p0.x = pos_init.x;
 	_p0.y = pos_init.y;
-	_p1.x = pos_init.x + dist_p1 * unit_yaw_init.x;
-	_p1.y = pos_init.y + dist_p1 * unit_yaw_init.y;
-	_p2.x = pos_goal.x - dist_p2 * unit_yaw_goal.x;
-	_p2.y = pos_goal.y - dist_p2 * unit_yaw_goal.y;
-	_p3.x = pos_goal.x;
-	_p3.y = pos_goal.y;*/
-		
-	_p0.x = X_START;
-	_p0.y = Y_START;
-	/*_p1.x = 20.0;
-	_p1.y = 30.0;
-	_p2.x = 30.0;
-	_p2.y = 20.0;*/
-	_p3.x = X_GOAL;
-	_p3.y = Y_GOAL;
 
-	//! Calculamos los coeficientes del polinomio del tercer grado
-	/*_cx = 3.0 * (_p1.x - _p0.x);
-	_bx = 3.0 * (_p2.x - _p1.x) - _cx;
-	_ax = _p3.x - _p0.x - _cx - _bx;
-	_cy = 3.0 * (_p1.y - _p0.y);
-	_by = 3.0 * (_p2.y - _p1.y) - _cy;
-	_ay = _p3.y - _p0.y - _cy - _by;
-	_ax = 2 * (_p0.x - _p3.x) + unit_yaw_init.x + unit_yaw_goal.x;
-	_bx = 3 * (_p3.x - _p0.x) - (2 * unit_yaw_init.x + unit_yaw_goal.x);
-	_cx = unit_yaw_init.x;
-	_ay = 2 * (_p0.y - _p3.y) + unit_yaw_init.y + unit_yaw_goal.y;
-	_by = 3 * (_p3.y - _p0.y) - (2 * unit_yaw_init.y + unit_yaw_goal.y);
-	_cy = unit_yaw_init.y;*/
+	_p3.x = pos_goal.x;
+	_p3.y = pos_goal.y;
 
 	double k_init = K_SIDE - 1.0 + p_EGK_init->getVels().x / V_MAX;
 	double k_goal = K_SIDE;
@@ -2249,8 +2229,8 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	if (_p_circ)
 		_p_circ->drawGL();
 
-	if (_p_spline)
-		_p_spline->drawGL();
+	/*if (_p_spline)
+		_p_spline->drawGL();*/
 
 	if (this->_init == nullptr || this->_end == nullptr)
 		return;

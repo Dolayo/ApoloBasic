@@ -512,7 +512,7 @@ RDTstar::RDTtree::PathSegment* RDTstar::RDTtree::getBest(vector<RobotState*>& v_
 	else return nullptr;
 }
 
-void RDTstar::RDTtree::Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew)
+void RDTstar::RDTtree::Reconnect( vector<RobotState*>& v_nei, RobotState* Xnew, PathSegment* ap_initNodePath)
 {
 	// Ordeno los vecinos de mayor a menor coste
 	
