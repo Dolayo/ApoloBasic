@@ -42,6 +42,9 @@ constexpr int NUM_ITER_PATH = 3000;//2000,  339 fin para el banco de pruebas de 
 //! Tolerancia de posicion
 constexpr double POSE_TOL = 1;
 
+//! Tolerancia de posicion que aun estamos probando
+constexpr double POSE_TOL_SHARP = 0.1;
+
 //! Tolerancia de velocidad
 constexpr double VEL_TOL = 0.5;
 
@@ -78,14 +81,14 @@ constexpr double TEST_YAW = -160.0 * PI / 180.0;
 constexpr double VX_INIT = 0;//V_MAX
 
 //! Radio de reconexion para el RRT*
-constexpr double radius = 0;
+constexpr double radius = 25;//25
 
 //! Iteraciones del planificador en fase de puntos controlados
-constexpr unsigned int NUM_ITERS = 3;
+constexpr unsigned int NUM_ITERS = 4;
 
 
-constexpr double T_TOP = 0.9;//0.7
-constexpr double T_LOW = 0.01;//0.2
+constexpr double T_TOP = 0.99;//0.9
+constexpr double T_LOW = 0.01;//0.01
 
 //! Velocidad de frenado para tomar la curva
 constexpr double VX_SLOW= 0.1;//1.0

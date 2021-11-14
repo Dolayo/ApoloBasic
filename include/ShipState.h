@@ -3,6 +3,7 @@
 
 #include <mrcore.h>
 #include "Ship.h"
+#include "defines.h"
 
 namespace mr 
 {
@@ -28,7 +29,7 @@ namespace mr
 
 			virtual bool isEqual(RobotState* n) override;
 
-			bool isSamePos(RobotState* n);
+			bool isSamePos(RobotState* n, double pos_tol = POSE_TOL);
 
 			bool isSamePos(Vector3D p);
 			

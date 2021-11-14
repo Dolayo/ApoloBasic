@@ -29,7 +29,7 @@ bool ShipState::isEqual(RobotState* n)
 	else return false;
 }
 
-bool ShipState::isSamePos(RobotState* n)
+bool ShipState::isSamePos(RobotState* n, double pos_tol)
 {
 	//Equal if compatible
 	// For now, compatible if less than a constant
@@ -39,7 +39,7 @@ bool ShipState::isSamePos(RobotState* n)
 
 	Vector3D dif_pose = naux->_pose - _pose;
 	dif_pose.z = 0.0;
-	if ((dif_pose.module() < POSE_TOL))
+	if ((dif_pose.module() < pos_tol))
 		return true;
 	else return false;
 }
