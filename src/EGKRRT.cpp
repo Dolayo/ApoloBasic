@@ -49,10 +49,10 @@ bool EGKRRT::computePlan(int maxiterations)
 		RobotState* node = getNextSample();
 
 		//--! Testing purposes !--//
-		if(i==0)
+		/*if(i==0)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(50, 0, 0));
 		if(i==1)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(15, -35, 0));//-35
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(15, -35, 0));
 		if (i == 2)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(15, -45, 0));
 		if (i == 3)
@@ -60,7 +60,7 @@ bool EGKRRT::computePlan(int maxiterations)
 		if (i == 4)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(3, -9, 0));
 		if (i == 5)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, -4, 0));
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, -4, 0));*/
 
 		/*if (i == 0)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, -8, 0));
@@ -287,9 +287,9 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 			bool b_reach = false;
 
 			// El nuevo segmento que une a Xnew con el vecino
-			EGKpath* newRePath = EGKpath::createPath(Xnew, vecino, b_reach, NUM_ITER_PATH, true);
+			EGKpath* newRePath = EGKpath::createPath(Xnew, vecino, b_reach, NUM_ITER_PATH, true, false);
 
-			if (newRePath->_inter.empty())
+			if (newRePath->_inter.empty() || !b_reach)
 			{
 				delete newRePath;
 				continue;
@@ -324,10 +324,9 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 				oldPath->_inter.erase(oldPath->_inter.begin(), oldPath->_inter.begin() + pos_node);
 
 				bool b_mini_reach;
-				EGKpath* miniPath = EGKpath::createPath(newRePath->_end, oldPath->_init, b_mini_reach, NUM_ITER_PATH, true, true);
+				EGKpath* miniPath = EGKpath::createPath(newRePath->_end, oldPath->_init, b_mini_reach, NUM_ITER_PATH, false, true);
 
-				miniPath->_parent = newRePath;
-				oldPath->_parent = miniPath;
+				
 				//newRePath->_end = oldPath->_init;
 
 				// Deleteamos los nodos de la lista del arbol y de la lista de vecinos
@@ -350,7 +349,18 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 				}
 
 				_paths.push_back(newRePath);
-				_paths.push_back(miniPath);
+
+				if (miniPath && b_mini_reach)
+				{
+					_paths.push_back(miniPath);
+					miniPath->_parent = newRePath;
+					oldPath->_parent = miniPath;
+				}
+					
+				else
+				{
+					delete miniPath;
+				}
 			}
 
 			else
@@ -613,7 +623,13 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 
 	p_newPath->_init = p_initState;
 
-	p_initState->placeRobot();
+	if(b_precision)
+		p_initState->placeRobotTowards(p_end);
+	else
+	{
+		p_initState->placeRobot();
+	}
+	
 
 	ShipState* p_newState = nullptr;/* , * p_prevState = p_init;*/
 
@@ -2257,8 +2273,8 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	if (_p_circ)
 		_p_circ->drawGL();
 
-	if (_p_spline)
-		_p_spline->drawGL();
+	/*if (_p_spline)
+		_p_spline->drawGL();*/
 
 	if (this->_init == nullptr || this->_end == nullptr)
 		return;
