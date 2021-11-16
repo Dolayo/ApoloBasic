@@ -84,7 +84,7 @@ constexpr double VX_INIT = 0;//V_MAX
 constexpr double radius = 25;//25
 
 //! Iteraciones del planificador en fase de puntos controlados
-constexpr unsigned int NUM_ITERS = 5;
+constexpr unsigned int NUM_ITERS = 4;
 
 
 constexpr double T_TOP = 0.99;//0.9

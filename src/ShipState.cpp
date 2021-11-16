@@ -253,7 +253,7 @@ void ShipState::placeRobotTowards(RobotState* target)
 
 	Transformation3D t(_pose.x, _pose.y, _pose.z, Z_AXIS, angle);
 	_ship->setRelativeT3D(t);
-
+	_ship->setYaw(angle);
 }
 
 bool ShipState::moveRobotCloser(double stepSize)

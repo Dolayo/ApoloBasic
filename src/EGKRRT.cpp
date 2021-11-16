@@ -49,7 +49,7 @@ bool EGKRRT::computePlan(int maxiterations)
 		RobotState* node = getNextSample();
 
 		//--! Testing purposes !--//
-		/*if(i==0)
+		if(i==0)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(50, 0, 0));
 		if(i==1)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(15, -35, 0));
@@ -60,7 +60,7 @@ bool EGKRRT::computePlan(int maxiterations)
 		if (i == 4)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(3, -9, 0));
 		if (i == 5)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, -4, 0));*/
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, -4, 0));
 
 		/*if (i == 0)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, -8, 0));
@@ -251,36 +251,27 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 	//! Este nodo es el de mayor coste dentro de este path, pues antes los hemos
 	//! ordenado de mayor a menor, por lo tanto si vuelve a salir otro nodo
 	//! de este path se obvia              
-	std::vector<PathSegment*> v_used_paths;
+	std::vector<ShipState*> v_banned_nodes;
 
 	for (RobotState* v : v_nei)
 	{
 		ShipState* Xnew = dynamic_cast<ShipState*>(xnew);
 		ShipState* vecino = dynamic_cast<ShipState*>(v);
 
+		//! Si el nodo esta en la lista de baneados se obvia
+		/*bool pass = false;
+		for (ShipState* i_node : v_banned_nodes)
+			if (vecino->isEqual(i_node))
+				pass = true;
+
+		if (pass)
+			continue;*/
+
 		// Buscamos a que segmento pertenece este vecino
 		PathSegment* oldPath = findPath4Node(vecino);
 
 		if (!oldPath)
 			continue;
-
-		//! Comprobamos que este path no ha sido utilizado ya
-		bool is_path_used = false;
-		for(PathSegment* i_path: v_used_paths)
-		{
-			EGKpath* i_EGKpath = dynamic_cast<EGKpath*>(i_path);
-			EGKpath* old_EGKpath = dynamic_cast<EGKpath*>(oldPath);
-
-			if (!i_EGKpath || !old_EGKpath)
-				continue;
-
-			if (old_EGKpath->IsEqual(i_EGKpath))
-				is_path_used = true;
-		}
-
-		if (is_path_used)
-			continue;
-
 
 		if (Xnew && vecino)
 		{
@@ -289,7 +280,7 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 			// El nuevo segmento que une a Xnew con el vecino
 			EGKpath* newRePath = EGKpath::createPath(Xnew, vecino, b_reach, NUM_ITER_PATH, true, false);
 
-			if (newRePath->_inter.empty() || !b_reach)
+			if (newRePath->_inter.empty())
 			{
 				delete newRePath;
 				continue;
@@ -300,8 +291,6 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 			// Si el coste de un vecino es mayor que la distancia a Xnew mas el coste de Xnew, creo el nuevo segmento de Xnew al vecino
 			if (((distance + Xnew->getCost()) < vecino->getCost()) && b_reach)
 			{
-				v_used_paths.push_back(oldPath);
-
 				//! Buscamos la posicion que ocupa initNode en oldPath
 				int pos_node = 0;
 				for (int w = 0; w < oldPath->size(); ++w)
@@ -311,13 +300,26 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 						break;
 					}
 
-				//bool debug_a = erase_vertex(oldPath->_init);
-				//bool debug_b = erase_vertex(oldPath->_end);
+				//! Añadimos los nodos previos de oldPath a la lista de nodos baneados antes de borrarlos
+				/*for (RobotState* i : oldPath->_inter)
+				{
+					ShipState* EGK_i = dynamic_cast<ShipState*>(i);
+					if (EGK_i)
+					{
+						if (!(EGK_i->isEqual(vecino)))
+							v_banned_nodes.push_back(EGK_i);
+						else
+						{
+							break;
+						}
+					}
+					else
+					{
+						throw ERRORNULL;
+					}
+				}*/
 
-				//newRePath->_init = Xnew;
-				
-
-				newRePath->_parent = ap_initNodePath; //findPath4Node(Xnew)
+				newRePath->_parent = ap_initNodePath; 
 
 				oldPath->_init = vecino;
 				oldPath->_parent = newRePath;
@@ -325,28 +327,6 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 
 				bool b_mini_reach;
 				EGKpath* miniPath = EGKpath::createPath(newRePath->_end, oldPath->_init, b_mini_reach, NUM_ITER_PATH, false, true);
-
-				
-				//newRePath->_end = oldPath->_init;
-
-				// Deleteamos los nodos de la lista del arbol y de la lista de vecinos
-				for (RobotState* oldState_i : oldPath->_inter)
-				{
-					if (!(oldState_i == vecino))
-					{
-						for (int j = 0; j < _nodes.size(); ++j)
-						{
-							if (oldState_i == _nodes[j])
-							{
-								//delete nodes[j];
-								_nodes.erase(_nodes.begin() + j);
-								break;
-							}
-						}
-					}
-
-					else break;
-				}
 
 				_paths.push_back(newRePath);
 
@@ -623,8 +603,12 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 
 	p_newPath->_init = p_initState;
 
-	if(b_precision)
+	if (b_precision)
+	{
 		p_initState->placeRobotTowards(p_end);
+		p_initState->setYaw(p_finalState->getYaw());
+	}
+		
 	else
 	{
 		p_initState->placeRobot();
@@ -647,7 +631,7 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 				if (b_ensure_yaw)
 				{
 					double ang = 180 * (std::abs(p_finalState->getYaw() - p_initState->getYaw())) / PI;
-					if (ang > MAX_ANG_TOL)
+					if (std::abs(ang) > MAX_ANG_TOL)
 						b_success = false;
 				}
 
@@ -2273,8 +2257,8 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	if (_p_circ)
 		_p_circ->drawGL();
 
-	/*if (_p_spline)
-		_p_spline->drawGL();*/
+	if (_p_spline)
+		_p_spline->drawGL();
 
 	if (this->_init == nullptr || this->_end == nullptr)
 		return;
