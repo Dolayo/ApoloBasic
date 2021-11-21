@@ -163,14 +163,16 @@ protected:
 					_parent = n._parent;
 				}
 				RobotState* operator[](int i) { return _inter[i]; }
-				bool IsEqual(EGKpath* p_path){ return ((this->_init == p_path->_init) && (this->_end == p_path->_end)); }
+				bool IsEqual(PathSegment* p_path);
 				double getLength();
 				EGKpath(const EGKpath& n){(*this) = n;}
 				RobotState* last(){ return _inter.back(); }
 				virtual void appendState(RobotState* p_aux){_inter.push_back(p_aux);}
 				void appendCtrlAct(std::vector<double> v_aux) { _sequence.push_back(v_aux); }
-				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter = 100, bool b_ensure_yaw = false, bool b_precision = false);
-				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState, bool b_ensure_yaw = false);
+				static EGKpath* createPath(RobotState* p_init, RobotState* p_end, bool& ar_success, int niter = 100, 
+											bool b_ensure_yaw = false, bool b_precision = false);
+				virtual std::vector<double> navigation(RobotState* p_initState, RobotState* p_finalState, 
+														bool b_ensure_yaw = false, bool b_precision = false);
 				static bool isGhostThere(ShipState* donkey, ShipState* carrot, Vector2D& newPos);
 				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
 				bool generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);

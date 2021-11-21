@@ -24,7 +24,7 @@
 #define XP 5
 #define S_AIR 15
 #define S_WATER 2.5
-#define V_MAX 2.7//2.7
+#define V_MAX 2.0//2.7
 #define A_MAX 0.3857
 #define M_ARM 1
 #define TRUE_WIND_DIR PI
@@ -40,7 +40,7 @@
 constexpr int NUM_ITER_PATH = 3000;//2000,  339 fin para el banco de pruebas de distancia30 
 
 //! Tolerancia de posicion
-constexpr double POSE_TOL = 1;
+constexpr double POSE_TOL = 1.0;
 
 //! Tolerancia de posicion que aun estamos probando
 constexpr double POSE_TOL_SHARP = 0.1;
@@ -63,7 +63,7 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 1.0;//0
+constexpr double X_START = 0.0 + 1.0;//0
 constexpr double Y_START = 0;//30
 
 //! Orientacion relativa del robot en el punto de incio
@@ -71,14 +71,14 @@ constexpr double YAW_START = 0.0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 30 + 25.0;//30
-constexpr double Y_GOAL = 20.0;//0
+constexpr double X_GOAL = 0 + 1.0;//30
+constexpr double Y_GOAL = -30.0;//0
 
 //! Orientacion goal, usado para testeo
 constexpr double TEST_YAW = -160.0 * PI / 180.0;
 
 //! Velocidad incial de avance
-constexpr double VX_INIT = 0;//V_MAX
+constexpr double VX_INIT = V_MAX;//V_MAX
 
 //! Radio de reconexion para el RRT*
 constexpr double radius = 25;//25
