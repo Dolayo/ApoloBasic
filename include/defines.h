@@ -37,7 +37,7 @@
 #define RO_AIR 1.225
 
 //! Numero de iteraciones a efectuar al crear un nuevo path
-constexpr int NUM_ITER_PATH = 3000;//2000,  339 fin para el banco de pruebas de distancia30 
+constexpr int NUM_ITER_PATH = 1000;//2000,  339 fin para el banco de pruebas de distancia30 
 
 //! Tolerancia de posicion
 constexpr double POSE_TOL = 1.0;
@@ -63,7 +63,7 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 0.0 + 1.0;//0
+constexpr double X_START = 0.0 + 0.0;//0
 constexpr double Y_START = 0;//30
 
 //! Orientacion relativa del robot en el punto de incio
@@ -71,27 +71,27 @@ constexpr double YAW_START = 0.0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 0 + 1.0;//30
-constexpr double Y_GOAL = -30.0;//0
+constexpr double X_GOAL = 60 + 1.0;//30
+constexpr double Y_GOAL = 0.0;//0
 
 //! Orientacion goal, usado para testeo
-constexpr double TEST_YAW = -160.0 * PI / 180.0;
+constexpr double TEST_YAW = 0.0 * PI / 180.0;
 
 //! Velocidad incial de avance
-constexpr double VX_INIT = V_MAX;//V_MAX
+constexpr double VX_INIT = 0;//V_MAX
 
 //! Radio de reconexion para el RRT*
 constexpr double radius = 25;//25
 
 //! Iteraciones del planificador en fase de puntos controlados
-constexpr unsigned int NUM_ITERS = 4;
+constexpr unsigned int NUM_ITERS = 10;
 
 
 constexpr double T_TOP = 0.99;//0.9
 constexpr double T_LOW = 0.01;//0.01
 
 //! Velocidad de frenado para tomar la curva
-constexpr double VX_SLOW= 0.1;//1.0
+constexpr double VX_SLOW= 0.5;//0.1
 
 //! K spline center
 constexpr double K_CENTER = 2.0;

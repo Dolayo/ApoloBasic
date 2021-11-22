@@ -50,7 +50,7 @@ bool EGKRRT::computePlan(int maxiterations)
 		RobotState* node = getNextSample();
 
 		//--! Testing purposes !--//
-		/*if(i==0)
+		if(i==0)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(50, 0, 0));
 		if(i==1)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(15, -35, 0));
@@ -61,7 +61,16 @@ bool EGKRRT::computePlan(int maxiterations)
 		if (i == 4)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(3, -9, 0));
 		if (i == 5)
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, -4, 0));*/
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(1, -14, 0));
+		if (i == 6)
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(30, -30, 0));
+		if (i == 7)
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(5, -40, 0));
+		if (i == 8)
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(27, -15, 0));
+		if (i == 9)
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(45, -40, 0));
+
 
 		/*if (i == 0)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(8, -8, 0));
@@ -120,7 +129,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	RobotState* n = node->clone();
 
 	//! Optimal radius = gamma*map_size*sqrt()
-	_radius = 0.9 * 60 * sqrt(log((double)_nodes.size()+1.0) / ((double)_nodes.size() + 1.0));
+	_radius = max(0.9 * 60 * sqrt(log((double)_paths.size()+1.0) / ((double)_paths.size() + 1.0)), 15);
 
 	// tomo el punto de conexion: estado y segmento
 	// closest_path es el segmento del arbol mas cercano al nodo que tratamos de añadir(in/n)
@@ -197,7 +206,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
 	//dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success, NUM_ITER_PATH);
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500);
 
 	// 
 	//_vertexes.push_back(newPath->_end);
@@ -258,7 +267,7 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 	//! ordenado de mayor a menor, por lo tanto si vuelve a salir otro nodo
 	//! de este path se obvia              
 	std::vector<PathSegment*> v_used_paths;
-
+	std::vector<RobotState*> v_dead_nodes;
 	for (RobotState* v : v_nei)
 	{
 		ShipState* Xnew = dynamic_cast<ShipState*>(xnew);
@@ -311,10 +320,13 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 		{
 			++num_llamadas_exito;
 
+			for (RobotState* i : newRePath->_inter)
+				add(i);
+
 			//! Añadimos oldPath a la lista de paths ya utilizados
 			 v_used_paths.push_back(oldPath);
 
-			//! Buscamos la posicion que ocupa initNode en oldPath
+			//! Buscamos la posicion que ocupa vecino en oldPath
 			int pos_node = 0;
 			for (int w = 0; w < oldPath->size(); ++w)
 				if (oldPath->_inter[w] == vecino)
@@ -322,6 +334,9 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 					pos_node = w;
 					break;
 				}
+
+			for (int w = 1; w < pos_node; ++w)
+				v_dead_nodes.push_back(oldPath->_inter[w]);
 			
 			newRePath->_parent = ap_initNodePath; 
 
@@ -339,6 +354,9 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 				_paths.push_back(miniPath);
 				miniPath->_parent = newRePath;
 				oldPath->_parent = miniPath;
+
+				for (RobotState* i : miniPath->_inter)
+					add(i);
 			}
 					
 			else
@@ -353,6 +371,19 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 			delete newRePath;
 
 			continue;
+		}
+	}
+
+	for (RobotState* dead_node : v_dead_nodes)
+	{
+		for (RobotState* node_in_tree : _nodes)
+		{
+			if (dead_node == node_in_tree)
+			{
+				delete node_in_tree;
+				node_in_tree = nullptr;
+				break;
+			}
 		}
 	}
 }
@@ -587,7 +618,7 @@ void EGKRRT::EGKtree::PopulateVertexes()
 }
 
 //! -------------------------------------- Path -------------------------------------- 
-//! 
+
 EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_init, RobotState* p_end, bool& b_success, int niter, bool b_ensure_yaw, bool b_precision)
 {
 	EGKpath* p_newPath = new EGKpath();
@@ -2232,8 +2263,13 @@ void EGKRRT::EGKtree::drawGL()
 	unsigned int i;
 	glLineWidth(1);
 	glColor3f(1, 0, 1);
-	for (i = 0; i < _paths.size(); i++)_paths[i]->drawGL();
-	//for (i = 0; i < _nodes.size(); i++)_nodes[i]->drawGL();
+	for (i = 0; i < _paths.size(); i++)
+		_paths[i]->drawGL();
+	for (i = 0; i < _nodes.size(); i++)
+	{
+		if(_nodes[i] != nullptr)
+			_nodes[i]->drawGL();
+	}
 	for (i = 0; i < _vertexes.size(); i++)
 	{
 		if (_vertexes[i] == nullptr)
@@ -2249,8 +2285,8 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	if (_p_circ)
 		_p_circ->drawGL();
 
-	if (_p_spline)
-		_p_spline->drawGL();
+	/*if (_p_spline)
+		_p_spline->drawGL();*/
 
 	if (this->_init == nullptr || this->_end == nullptr)
 		return;
