@@ -240,6 +240,7 @@ protected:
 		EGKRobotPath* GetPathFromRoot(ShipState* n);
 		double distance(RobotState* p, PathSegment* path, RobotState** mnode) override;
 		void PopulateVertexes();
+		virtual PathSegment* findPath4Node(RobotState* node) override;
 		virtual void drawGL() override;
 	};
 

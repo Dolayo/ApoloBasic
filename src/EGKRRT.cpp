@@ -102,7 +102,7 @@ bool EGKRRT::computePlan(int maxiterations)
 
 				path = &(*pathA);
 
-				path->filterLoops(); //clean loops if any 
+				//path->filterLoops(); //clean loops if any 
 
 				return solved;
 			}
@@ -167,38 +167,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 	//! Este segmento sera uno(el anterior a initNode) de los dos en los que quede dividido el
 	//! segmento mas cercano con la inclusion del nuevo segmento 
-	PathSegment* newPathA = nullptr;
-
-	if (closest_path != nullptr)
-	{
-		if (_paths.size() != 0 && !(closest_path->_init->isEqual(initNode)) && !(closest_path->_end->isEqual(initNode)))
-		{
-			bool b_aux = false;
-
-			// Creamos el path desde el inicio del antiguo segmento hasta el punto intermedio initNode
-			EGKpath* newPathA = new EGKpath();
-
-			//! Buscamos la posicion que ocupa initNode en oldPath
-			int pos_node = 0;
-			for (int w = 0; w < closest_path->size(); ++w)
-				if(closest_path->_inter[w] == initNode)
-				{
-					pos_node = w;
-					break;
-				}
-
-			newPathA->_init = closest_path->_init;
-			newPathA->_parent = closest_path->_parent;
-			newPathA->_end = initNode;
-			newPathA->_inter.assign(closest_path->_inter.begin(), closest_path->_inter.begin() + pos_node);
-
-			closest_path->_init = initNode;
-			closest_path->_parent = newPathA;
-			closest_path->_inter.erase(closest_path->_inter.begin(), closest_path->_inter.begin()+ pos_node);
-
-			_paths.push_back(newPathA);	
-		}
-	}
+	
 
 	bool success;
 
@@ -227,7 +196,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	newPath->_init = initNode;
 
 	//el padre del nuevo segmento es el segmento que contiene al nodo de menor coste
-	newPath->_parent = newPathA; //findPath4Node(initNode)
+	//newPath->_parent = newPathA; //findPath4Node(initNode)
 
 	// si no se ha llegado al final destruyo la copia
 	if (!success)
@@ -235,6 +204,53 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 	// añado el nuevo path al arbol
 	_paths.push_back(newPath);
+
+	EGKpath* newPathA = nullptr;
+
+	if (closest_path != nullptr)
+	{
+		if (_paths.size() != 0)
+		{
+			if (closest_path->_init == initNode)
+			{
+				newPath->_parent = closest_path->_parent;
+			}
+			else if(closest_path->_end == initNode)
+			{
+				newPath->_parent = closest_path;
+			}
+
+			else
+			{
+				bool b_aux = false;
+
+				// Creamos el path desde el inicio del antiguo segmento hasta el punto intermedio initNode
+				newPathA = new EGKpath();
+
+				//! Buscamos la posicion que ocupa initNode en oldPath
+				int pos_node = 0;
+				for (int w = 0; w < closest_path->size(); ++w)
+					if(closest_path->_inter[w] == initNode)
+					{
+						pos_node = w;
+						break;
+					}
+
+				newPathA->_init = closest_path->_init;
+				newPathA->_parent = closest_path->_parent;
+				newPathA->_end = initNode;
+				newPathA->_inter.assign(closest_path->_inter.begin(), closest_path->_inter.begin() + pos_node);
+
+				closest_path->_init = initNode;
+				closest_path->_parent = newPathA;
+				closest_path->_inter.erase(closest_path->_inter.begin(), closest_path->_inter.begin()+ pos_node);
+
+				_paths.push_back(newPathA);	
+
+				newPath->_parent = newPathA;
+			}
+		}
+	}
 
 	if ((_paths.size() > 1) && (neighbors.size() != 0))
 	{
@@ -374,7 +390,7 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 		}
 	}
 
-	for (RobotState* dead_node : v_dead_nodes)
+	/*for (RobotState* dead_node : v_dead_nodes)
 	{
 		for (RobotState* node_in_tree : _nodes)
 		{
@@ -385,7 +401,7 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 				break;
 			}
 		}
-	}
+	}*/
 }
 
 //double EGKRRT::EGKtree::distance(RobotState* rs, PathSegment* path, RobotState** mnode)
@@ -615,6 +631,38 @@ void EGKRRT::EGKtree::PopulateVertexes()
 		_vertexes.push_back(p->_init);
 		_vertexes.push_back(p->_end);
 	}
+}
+
+RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::findPath4Node(RobotState* node)
+{
+	ShipState* p_node_star = dynamic_cast<ShipState*>(node);
+
+	if (!p_node_star)
+		throw ERRORNULL;
+
+	if (_paths.size() != 0)
+	{
+		for (auto i_path : _paths)
+		{
+			if (p_node_star->getCost() == 0.0)
+			{
+				if (i_path->_init == node)
+					return i_path;
+				else
+				{
+					continue;
+				}
+			}
+			for (auto j_node : i_path->_inter)
+			{
+				if ((j_node == node) && (j_node != (i_path->_init))) return i_path;
+
+			}
+		}
+		return nullptr;
+	}
+
+	else return nullptr;
 }
 
 //! -------------------------------------- Path -------------------------------------- 
@@ -2265,11 +2313,11 @@ void EGKRRT::EGKtree::drawGL()
 	glColor3f(1, 0, 1);
 	for (i = 0; i < _paths.size(); i++)
 		_paths[i]->drawGL();
-	for (i = 0; i < _nodes.size(); i++)
+	/*for (i = 0; i < _nodes.size(); i++)
 	{
 		if(_nodes[i] != nullptr)
 			_nodes[i]->drawGL();
-	}
+	}*/
 	for (i = 0; i < _vertexes.size(); i++)
 	{
 		if (_vertexes[i] == nullptr)

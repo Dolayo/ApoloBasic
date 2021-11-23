@@ -429,11 +429,24 @@ bool RDTstar::RDTtree::rootTree(RobotState *rot)
 
 RDTstar::RDTtree::PathSegment* RDTstar::RDTtree::findPath4Node( RobotState* node)
 {
+	WBStar* p_node_star = dynamic_cast<WBStar*>(node);
+
+	if (!p_node_star)
+		throw ERRORNULL;
 
 	if (_paths.size() != 0)
 	{
 		for (auto i_path : _paths)
 		{
+			if (p_node_star->getCost() == 0.0)
+			{
+				if (i_path->_init == node)
+					return i_path;
+				else
+				{
+					continue;
+				}
+			}
 			for (auto j_node : i_path->_inter)
 			{
 				if ((j_node==node) && (j_node!=(i_path->_init))) return i_path;

@@ -71,8 +71,8 @@ constexpr double YAW_START = 0.0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 60 + 1.0;//30
-constexpr double Y_GOAL = 0.0;//0
+constexpr double X_GOAL = 45;//
+constexpr double Y_GOAL = -40;//
 
 //! Orientacion goal, usado para testeo
 constexpr double TEST_YAW = 0.0 * PI / 180.0;
