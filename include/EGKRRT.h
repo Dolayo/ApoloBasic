@@ -234,6 +234,7 @@ protected:
 		//virtual double distance(RobotState* p, PathSegment* path, RobotState** mnode = 0) override;
 		virtual RobotState* addNode(RobotState* node) override;
 		virtual void Reconnect(vector<RobotState*>& v_nei, RobotState* Xnew, PathSegment* ap_initNodePath) override;
+		virtual void getNeighbors(RobotState* Xnew, vector<RobotState*>* v_nei) override;
 		//virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
 		//virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
 		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;
@@ -241,6 +242,7 @@ protected:
 		double distance(RobotState* p, PathSegment* path, RobotState** mnode) override;
 		void PopulateVertexes();
 		virtual PathSegment* findPath4Node(RobotState* node) override;
+		PathSegment* findPath4NodeEnd(RobotState* node);
 		virtual void drawGL() override;
 	};
 

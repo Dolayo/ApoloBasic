@@ -63,7 +63,7 @@ void canvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		if (p != nullptr)
 			p->drawGL();
 
-		sol.drawGL();
+		EGKsol.drawGL();
 	}
 	
 	

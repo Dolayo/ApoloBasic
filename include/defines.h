@@ -9,13 +9,13 @@
 
 
 #define DIST1 5//5
-#define DIST2 10//10
+#define DIST2 15//10
 #define THRUSTX 28000
 #define THRUSTX_spline 0 //27500 esta va bien para v_init = 0, 
 #define THRUSTY 28000
 #define THRUSTY_spline THRUSTY
 #define THRUSTW 192000
-#define THRUSTW_spline THRUSTW*1.0//La idea del giro no es muy buena, valio para 10 de chiripa, mejor bajar la velocidad en X
+#define THRUSTW_spline THRUSTW
 #define N_ITER 100
 #define WIDTH 3
 #define LENGTH 10
@@ -84,7 +84,7 @@ constexpr double VX_INIT = 0;//V_MAX
 constexpr double radius = 25;//25
 
 //! Iteraciones del planificador en fase de puntos controlados
-constexpr unsigned int NUM_ITERS = 10;
+constexpr unsigned int NUM_ITERS = 30;
 
 
 constexpr double T_TOP = 0.99;//0.9

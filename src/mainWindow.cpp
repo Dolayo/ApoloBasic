@@ -261,15 +261,15 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 				//dynamic_cast<EGKRRT*>(planner)->testingPlan();
 				dynamic_cast<EGKRRT*>(planner)->computePlan(_n_iter);
 
-				auto solution_plan = planner->getPlan();
+				const RobotPath* solution_plan = planner->getPlan();
 				if (solution_plan)
-					solution.path = solution_plan->path;
+					solution.path.assign(solution_plan->path.begin(), solution_plan->path.end());
 				
 			}
 				
 
 			MyGLCanvas->p = this->planner;
-			MyGLCanvas->EGKsol = this->solution;
+			MyGLCanvas->EGKsol = solution;//this->solution
 			MyGLCanvas->Refresh(false);
 			sb->SetStatusText(wxT("EGK done"));
 			break;
