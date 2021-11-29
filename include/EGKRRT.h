@@ -165,6 +165,8 @@ protected:
 				RobotState* operator[](int i) { return _inter[i]; }
 				bool IsEqual(PathSegment* p_path);
 				double getLength();
+				double getLength2States(RobotState* p_initState, RobotState* p_finalState);
+				void discretizeNeighbours();
 				EGKpath(const EGKpath& n){(*this) = n;}
 				RobotState* last(){ return _inter.back(); }
 				virtual void appendState(RobotState* p_aux){_inter.push_back(p_aux);}
@@ -181,6 +183,7 @@ protected:
 		private:
 			Circunference* _p_circ{nullptr};
 			Spline* _p_spline{ nullptr };
+			std::vector<RobotState*> _v_discretized_neighbours;
 		};
 
 	public:

@@ -2,9 +2,9 @@
 #define __DEFINES_
 
 #define DELTA_T 0.1 //seconds
-#define THETA1 5*PI/180 // 3º normal, 
-#define THETA2 15*PI/180 // 10º normal, 
-#define THETA3 30*PI/180 // 15º normal, 
+#define THETA1 3*PI/180 // 3º normal, 
+#define THETA2 10*PI/180 // 10º normal, 
+#define THETA3 15*PI/180 // 15º normal, 
 
 
 
@@ -63,7 +63,7 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 0.0 + 0.0;//0
+constexpr double X_START = 0.0 + 30.0;//0
 constexpr double Y_START = 0;//30
 
 //! Orientacion relativa del robot en el punto de incio
@@ -78,7 +78,7 @@ constexpr double Y_GOAL = -40;//-40
 constexpr double TEST_YAW = 0.0 * PI / 180.0;
 
 //! Velocidad incial de avance
-constexpr double VX_INIT = 0;//V_MAX
+constexpr double VX_INIT = V_MAX;//V_MAX
 
 //! Radio de reconexion para el RRT*
 constexpr double radius = 25;//25
