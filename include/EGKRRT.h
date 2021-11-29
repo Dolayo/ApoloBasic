@@ -241,6 +241,7 @@ protected:
 		EGKRobotPath* GetPathFromRoot(ShipState* n);
 		double distance(RobotState* p, PathSegment* path, RobotState** mnode) override;
 		void PopulateVertexes();
+		EGKRobotPath* findSolution(RobotState* goal);
 		virtual PathSegment* findPath4Node(RobotState* node) override;
 		PathSegment* findPath4NodeEnd(RobotState* node);
 		virtual void drawGL() override;
@@ -259,6 +260,7 @@ public:
 
 	virtual bool setStartAndGoalStates(RobotState* start_, RobotState* goal_) override;
 	virtual bool computePlan(int maxiterations) override;
+	bool AddMoreNodes(int maxiterations);
 	bool testingPlan();
 	EGKRRT():RDTstar()
 	{

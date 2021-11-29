@@ -71,13 +71,14 @@ private:
     int height;
     int width;
 
-    World world;
+    World _world;
     World sea;
 	WheeledBaseSim *myrobot;
-    Ship* _myship;
-	Sampler *sampler;
-	PathPlanner *planner;
-	EGKRobotPath solution;
+    Ship* _p_myship;
+	Sampler *_p_sampler;
+	PathPlanner *_p_planner;
+    RobotPath _sol;
+	EGKRobotPath* _p_solution;
 
     double _x_start{ X_START };
     double _y_start{ Y_START };

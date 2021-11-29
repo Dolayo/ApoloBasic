@@ -29,6 +29,7 @@ canvas::canvas(wxFrame *parent, wxPoint pos, wxSize size):
 	r = nullptr;
 	s = nullptr;
 	sh = nullptr;
+	EGKsol = nullptr;
 	flag=false;
 }
 
@@ -57,13 +58,14 @@ void canvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	{
 		scene.Draw();
 
-		if(sh!=nullptr)
+		if(sh)
 			sh->drawGL();
 
-		if (p != nullptr)
+		if (p)
 			p->drawGL();
 
-		EGKsol.drawGL();
+		if(EGKsol)
+			EGKsol->drawGL();
 	}
 	
 	

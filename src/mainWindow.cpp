@@ -19,9 +19,10 @@ END_EVENT_TABLE()
 
 MainWindow::MainWindow(const wxString& title) : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1200, 800), wxDEFAULT_FRAME_STYLE | wxHSCROLL | wxVSCROLL),
 myrobot(nullptr),
-_myship(nullptr),
-planner(nullptr),
-sampler(nullptr),
+_p_myship(nullptr),
+_p_planner(nullptr),
+_p_sampler(nullptr),
+_p_solution(nullptr),
 _thrustXinp(nullptr),
 _thrustYinp(nullptr),
 _button_sim(nullptr),
@@ -96,6 +97,7 @@ the_planner(0)
 
   	//Centre();
 }
+
 void MainWindow::Resize(wxSizeEvent& event)
 {
 	width=GetClientSize().GetWidth();
@@ -134,7 +136,7 @@ void MainWindow::createEnvironment()
 	building->addFace(paredfondo1);
 	building->addFace(paredfondo2);
 	
-	world+=building;
+	_world+=building;
 }
 
 void MainWindow::createShipEnvironment()
@@ -184,7 +186,7 @@ void MainWindow::createShipEnvironment()
 	shore->addFace(land3);
 	shore->addFace(land4);*/
 
-	world += shore;
+	_world += shore;
 }
 
 void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
@@ -195,81 +197,87 @@ void MainWindow::OnPlan(wxCommandEvent& WXUNUSED(event))
 	{
 		case 0:// RRT
 		{
-			WBState gen(myrobot, &world);
+			WBState gen(myrobot, &_world);
 			WBState* start = gen.createStateFromPoint3D(2.0, 8.0, 0);
 			WBState* goal = gen.createStateFromPoint3D(2.0, -8.0, 0);
-			solution.path.clear();
-			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
+
+			_p_planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
 			delete start;
 			delete goal;
-			if (planner->computePlan(3000))solution.path = (planner->getPlan())->path;//3000
-			MyGLCanvas->p = this->planner;
-			MyGLCanvas->sol = this->solution;
+			if (_p_planner->computePlan(3000))_sol.path = (_p_planner->getPlan())->path;//3000
+			MyGLCanvas->p = this->_p_planner;
+			MyGLCanvas->sol = _sol;
 			MyGLCanvas->Refresh(false);
 			break; 
 		}
 		case 1:// RRT*
 		{
-			WBStar gen(myrobot, &world, 0);
+			WBStar gen(myrobot, &_world, 0);
 			WBStar* start = gen.createStateFromPoint3D(2.0, -8, 0);
 			WBStar* goal = gen.createStateFromPoint3D(8.0, 1.5, 0);
-			solution.path.clear();
-			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
+
+			_p_planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
 			delete start;
 			delete goal;
-			if (planner->computePlan(3))solution.path = (planner->getPlan())->path;//3000
-			MyGLCanvas->p = this->planner;
-			MyGLCanvas->sol = this->solution;
+			if (_p_planner->computePlan(3))_sol.path = (_p_planner->getPlan())->path;//3000
+			MyGLCanvas->p = this->_p_planner;
+			MyGLCanvas->sol = _sol;
 			MyGLCanvas->Refresh(false);
 			break;
 		}
 		case 2: //EGK
 		{
-			//ShipState gen(_myship, &world);
-			//ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, 8.0, 0));
-			//ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(2.0, -8.0));
+			ShipState* start;
+			ShipState* goal;
 
-			//solution.path.clear();
-			//planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
-			//delete start;
-			//delete goal;
-			//if (planner->computePlan(50))solution.path = (planner->getPlan())->path;//3000
-			//MyGLCanvas->p = this->planner;
-			//MyGLCanvas->sol = this->solution;
-			//MyGLCanvas->Refresh(false);
-			//sb->SetStatusText(wxT("EGK done"));
-			//break;
-
-			// Testing purposes
-			ShipState gen(_myship, &world);
-
-			_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
-			//_myship->setRelativeOrientation(0,0,0);
-			_myship->setVels(Vector3D(VX_INIT,0,0));
-			_myship->setState(_x_start, _y_start, _yaw_start/*-PI / 2*/);
-
-			ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_start, _y_start, _yaw_start));
-			ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_goal, _y_goal, 0));
-			start->setVels(Vector3D(VX_INIT, 0, 0));
-			solution.path.clear();
-			planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
-			delete start;
-			delete goal;
-
-			if (dynamic_cast<EGKRRT*>(planner))
+			if (!(_p_planner->isSolved()))
 			{
-				//dynamic_cast<EGKRRT*>(planner)->testingPlan();
-				dynamic_cast<EGKRRT*>(planner)->computePlan(_n_iter);
+				ShipState gen(_p_myship, &_world);
+				start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_start, _y_start, _yaw_start));
+				goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_goal, _y_goal, 0));
+				_p_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
+				//_p_myship->setRelativeOrientation(0,0,0);
+				_p_myship->setVels(Vector3D(VX_INIT,0,0));
+				_p_myship->setState(_x_start, _y_start, _yaw_start);
 
-				const RobotPath* solution_plan = planner->getPlan();
-				if (solution_plan)
-					solution.path.assign(solution_plan->path.begin(), solution_plan->path.end());
-				
+				ShipState* start = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_start, _y_start, _yaw_start));
+				ShipState* goal = dynamic_cast<ShipState*>(gen.createStateFromPoint3D(_x_goal, _y_goal, 0));
+
+				start->setVels(Vector3D(VX_INIT, 0, 0));
+
+				//solution.path.clear();
+				_p_planner->setStartAndGoalStates(start, goal); //generico a cualquier planificador
+				delete start;
+				delete goal;
 			}
 				
 
-			MyGLCanvas->p = this->planner;
-			MyGLCanvas->EGKsol = solution;//this->solution
+			
+
+			EGKRRT* p_EGKplanner = dynamic_cast<EGKRRT*>(_p_planner);
+
+			if (!p_EGKplanner)
+				break;
+
+			//p_EGKplanner->testingPlan();
+			bool success = p_EGKplanner->computePlan(_n_iter);
+
+			const RobotPath* solution_plan = nullptr;
+
+			solution_plan = _p_planner->getPlan();
+
+			if (solution_plan && !_p_solution)
+				_p_solution = new EGKRobotPath;
+
+			if (solution_plan)
+				_p_solution->path.assign(solution_plan->path.begin(), solution_plan->path.end());
+
+			if(_p_planner)
+				MyGLCanvas->p = this->_p_planner;
+
+			if (_p_solution)
+				MyGLCanvas->EGKsol = this->_p_solution;
+
 			MyGLCanvas->Refresh(false);
 			sb->SetStatusText(wxT("EGK done"));
 			break;
@@ -292,7 +300,7 @@ void MainWindow::OnExit(wxCloseEvent& event)
 
 	if (ret == wxID_YES) {
 		delete MyGLCanvas;
-		world.destroyContent();
+		_world.destroyContent();
     	this->Destroy();
 	} else {
 		event.Veto();
@@ -323,17 +331,17 @@ void MainWindow::OnRDT(wxCommandEvent& event)
 	//creo el robot
 	myrobot = new Pioneer3ATSim;
 	myrobot->setRelativePosition(Vector3D(2.0, 8, 0));
-	world += myrobot;
+	_world += myrobot;
 
 	//creo un planificador y su sistema de muestreo
-	sampler = new RandomSampler(&world);
-	planner = new RDTplanner;
-	(dynamic_cast<SBPathPlanner*>(planner))->setSampler(sampler); //solo especifico de los basados en muestreo
+	_p_sampler = new RandomSampler(&_world);
+	_p_planner = new RDTplanner;
+	(dynamic_cast<SBPathPlanner*>(_p_planner))->setSampler(_p_sampler); //solo especifico de los basados en muestreo
 
-	MyGLCanvas->w = this->world;
+	MyGLCanvas->w = this->_world;
 	MyGLCanvas->r = this->myrobot;
-	MyGLCanvas->s = this->sampler;
-	MyGLCanvas->p = this->planner;
+	MyGLCanvas->s = this->_p_sampler;
+	MyGLCanvas->p = this->_p_planner;
 
 	MyGLCanvas->create_world();
 
@@ -356,17 +364,17 @@ void MainWindow::OnRDTstar(wxCommandEvent& event)
 	//creo el robot
 	myrobot=new Pioneer3ATSim;
 	myrobot->setRelativePosition(Vector3D(2.0,8,0));
-	world+=myrobot;
+	_world+=myrobot;
 
 	//creo un planificador y su sistema de muestreo
-	sampler=new RandomSampler(&world);
-	planner=new RDTstar;
-	(dynamic_cast<SBPathPlanner *>(planner))->setSampler(sampler); //solo especifico de los basados en muestreo
+	_p_sampler=new RandomSampler(&_world);
+	_p_planner=new RDTstar;
+	(dynamic_cast<SBPathPlanner *>(_p_planner))->setSampler(_p_sampler); //solo especifico de los basados en muestreo
 
-	MyGLCanvas->w = this->world;
+	MyGLCanvas->w = this->_world;
 	MyGLCanvas->r = this->myrobot;
-	MyGLCanvas->s = this->sampler;
-	MyGLCanvas->p = this->planner;
+	MyGLCanvas->s = this->_p_sampler;
+	MyGLCanvas->p = this->_p_planner;
 
 	MyGLCanvas->create_world();
 	
@@ -409,10 +417,10 @@ void MainWindow::OnShip(wxCommandEvent& event)
 	createShipEnvironment();
 
 	//creo el robot
-	_myship = new Ship();
-	_myship->setRelativePosition(Vector3D(2.0, 8, 0));
-	_myship->setState(2, 8, 0, 0, 0, 0);
-	world += _myship;
+	_p_myship = new Ship();
+	_p_myship->setRelativePosition(Vector3D(2.0, 8, 0));
+	_p_myship->setState(2, 8, 0, 0, 0, 0);
+	_world += _p_myship;
 	/*
 		//creo un planificador y su sistema de muestreo
 	sampler = new RandomSampler(&world);
@@ -421,9 +429,9 @@ void MainWindow::OnShip(wxCommandEvent& event)
 	*/
 
 
-	MyGLCanvas->w = this->world;
+	MyGLCanvas->w = this->_world;
 	//MyGLCanvas->r = this->myship;
-	MyGLCanvas->sh = this->_myship;
+	MyGLCanvas->sh = this->_p_myship;
 	//MyGLCanvas->s = this->sampler;
 	//MyGLCanvas->p = this->planner;
 
@@ -434,16 +442,16 @@ void MainWindow::OnTimer(wxTimerEvent& event)
 {
 
 	//_myship->simpleSim(0.1);
-	_myship->simpleDynamicsSim(0.1);
+	_p_myship->simpleDynamicsSim(0.1);
 	//(*_Wind_Force_Drag).WriteText(to_string(round(_myship->getWind_Force_Drag())));
 	
-	MyGLCanvas->sh = _myship;
+	MyGLCanvas->sh = _p_myship;
 	MyGLCanvas->Refresh(true);
 }
 
 void MainWindow::OnStop(wxCommandEvent& WXUNUSED(event))
 {
-	_myship->setThrusts(0, 0);
+	_p_myship->setThrusts(0, 0);
 }
 
 void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
@@ -458,7 +466,7 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 	float thrustW_M = std::stof(_thrustWinp->GetLineText(0).ToStdString());
 	//float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
 
-	_myship->setThrusts(thrustX_f, thrustY_f, thrustW_M);
+	_p_myship->setThrusts(thrustX_f, thrustY_f, thrustW_M);
 	//myship->simulate(0.1);
 
 	_mytimer->Start(100);	
@@ -489,23 +497,23 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 
 	createShipEnvironment();
 
-	_myship = new Ship();
-	_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
-	_myship->setRelativeOrientation(0,0, _yaw_start);
-	_myship->setVels(Vector3D(V_MAX, 0, 0));
+	_p_myship = new Ship();
+	_p_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
+	_p_myship->setRelativeOrientation(0,0, _yaw_start);
+	_p_myship->setVels(Vector3D(V_MAX, 0, 0));
 
-	_myship->setState(_x_start, _y_start, _yaw_start/*-PI / 2*/);
-	world += _myship;
+	_p_myship->setState(_x_start, _y_start, _yaw_start/*-PI / 2*/);
+	_world += _p_myship;
 	
 	//creo un planificador y su sistema de muestreo
-	sampler = new RandomSampler(&world);
-	planner = new EGKRRT;
-	(dynamic_cast<SBPathPlanner*>(planner))->setSampler(sampler); //solo especifico de los basados en muestreo
+	_p_sampler = new RandomSampler(&_world);
+	_p_planner = new EGKRRT;
+	(dynamic_cast<SBPathPlanner*>(_p_planner))->setSampler(_p_sampler); //solo especifico de los basados en muestreo
 	
-	MyGLCanvas->w = this->world;
-	MyGLCanvas->sh = this->_myship;
-	MyGLCanvas->s = this->sampler;
-	MyGLCanvas->p = this->planner;
+	MyGLCanvas->w = this->_world;
+	MyGLCanvas->sh = this->_p_myship;
+	MyGLCanvas->s = this->_p_sampler;
+	MyGLCanvas->p = this->_p_planner;
 
 	MyGLCanvas->create_world();
 }

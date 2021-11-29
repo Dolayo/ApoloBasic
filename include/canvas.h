@@ -23,7 +23,7 @@ private:
 	Sampler *s;
 	PathPlanner *p;
 	RobotPath sol;
-	EGKRobotPath EGKsol;
+	EGKRobotPath* EGKsol;
 
 	bool flag;
 
@@ -36,7 +36,18 @@ public:
 	virtual ~canvas()
 	{
 		w.destroyContent();
-		delete m_context;
+		if(m_context)
+			delete m_context;
+		if (r)
+			delete r;
+		if (sh)
+			delete sh;
+		/*if (s)
+			delete s;*/
+		if (p)
+			delete p;
+		if (EGKsol)
+			delete EGKsol;
 		Close(true);
 	}
 

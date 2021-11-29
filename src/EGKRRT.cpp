@@ -43,7 +43,12 @@ bool EGKRRT::testingPlan()
 
 bool EGKRRT::computePlan(int maxiterations)
 {
-	if (solved)return true;
+	if (solved)
+	{
+		AddMoreNodes(maxiterations);
+		return solved;
+	}
+		
 
 	for (int i = 0; i < maxiterations; i++)
 	{
@@ -91,7 +96,7 @@ bool EGKRRT::computePlan(int maxiterations)
 				_tree->PopulateVertexes();
 
 				//retrive each path
-				EGKRobotPath* pathA = _tree->GetPathFromRoot(EGK_addedNode); //esto hay que cambiarlo para que se genere un EGKpath, hay que hacerlo con punteros y no con objetos tal cual
+				EGKRobotPath* pathA = _tree->GetPathFromRoot(EGK_addedNode);
 
 				//rearrange the states
 				delete path;
@@ -107,8 +112,53 @@ bool EGKRRT::computePlan(int maxiterations)
 		delete node;
 	}
 
+	_tree->_vertexes.push_back(start);
 	_tree->PopulateVertexes();
 	return false;
+}
+
+bool EGKRRT::AddMoreNodes(int maxiterations)
+{
+	for (int i = 0; i < maxiterations; i++)
+	{
+		RobotState* node = getNextSample();
+
+		if (!node)
+			continue;
+
+		RobotState* addedNode = _tree->addNode(node);
+
+		delete node;
+	}
+
+	_tree->PopulateVertexes();
+
+	EGKRobotPath* pathA = _tree->findSolution(goal);
+
+	//rearrange the states
+	delete path;
+
+	path = &(*pathA);
+
+	return true;
+}
+
+EGKRobotPath* EGKRRT::EGKtree::findSolution(RobotState* goal)
+{
+
+	for (PathSegment* i_path : _paths)
+	{
+		ShipState* EGK_Node = dynamic_cast<ShipState*>(i_path->_end);
+		if (EGK_Node)
+		{
+			if (EGK_Node->isSamePos(goal))
+			{
+				return GetPathFromRoot(EGK_Node);
+			}
+		}
+		else throw ERRORNULL;
+		
+	}
 }
 
 //! -------------------------------------- Tree -------------------------------------- 
@@ -126,7 +176,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 	//! Optimal radius = gamma*map_size*sqrt()
 	_radius = max(0.9 * 60 * sqrt(log((double)_paths.size()+1.0) / ((double)_paths.size() + 1.0)), 15);
-
+	_radius = 0.0;
 	// tomo el punto de conexion: estado y segmento
 	// closest_path es el segmento del arbol mas cercano al nodo que tratamos de añadir(in/n)
 	// initNode almacena el nodo de dicho segmento que esta mas cerca de n
@@ -172,21 +222,23 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// creamos el nuevo segmento desde initNode hasta n
 	//dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
 	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500);
-
+	
 	// 
 	//_vertexes.push_back(newPath->_end);
 
-	for (RobotState* i : newPath->_inter)
-		add(i);
-
 	// Si el nuevo segmento esta vacio, eliminamos todo 
-	if (newPath->size() == 0) 
+	if (newPath->size() == 0 || !(newPath->_end))
 	{
 		delete newPath;
 		delete n;
 
-		return 0;//no state created
+		return nullptr;//no state created
 	}
+
+	dynamic_cast<ShipState*>(newPath->_end)->getYaw();
+
+	for (RobotState* i : newPath->_inter)
+		add(i);
 
 	// inicializo el nuevo segmento con el nodo de menor coste
 	newPath->_init = initNode;
@@ -250,7 +302,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 	if ((_paths.size() > 1) && (neighbors.size() != 0))
 	{
-		Reconnect(neighbors, newPath->_end, newPath);
+		//Reconnect(neighbors, newPath->_end, newPath);
 	}
 
 	// devuelvo el extremo del nuevo segmento añadido
@@ -667,11 +719,9 @@ RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::getBest(vector<RobotState*>& v_n
 
 void EGKRRT::EGKtree::PopulateVertexes()
 {
-	for (auto p : _paths)
-	{
-		_vertexes.push_back(p->_init);
-		_vertexes.push_back(p->_end);
-	}
+	_vertexes.clear();
+	for (auto i_path : _paths)
+		_vertexes.push_back(i_path->_end);
 }
 
 RDTstar::RDTtree::PathSegment* EGKRRT::EGKtree::findPath4Node(RobotState* node)

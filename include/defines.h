@@ -2,9 +2,9 @@
 #define __DEFINES_
 
 #define DELTA_T 0.1 //seconds
-#define THETA1 3*PI/180 // 3º normal, 
-#define THETA2 10*PI/180 // 10º normal, 
-#define THETA3 15*PI/180 // 15º normal, 
+#define THETA1 5*PI/180 // 3º normal, 
+#define THETA2 15*PI/180 // 10º normal, 
+#define THETA3 30*PI/180 // 15º normal, 
 
 
 
@@ -37,7 +37,7 @@
 #define RO_AIR 1.225
 
 //! Numero de iteraciones a efectuar al crear un nuevo path
-constexpr int NUM_ITER_PATH = 1000;//2000,  339 fin para el banco de pruebas de distancia30 
+constexpr int NUM_ITER_PATH = 1000;
 
 //! Tolerancia de posicion
 constexpr double POSE_TOL = 1.0;
@@ -71,8 +71,8 @@ constexpr double YAW_START = 0.0;
 
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 45;//
-constexpr double Y_GOAL = -40;//
+constexpr double X_GOAL = 45;//45
+constexpr double Y_GOAL = -40;//-40
 
 //! Orientacion goal, usado para testeo
 constexpr double TEST_YAW = 0.0 * PI / 180.0;
