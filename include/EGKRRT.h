@@ -166,6 +166,7 @@ protected:
 				bool IsEqual(PathSegment* p_path);
 				double getLength();
 				double getLength2States(RobotState* p_initState, RobotState* p_finalState);
+				std::vector<RobotState*> getDiscretizedNeighbours(void) const {return _v_discretized_neighbours;}
 				void discretizeNeighbours();
 				EGKpath(const EGKpath& n){(*this) = n;}
 				RobotState* last(){ return _inter.back(); }
@@ -238,6 +239,8 @@ protected:
 		virtual RobotState* addNode(RobotState* node) override;
 		virtual void Reconnect(vector<RobotState*>& v_nei, RobotState* Xnew, PathSegment* ap_initNodePath) override;
 		virtual void getNeighbors(RobotState* Xnew, vector<RobotState*>* v_nei) override;
+		void getLastNeighbors(RobotState* Xnew, vector<RobotState*>* v_nei);
+		void getDiscretizedNeighbors(RobotState* Xnew, vector<RobotState*>* v_nei);
 		//virtual double distance(RobotState* rs, PathSegment* path, RobotState** mnode = nullptr) override;
 		//virtual PathSegment* getClosestPathSegment(RobotState* n, RobotState** minstate) override;
 		virtual PathSegment* getBest(vector<RobotState*>& v_nei, RobotState** best) override;

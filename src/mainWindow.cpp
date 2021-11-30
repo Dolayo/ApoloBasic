@@ -495,9 +495,13 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 
 	sb->SetStatusText(wxT("EGK-RRT Ready!"));
 
+	_world.destroyContent();
 	createShipEnvironment();
 
+	if (_p_myship)
+		delete _p_myship;
 	_p_myship = new Ship();
+
 	_p_myship->setRelativePosition(Vector3D(_x_start, _y_start, 0));
 	_p_myship->setRelativeOrientation(0,0, _yaw_start);
 	_p_myship->setVels(Vector3D(V_MAX, 0, 0));
@@ -506,8 +510,13 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 	_world += _p_myship;
 	
 	//creo un planificador y su sistema de muestreo
-	_p_sampler = new RandomSampler(&_world);
+	if (!_p_sampler)
+		_p_sampler = new RandomSampler(&_world);
+
+	if (_p_planner)
+		delete _p_planner;
 	_p_planner = new EGKRRT;
+
 	(dynamic_cast<SBPathPlanner*>(_p_planner))->setSampler(_p_sampler); //solo especifico de los basados en muestreo
 	
 	MyGLCanvas->w = this->_world;
