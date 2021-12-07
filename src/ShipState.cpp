@@ -106,6 +106,17 @@ double ShipState::distanceTo(Vector3D vec_pos)
 	return val;
 }
 
+double ShipState::SimpleDistance(RobotState* p)
+{
+	ShipState* naux = dynamic_cast<ShipState*>(p);
+	//if (!naux)return 10000.0;
+	Vector3D thisPos(_pose.x, _pose.y, 0.0);
+	Vector3D nauxPos(naux->_pose.x, naux->_pose.y, 0.0);
+	Vector3D dif_pos = nauxPos - thisPos;
+
+	return dif_pos.module();
+}
+
 Vector3D ShipState::getGhostPos()
 {
 	Vector3D accs = getAccs();

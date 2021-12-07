@@ -90,7 +90,9 @@ private:
     int _n_iter{ NUM_ITERS };
 
     void createEnvironment();
-    void createShipEnvironment();
+    void createShipEnvironment_Blank();
+    void createShipEnvironment_Obstacle1();
+    void createShipEnvironment_Obstacle2();
     
     void Resize(wxSizeEvent& event);
 	void OnPlan(wxCommandEvent& event);

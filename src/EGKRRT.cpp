@@ -49,11 +49,16 @@ bool EGKRRT::computePlan(int maxiterations)
 		return solved;
 	}
 		
-
 	for (int i = 0; i < maxiterations; i++)
 	{
+		
 		RobotState* node = getNextSample();
 
+		//! Buscamos la solucion cada 5 iteraciones
+		if ((i + 10) % 10 == 0)
+		{
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(X_GOAL, Y_GOAL, 0));
+		} 
 		//--! Testing purposes !--//
 		/*if(i==0)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(50, 0, 0));
@@ -77,7 +82,7 @@ bool EGKRRT::computePlan(int maxiterations)
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(45, -40, 0));*/
 
 		if (i == (maxiterations-1))
-			dynamic_cast<ShipState*>(node)->setPose(Vector3D(45, -40, 0));
+			dynamic_cast<ShipState*>(node)->setPose(Vector3D(X_GOAL, Y_GOAL, 0));
 
 		//--! Testing purposes !--//
 
@@ -97,6 +102,9 @@ bool EGKRRT::computePlan(int maxiterations)
 
 				//retrive each path
 				EGKRobotPath* pathA = _tree->GetPathFromRoot(EGK_addedNode);
+
+				//! Distance of the path
+				double distance = pathA->getDistance();
 
 				//rearrange the states
 				delete path;
@@ -134,6 +142,9 @@ bool EGKRRT::AddMoreNodes(int maxiterations)
 	_tree->PopulateVertexes();
 
 	EGKRobotPath* pathA = _tree->findSolution(goal);
+
+	//! Distance of the path
+	double distance = pathA->getDistance();
 
 	//rearrange the states
 	delete path;
@@ -221,13 +232,13 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
 	//dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500);
+	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500, false, false);
 	
 	// 
 	//_vertexes.push_back(newPath->_end);
-
 	// Si el nuevo segmento esta vacio, eliminamos todo 
-	if (newPath->size() == 0 || !(newPath->_end))
+
+	if (!newPath || newPath->size() == 0 || !(newPath->_end) || newPath->isLoop())
 	{
 		delete newPath;
 		delete n;
@@ -304,11 +315,11 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	std::vector<RobotState*> v_discretized_neighbours;
 
 	if((neighbors.size() != 0))
-		getDiscretizedNeighbors(newPath->_end, &v_discretized_neighbours);
+		getLastNeighbors(newPath->_end, &v_last_neighbours);
 
-	if ((_paths.size() > 1) && (v_discretized_neighbours.size() != 0))
+	if ((_paths.size() > 1) && (v_last_neighbours.size() != 0))
 	{
-		Reconnect(v_discretized_neighbours, newPath->_end, newPath);
+		Reconnect(v_last_neighbours, newPath->_end, newPath);
 	}
 
 	// devuelvo el extremo del nuevo segmento añadido
@@ -350,7 +361,8 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 		PathSegment* oldPath = nullptr;
 
 		// Buscamos a que segmento pertenece este vecino
-		oldPath = findPath4Node(vecino);
+		//oldPath = findPath4Node(vecino);
+		oldPath = findPath4NodeEnd(vecino);
 
 		if (!oldPath)
 			continue;
@@ -363,14 +375,14 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 
 		//! Reconectamos solo con con los _end de los paths
 		//! vecino == oldPath->_end
-		if (false)
+		if (vecino == oldPath->_end)
 		{
 			bool b_reach = false;
 			// El nuevo segmento que une a Xnew con el vecino
 			EGKpath* newRePath = EGKpath::createPath(Xnew, vecino, b_reach, NUM_ITER_PATH, true, false);
 
 			//! Si no se ha podido hacer ningun paso deleteamos el segmento
-			if (newRePath->_inter.empty())
+			if (!newRePath || newRePath->_inter.empty() || newRePath->_sequence.empty())
 			{
 				delete newRePath;
 				continue;
@@ -411,12 +423,9 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 				oldPath->_inter.clear();
 
 				bool b_mini_reach;
-				EGKpath* miniPath = EGKpath::createPath(newRePath->_end, oldPath->_end, b_mini_reach, NUM_ITER_PATH, false, true);
+				EGKpath* miniPath = EGKpath::createPath(newRePath->_end, vecino, b_mini_reach, NUM_ITER_PATH, false, true);
 
-
-
-
-				if (miniPath && b_mini_reach && (miniPath->getLength()>1.1))
+				if (miniPath && b_mini_reach && (miniPath->getLength()<1.1))
 				{
 					//_paths.push_back(miniPath);
 
@@ -426,6 +435,8 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 					oldPath->_inter.assign(miniPath->_inter.begin(), miniPath->_inter.end());
 
 					miniPath->_inter.clear();
+					miniPath->_init = nullptr;
+					miniPath->_end = nullptr;
 					delete miniPath;
 
 					for (RobotState* i : oldPath->_inter)
@@ -806,7 +817,7 @@ void EGKRRT::EGKtree::getLastNeighbors(RobotState* Xnew, vector<RobotState*>* v_
 	{
 		if (!(i_path->_end))
 			continue;
-		if (i_path->_end->distanceTo(Xnew) < _radius) 
+		if ((Xnew != i_path->_end) && (i_path->_end->distanceTo(Xnew) < _radius))
 			v_nei->push_back(i_path->_end);
 	}
 }
@@ -861,6 +872,8 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 
 		if (p_initState->isSamePos(p_finalState, precision_tol))
 		{
+			
+				
 			b_success = true;
 			p_newPath->appendState(p_initState);
 			p_newPath->_end = p_newState;
@@ -1176,7 +1189,7 @@ double EGKRRT::EGKtree::EGKpath::getLength2States(RobotState* p_initState, Robot
 		{
 			for (int j = i; j < (this->_inter.size()-1); ++j)
 			{
-				ret += this->_inter[j]->distanceTo(this->_inter[j + 1]);
+				ret += dynamic_cast<ShipState*>(this->_inter[j])->SimpleDistance(this->_inter[j + 1]);
 				if (this->_inter[j + 1] == p_finalState)
 					break;
 			}
@@ -1476,6 +1489,22 @@ bool EGKRRT::EGKtree::EGKpath::generateCtrlActCirc(ShipState* ap_initState, Quad
 			break;
 		}
 	}
+}
+
+bool EGKRRT::EGKtree::EGKpath::isLoop()
+{
+	for (int i=0;i<(_inter.size()-1);++i)
+	{
+		for (int j = i+1; j < _inter.size(); ++j)
+		{
+			double dist_real = dynamic_cast<ShipState*>(_inter[i])->SimpleDistance(_inter[j]);
+			double dist_in_path = getLength2States(_inter[i], _inter[j]);
+			double factor = std::abs(dist_real - dist_in_path) / dist_in_path;
+			if (factor>0.9)
+				return true;
+		}
+	}
+	return false;
 }
 
 //! -------------------------------------- Circunference -------------------------------------- 
@@ -2610,8 +2639,8 @@ void EGKRobotPath::drawGL()
 	if (path.size() < 2)
 		return;
 
-	glLineWidth(3);
-	glColor3f(0.2, 1.0F, 0.2F);//1, 0.2F, 0.2F
+	glLineWidth(6);
+	glColor3f(1.0, 0.1F, 0.1F);//1, 0.2F, 0.2F
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINE_STRIP);
 	for (RobotState* i: path)
@@ -2620,3 +2649,17 @@ void EGKRobotPath::drawGL()
 	glEnd();
 	glEnable(GL_LIGHTING);
 }
+
+//! ----------------- RobotPath --------------------------------------
+
+double EGKRobotPath::getDistance()
+{
+	double ret = 0.0;
+
+	if (!(this->path.empty()))
+	for (size_t i = 0; i < (this->path.size() - 1); ++i)
+		ret += this->path[i]->distanceTo(this->path[i + 1]);
+
+	return ret;
+}
+

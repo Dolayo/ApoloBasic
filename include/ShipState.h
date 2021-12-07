@@ -40,6 +40,8 @@ namespace mr
 
 			double distanceTo(Vector3D vec_pos);
 
+			double SimpleDistance(RobotState* p);
+
 			Vector3D getGhostPos();
 			
 			//returns true if the ship state is equal to the state

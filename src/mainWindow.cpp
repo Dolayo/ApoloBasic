@@ -139,7 +139,66 @@ void MainWindow::createEnvironment()
 	_world+=building;
 }
 
-void MainWindow::createShipEnvironment()
+void MainWindow::createShipEnvironment_Blank()
+{
+	//Intializing test environment Faces included in a FacePart
+	Face deep(Transformation3D(0, 0, 0), 0, -60, 60, 60);
+	deep.setColor(0.18, 0.67, 0.80, 1);//0.1451, 0.1569, 0.3137,1
+
+	Face land1;
+	Face land2;
+	Face land3;
+	Face land4;
+	Face land5;
+
+	land1.setBase(Transformation3D(0, 20, 0, X_AXIS, -PI / 2));
+	land2.setBase(Transformation3D(0, -20, 0, X_AXIS, -PI / 2));
+	land3.setBase(Transformation3D(50, -20, 0, Y_AXIS, -PI / 2));
+	land4.setBase(Transformation3D(0, 0, 10, Z_AXIS, 0));//-PI / 2
+	land5.setBase(Transformation3D(10, -20, 0, Y_AXIS, -PI / 2));
+
+	land1.addVertex(50, 0);
+	land1.addVertex(50, -10);
+	land1.addVertex(10, -10);
+	land1.addVertex(10, 0);
+	land1.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land2.addVertex(50, 0);
+	land2.addVertex(50, -10);
+	land2.addVertex(10, -10);
+	land2.addVertex(10, 0);
+	land2.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land3.addVertex(10, 0);
+	land3.addVertex(10, 40);
+	land3.addVertex(0, 40);
+	land3.addVertex(0, 0);
+	land3.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land4.addVertex(10, -20);
+	land4.addVertex(50, -20);
+	land4.addVertex(50, 20);
+	land4.addVertex(10, 20);
+	land4.setColor(0.502, 0.251, 0.1, 1);
+
+	land5.addVertex(10, 0);
+	land5.addVertex(10, 40);
+	land5.addVertex(0, 40);
+	land5.addVertex(0, 0);
+	land5.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	FaceSetPart* shore = new FaceSetPart;
+	shore->addFace(deep);
+	/*shore->addFace(land1);
+	shore->addFace(land2);
+	shore->addFace(land3);
+	shore->addFace(land4);
+	shore->addFace(land5);*/
+
+	_world += shore;
+}
+
+void MainWindow::createShipEnvironment_Obstacle1()
 {
 	//Intializing test environment Faces included in a FacePart
 	Face deep(Transformation3D(0, 0, 0), 0, -60, 60, 60);
@@ -149,20 +208,91 @@ void MainWindow::createShipEnvironment()
 	Face land2;
 	Face land3;
 	Face land4;
+	Face land5;
+
+	land1.setBase(Transformation3D(0, 20, 0, X_AXIS, -PI / 2));
+	land2.setBase(Transformation3D(0, -20, 0, X_AXIS, -PI / 2));
+	land3.setBase(Transformation3D(50, -20, 0, Y_AXIS, -PI / 2));
+	land4.setBase(Transformation3D(0, 0, 10, Z_AXIS, 0));//-PI / 2
+	land5.setBase(Transformation3D(10, -20, 0, Y_AXIS, -PI / 2));
+
+	land1.addVertex(50, 0);
+	land1.addVertex(50, -10);
+	land1.addVertex(10, -10);
+	land1.addVertex(10, 0);
+	land1.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land2.addVertex(50, 0);
+	land2.addVertex(50, -10);
+	land2.addVertex(10, -10);
+	land2.addVertex(10, 0);
+	land2.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land3.addVertex(10, 0);
+	land3.addVertex(10, 40);
+	land3.addVertex(0, 40);
+	land3.addVertex(0, 0);
+	land3.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land4.addVertex(10, -20);
+	land4.addVertex(50, -20);
+	land4.addVertex(50, 20);
+	land4.addVertex(10, 20);
+	land4.setColor(0.502, 0.251, 0.1, 1);
+
+	land5.addVertex(10, 0);
+	land5.addVertex(10, 40);
+	land5.addVertex(0, 40);
+	land5.addVertex(0, 0);
+	land5.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	FaceSetPart* shore = new FaceSetPart;
+	shore->addFace(deep);
+	shore->addFace(land1);
+	shore->addFace(land2);
+	shore->addFace(land3);
+	shore->addFace(land4);
+	shore->addFace(land5);
+
+	_world += shore;
+}
+
+void MainWindow::createShipEnvironment_Obstacle2()
+{
+	//Intializing test environment Faces included in a FacePart
+	Face deep(Transformation3D(0, 0, 0), 0, -60, 60, 60);
+	deep.setColor(0.18, 0.67, 0.80, 1);//0.1451, 0.1569, 0.3137,1
+
+	Face land1;
+	Face land2;
+	Face land3;
+	Face land4;
+
+	Face land5;
+	Face land6;
+	Face land7;
+	Face land8;
 
 	land1.setBase(Transformation3D(0, 0, 0, X_AXIS, -PI / 2));
 	land2.setBase(Transformation3D(0, -2, 0, X_AXIS, -PI / 2));
-	land3.setBase(Transformation3D(5, -2, 0, Y_AXIS, -PI / 2));
-	land4.setBase(Transformation3D(0, 0, 2, Z_AXIS, -PI / 2));
+	land3.setBase(Transformation3D(25, -2, 0, Y_AXIS, -PI / 2));
+	land4.setBase(Transformation3D(0, 0, 2, Z_AXIS, -PI / 2));//-PI / 2
 
-	land1.addVertex(5, 0);
-	land1.addVertex(5, -2);
+	land5.setBase(Transformation3D(35, 0, 0, X_AXIS, -PI / 2));
+	land6.setBase(Transformation3D(35, -2, 0, X_AXIS, -PI / 2));
+	land7.setBase(Transformation3D(35, -2, 0, Y_AXIS, -PI / 2));
+	land8.setBase(Transformation3D(0, 0, 2, Z_AXIS, 0));//-PI / 2
+
+
+	//! First obstacle
+	land1.addVertex(25, 0);
+	land1.addVertex(25, -2);
 	land1.addVertex(0, -2);
 	land1.addVertex(0, 0);
 	land1.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
 
-	land2.addVertex(5, 0);
-	land2.addVertex(5, -2);
+	land2.addVertex(25, 0);
+	land2.addVertex(25, -2);
 	land2.addVertex(0, -2);
 	land2.addVertex(0, 0);
 	land2.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
@@ -174,17 +304,46 @@ void MainWindow::createShipEnvironment()
 	land3.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
 
 	land4.addVertex(2, 0);
-	land4.addVertex(2, 5);
-	land4.addVertex(0, 5);
+	land4.addVertex(2, 25);
+	land4.addVertex(0, 25);
 	land4.addVertex(0, 0);
 	land4.setColor(0.502, 0.251, 0.1, 1);
 
+	//! Second obstacle
+	land5.addVertex(45, 0);
+	land5.addVertex(45, -2);
+	land5.addVertex(0, -2);
+	land5.addVertex(0, 0);
+	land5.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land6.addVertex(45, 0);
+	land6.addVertex(45, -2);
+	land6.addVertex(0, -2);
+	land6.addVertex(0, 0);
+	land6.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land7.addVertex(2, 0);
+	land7.addVertex(2, 2);
+	land7.addVertex(0, 2);
+	land7.addVertex(0, 0);
+	land7.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land8.addVertex(35, 0);
+	land8.addVertex(35, -2);
+	land8.addVertex(80, -2);
+	land8.addVertex(80, 0);
+	land8.setColor(0.502, 0.251, 0.1, 1);
+
 	FaceSetPart* shore = new FaceSetPart;
 	shore->addFace(deep);
-	/*shore->addFace(land1);
+	shore->addFace(land1);
 	shore->addFace(land2);
 	shore->addFace(land3);
-	shore->addFace(land4);*/
+	shore->addFace(land4);
+	shore->addFace(land5);
+	shore->addFace(land6);
+	shore->addFace(land7);
+	shore->addFace(land8);
 
 	_world += shore;
 }
@@ -414,7 +573,7 @@ void MainWindow::OnShip(wxCommandEvent& event)
 
 	_button_stop = new wxButton(this, ID_Stop, wxT("Stop"), wxPoint(140, 50), wxSize(60, 30));
 
-	createShipEnvironment();
+	createShipEnvironment_Obstacle2();
 
 	//creo el robot
 	_p_myship = new Ship();
@@ -496,7 +655,7 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 	sb->SetStatusText(wxT("EGK-RRT Ready!"));
 
 	_world.destroyContent();
-	createShipEnvironment();
+	createShipEnvironment_Obstacle2();
 
 	if (_p_myship)
 		delete _p_myship;

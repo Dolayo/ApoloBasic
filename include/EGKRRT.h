@@ -45,6 +45,7 @@ class EGKRobotPath : public RobotPath
 public:
 
 	EGKRobotPath():RobotPath(){}
+	double getDistance();
 	virtual void drawGL() override;
 };
 
@@ -153,7 +154,13 @@ protected:
 			public:
 
 
-				virtual ~EGKpath() {if (_p_circ)delete _p_circ;}
+				virtual ~EGKpath() 
+				{
+					if (_p_circ)
+						delete _p_circ;
+					if (_p_spline)
+						delete _p_spline;
+				}
 				std::vector<std::vector<double>>_sequence;
 				EGKpath():PathSegment(){}
 				const EGKpath& operator=(const EGKpath& n) {
@@ -179,6 +186,7 @@ protected:
 				static bool isGhostThere(ShipState* donkey, ShipState* carrot, Vector2D& newPos);
 				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
 				bool generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
+				bool isLoop();
 				void drawGL();
 
 		private:
