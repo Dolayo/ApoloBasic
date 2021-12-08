@@ -93,6 +93,7 @@ private:
     void createShipEnvironment_Blank();
     void createShipEnvironment_Obstacle1();
     void createShipEnvironment_Obstacle2();
+    void createShipEnvironment_Obstacle3();
     
     void Resize(wxSizeEvent& event);
 	void OnPlan(wxCommandEvent& event);

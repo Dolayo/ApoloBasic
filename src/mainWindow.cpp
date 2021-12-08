@@ -287,14 +287,14 @@ void MainWindow::createShipEnvironment_Obstacle2()
 	//! First obstacle
 	land1.addVertex(25, 0);
 	land1.addVertex(25, -2);
-	land1.addVertex(0, -2);
-	land1.addVertex(0, 0);
+	land1.addVertex(-25, -2);
+	land1.addVertex(-25, 0);
 	land1.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
 
 	land2.addVertex(25, 0);
 	land2.addVertex(25, -2);
-	land2.addVertex(0, -2);
-	land2.addVertex(0, 0);
+	land2.addVertex(-25, -2);
+	land2.addVertex(-25, 0);
 	land2.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
 
 	land3.addVertex(2, 0);
@@ -303,10 +303,10 @@ void MainWindow::createShipEnvironment_Obstacle2()
 	land3.addVertex(0, 0);
 	land3.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
 
-	land4.addVertex(2, 0);
+	land4.addVertex(2, -25);
 	land4.addVertex(2, 25);
 	land4.addVertex(0, 25);
-	land4.addVertex(0, 0);
+	land4.addVertex(0, -25);
 	land4.setColor(0.502, 0.251, 0.1, 1);
 
 	//! Second obstacle
@@ -344,6 +344,96 @@ void MainWindow::createShipEnvironment_Obstacle2()
 	shore->addFace(land6);
 	shore->addFace(land7);
 	shore->addFace(land8);
+
+	_world += shore;
+}
+
+void MainWindow::createShipEnvironment_Obstacle3()
+{
+	//Intializing test environment Faces included in a FacePart
+	Face deep(Transformation3D(0, 0, 0), 0, -60, 60, 60);
+	deep.setColor(0.18, 0.67, 0.80, 1);//0.1451, 0.1569, 0.3137,1
+
+	Face land1;
+	Face land2;
+	Face land3;
+	Face land4;
+	Face transversal;
+	Face room1;
+	Face room2;
+	Face room3;
+
+	//! Paredes exteriores
+	land1.setBase(Transformation3D(0, 60, 0, X_AXIS, -PI / 2));
+	land2.setBase(Transformation3D(0, -60, 0, X_AXIS, -PI / 2));
+	land3.setBase(Transformation3D(60, -60, 0, Y_AXIS, -PI / 2));
+	land4.setBase(Transformation3D(0, -60, 0, Y_AXIS, -PI / 2));
+	transversal.setBase(Transformation3D(30, -60, 0, Y_AXIS, -PI / 2));
+	room1.setBase(Transformation3D(0, -40, 0, X_AXIS, -PI / 2));
+	room2.setBase(Transformation3D(0, -20, 0, X_AXIS, -PI / 2));
+	room3.setBase(Transformation3D(45, 20, 0, Y_AXIS, -PI / 2));
+
+	land1.addVertex(60, 0);
+	land1.addVertex(60, -10);
+	land1.addVertex(0, -10);
+	land1.addVertex(0, 0);
+	land1.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+	
+	land2.addVertex(60, 0);
+	land2.addVertex(60, -10);
+	land2.addVertex(0, -10);
+	land2.addVertex(0, 0);
+	land2.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land3.addVertex(0, 0);
+	land3.addVertex(0, 120);
+	land3.addVertex(10, 120);
+	land3.addVertex(10, 0);
+	land3.setColor(0.502, 0.251, 0.1, 1);//0.502, 0.251, 0.1, 1
+
+	land4.addVertex(0, 0);
+	land4.addVertex(0, 120);
+	land4.addVertex(10, 120);
+	land4.addVertex(10, 0);
+	land4.setColor(0.502, 0.251, 0.1, 1);
+
+	transversal.addVertex(0, 0);
+	transversal.addVertex(0, 80);
+	transversal.addVertex(10, 80);
+	transversal.addVertex(10, 0);
+	transversal.setColor(0.502, 0.251, 0.1, 1);
+
+	room1.addVertex(20, 0);
+	room1.addVertex(20, -10);
+	room1.addVertex(0, -10);
+	room1.addVertex(0, 0);
+	room1.setColor(0.502, 0.251, 0.1, 1);
+
+	room2.addVertex(20, 0);
+	room2.addVertex(20, -10);
+	room2.addVertex(0, -10);
+	room2.addVertex(0, 0);
+	room2.setColor(0.502, 0.251, 0.1, 1);
+
+	room3.addVertex(0, 0);
+	room3.addVertex(0, 40);
+	room3.addVertex(10, 40);
+	room3.addVertex(10, 0);
+	room3.setColor(0.502, 0.251, 0.1, 1);
+
+
+	
+
+	FaceSetPart* shore = new FaceSetPart;
+	shore->addFace(deep);
+	shore->addFace(land1);
+	shore->addFace(land2);
+	shore->addFace(land3);
+	shore->addFace(land4);
+	shore->addFace(transversal);
+	shore->addFace(room1);
+	shore->addFace(room2);
+	shore->addFace(room3);
 
 	_world += shore;
 }

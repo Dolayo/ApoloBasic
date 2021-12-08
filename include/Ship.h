@@ -62,7 +62,7 @@ namespace mr
 		void setState(double x = 0.0, double y = 0.0, double yaw = 0.0, double u = 0.0, double v = 0.0, double w = 0.0);
 		void setState(Vector3D pos, Vector3D vel);
 		Vector3D simpleAccs();
-		bool simpleDynamicsSim(double delta_t);
+		bool simpleDynamicsSim(double delta_t, bool b_use_collision = true);
 		virtual bool setThrusts(double t = 0.0, double r = 0.0, double w = 0.0);
 		double coeff(const double& x, const char& fluid, const char& type);
 		double sdl(const char& fluid, const char& type, const char& type2);

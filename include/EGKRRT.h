@@ -119,11 +119,16 @@ protected:
 					std::tuple<double, bool, bool> getRelativeAng(RobotState* ap_init);
 					Vector2D SpfirstD(double t);
 					bool IsFeasible(ShipState* ap_init, ShipState* ap_goal);
+					bool IsFreeSpace(RobotState* ap_init);
+					void discretizeSpline();
 					double getTnear(void) const { return _t_near; }
 					bool getSTOP() const{ return _stop; }
 					void setSTOP(bool ab_stop) { _stop = ab_stop; }
 					void drawGL();
 					bool IsOk() const { return _b_is_Ok; }
+					std::vector<Vector2D> getDiscretizedPoints() { return _v_discretized_spline; }
+
+					
 					
 				private:
 
@@ -141,8 +146,6 @@ protected:
 					double _by{ 0.0 };
 					double _ay{ 0.0 };
 
-					std::vector<Vector2D> _pointList;
-
 					bool _b_is_Ok{ true };
 
 					double _t_near{ 0.0 };
@@ -150,6 +153,7 @@ protected:
 
 					bool _stop{true};
 					std::vector<double> ang_list;
+					std::vector<Vector2D> _v_discretized_spline;
 				};
 			public:
 
@@ -158,8 +162,8 @@ protected:
 				{
 					if (_p_circ)
 						delete _p_circ;
-					if (_p_spline)
-						delete _p_spline;
+					/*if (_p_spline)
+						delete _p_spline;*/
 				}
 				std::vector<std::vector<double>>_sequence;
 				EGKpath():PathSegment(){}
@@ -171,6 +175,7 @@ protected:
 				}
 				RobotState* operator[](int i) { return _inter[i]; }
 				bool IsEqual(PathSegment* p_path);
+				std::vector<Vector2D> getDiscretizedPoints() { return this->_p_spline->getDiscretizedPoints(); }
 				double getLength();
 				double getLength2States(RobotState* p_initState, RobotState* p_finalState);
 				std::vector<RobotState*> getDiscretizedNeighbours(void) const {return _v_discretized_neighbours;}
@@ -187,11 +192,18 @@ protected:
 				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
 				bool generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
 				bool isLoop();
+				bool isSplineOK()
+				{
+					if (_p_spline)
+						return _p_spline->IsOk();
+					else 
+						return false;
+				}
 				void drawGL();
 
 		private:
 			Circunference* _p_circ{nullptr};
-			Spline* _p_spline{ nullptr };
+			std::shared_ptr<Spline> _p_spline{ nullptr };
 			std::vector<RobotState*> _v_discretized_neighbours;
 		};
 

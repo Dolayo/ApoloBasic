@@ -106,6 +106,21 @@ double ShipState::distanceTo(Vector3D vec_pos)
 	return val;
 }
 
+bool ShipState::IsVisible(Vector2D vec_pos)
+{
+	bool b_ret = true;
+
+	Segment3D segm = Segment3D(Vector3D(_pose.x, _pose.y, 1.0), Vector3D(vec_pos.x, vec_pos.y, 1.0));
+
+	_ship->setIntersectable(false);
+
+	b_ret = !(_world->segmentIntersection(segm, 0));
+
+	_ship->setIntersectable(true);
+
+	return b_ret;
+}
+
 double ShipState::SimpleDistance(RobotState* p)
 {
 	ShipState* naux = dynamic_cast<ShipState*>(p);
@@ -220,7 +235,7 @@ vector<double> ShipState::getSample()
 	return vector<double>{_pose.x, _pose.y, _pose.z, _vel.x, _vel.y, _vel.z/*W*/};
 }
 
-bool ShipState::propagate(std::vector<double> v_auxCtrlAct, double delta_t, ShipState** p_retState)
+bool ShipState::propagate(std::vector<double> v_auxCtrlAct, double delta_t, ShipState** p_retState, bool b_use_collision)
 {
 	// Booleano para comprobar que no se ha chocado con nada
 	bool b_success;
@@ -231,7 +246,7 @@ bool ShipState::propagate(std::vector<double> v_auxCtrlAct, double delta_t, Ship
 	this->_ship->setThrusts(v_auxCtrlAct[0], v_auxCtrlAct[1], v_auxCtrlAct[2]);
 
 	//Simulamos al robot durante delta_t segundos con la accion de control v_auxCtrlAct
-	b_success = this->_ship->simpleDynamicsSim(delta_t);
+	b_success = this->_ship->simpleDynamicsSim(delta_t, b_use_collision);
 
 	// Creamos el nuevo estado a partir de como queda el robot despues de aplicar la accion de control
 	RobotState* aux_state = createStateFromCurrentRobotState();

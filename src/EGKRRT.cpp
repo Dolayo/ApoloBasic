@@ -3,6 +3,7 @@
 #include "ShipState.h"
 #include "defines.h"
 #include <math.h>
+#include <mrcore.h>
 
 //! -------------------------------------- Planner -------------------------------------- 
 
@@ -29,6 +30,8 @@ bool EGKRRT::testingPlan()
 			solved = true;
 			//retrive path
 			RobotPath pathA = _tree->getPathFromRoot(addedNode);
+
+			
 
 			//rearrange the states
 			delete path;
@@ -233,6 +236,8 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	// creamos el nuevo segmento desde initNode hasta n
 	//dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
 	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500, false, false);
+
+	
 	
 	// 
 	//_vertexes.push_back(newPath->_end);
@@ -245,6 +250,16 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 		return nullptr;//no state created
 	}
+
+	/*solo para testing plan*/
+	/*if (newPath->isSplineOK())
+	{
+		for (Vector2D i : newPath->getDiscretizedPoints())
+		{
+			RobotState* aux = dynamic_cast<ShipState*>(initNode)->createStateFromPoint3D(i.x, i.y, 0.0);
+			_vertexes.push_back(aux);
+		}
+	}*/
 
 	dynamic_cast<ShipState*>(newPath->_end)->getYaw();
 
@@ -413,8 +428,8 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 						break;
 					}*/
 
-				for (int w = 1; w < (oldPath->_inter.size()-1); ++w)
-					v_dead_nodes.push_back(oldPath->_inter[w]);
+				/*for (int w = 1; w < (oldPath->_inter.size()-1); ++w)
+					v_dead_nodes.push_back(oldPath->_inter[w]);*/
 
 				newRePath->_parent = ap_initNodePath;
 
@@ -884,12 +899,6 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 					b_success = false;
 			}
 
-			if (b_success)
-			{
-				//! Discretizamos el segmento en funcion de la longitud del barco
-				p_newPath->discretizeNeighbours();
-			}
-
 			return p_newPath;
 		}
 
@@ -897,8 +906,19 @@ EGKRRT::EGKtree::EGKpath* EGKRRT::EGKtree::EGKpath::createPath(RobotState* p_ini
 		// Obtain the control action
 		std::vector<double> v_ctrlAct = p_newPath->navigation(p_initState, p_finalState, b_ensure_yaw, b_precision);
 
+		if (v_ctrlAct[0] < 0.0)
+			return nullptr;
+
 		// Propagate the control action
-		bool b_success_prop = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
+		bool b_success_prop;
+		if (b_ensure_yaw)//b_ensure_yaw
+		{
+			b_success_prop = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState, false);
+		}
+		else
+		{
+			b_success_prop = p_initState->propagate(v_ctrlAct, DELTA_T, &p_newState);
+		}
 
 		if (b_success_prop)
 		{
@@ -1032,7 +1052,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 	}
 
 	if (b_ensure_yaw && !_p_spline)
-		_p_spline = new Spline(p_ShipInitState, p_ShipFinalState, zone);
+		_p_spline = std::make_shared<Spline>(p_ShipInitState, p_ShipFinalState, zone);//new Spline
 
 
 
@@ -1049,7 +1069,7 @@ std::vector<double> EGKRRT::EGKtree::EGKpath::navigation(RobotState* p_initState
 			
 		if(v_auxCtrlAct.size()==0)
 		{
-			v_auxCtrlAct.push_back(0.);
+			v_auxCtrlAct.push_back(-1.0);
 			v_auxCtrlAct.push_back(0.);
 			v_auxCtrlAct.push_back(0.);
 			return v_auxCtrlAct;
@@ -1500,7 +1520,7 @@ bool EGKRRT::EGKtree::EGKpath::isLoop()
 			double dist_real = dynamic_cast<ShipState*>(_inter[i])->SimpleDistance(_inter[j]);
 			double dist_in_path = getLength2States(_inter[i], _inter[j]);
 			double factor = std::abs(dist_real - dist_in_path) / dist_in_path;
-			if (factor>0.9)
+			if (dist_in_path>1.0 && factor>0.9)
 				return true;
 		}
 	}
@@ -1688,6 +1708,10 @@ EGKRRT::EGKtree::EGKpath::Spline::Spline(RobotState* ap_init, RobotState* ap_goa
 	_cy = my1;
 
 	_b_is_Ok = IsFeasible(p_EGK_init, p_EGK_goal);
+
+	if (_b_is_Ok)
+		_b_is_Ok = IsFreeSpace(p_EGK_init);
+
 
 }
 
@@ -2536,6 +2560,48 @@ bool EGKRRT::EGKtree::EGKpath::Spline::IsFeasible(ShipState* ap_init, ShipState*
 	return _b_is_Ok;
 }
 
+bool EGKRRT::EGKtree::EGKpath::Spline::IsFreeSpace(RobotState* ap_init)
+{
+	ShipState* p_EGK_init = dynamic_cast<ShipState*>(ap_init);
+
+	if (!p_EGK_init)
+		throw ERRORNULL;
+
+	discretizeSpline();
+
+	for (int i = 0; i < ((int)_v_discretized_spline.size()-1);++i )
+	{
+		RobotState* aux_state = p_EGK_init->createStateFromPoint3D(_v_discretized_spline[i].x, _v_discretized_spline[i].y, 0.0);
+
+		ShipState* p_EGK_aux = dynamic_cast<ShipState*>(aux_state);
+
+		if (!p_EGK_aux)
+			throw ERRORNULL;
+
+		Segment3D segm = Segment3D(Vector3D(_v_discretized_spline[i].x, _v_discretized_spline[i].y, 1.0), 
+								   Vector3D(_v_discretized_spline[i+1].x, _v_discretized_spline[i+1].y, 1.0));
+
+		if(!(p_EGK_aux->IsVisible(_v_discretized_spline[i + 1])))
+			return false;
+	}
+	return true;
+}
+
+void EGKRRT::EGKtree::EGKpath::Spline::discretizeSpline()
+{
+	double ship_length = LENGTH / 5;
+	_v_discretized_spline.push_back(Spfunction(0.0));
+	//_v_discretized_neighbours.push_back(_end);
+	for (double i = 0.00; i < 1.00; i+=0.01)
+	{
+		Vector2D point = Spfunction(i);
+		double aux_length = (_v_discretized_spline.back() - point).module();
+
+		if (aux_length > ship_length)
+			_v_discretized_spline.push_back(point);
+	}
+}
+
 //! ----------------- Drawing methods --------------------------------------
 
 void EGKRRT::drawGL()
@@ -2572,8 +2638,8 @@ void EGKRRT::EGKtree::EGKpath::drawGL()
 	if (_p_circ)
 		_p_circ->drawGL();
 
-	/*if (_p_spline)
-		_p_spline->drawGL();*/
+
+	/*_p_spline->drawGL();*/
 
 	if (this->_init == nullptr || this->_end == nullptr)
 		return;

@@ -170,7 +170,7 @@ namespace mr
 		return Vector3D(ax, ay, aw);
 	}
 
-	bool Ship::simpleDynamicsSim(double delta_t)
+	bool Ship::simpleDynamicsSim(double delta_t, bool b_use_collision)
 	{
 		double ax = 0.0;
 		double ay = 0.0;
@@ -304,13 +304,17 @@ namespace mr
 
 		setAbsoluteT3D(newposition);
 
-		World* world = getWorld();
-		if (world) {
-			if (world->checkCollisionWith(*this)) {
-				setAbsoluteT3D(position); //no muevo el robot
-				return false;
+		if (b_use_collision)
+		{
+			World* world = getWorld();
+			if (world) {
+				if (world->checkCollisionWith(*this)) {
+					setAbsoluteT3D(position); //no muevo el robot
+					return false;
+				}
 			}
 		}
+		
 
 		return true; //se pudo realizar el movimiento
 	}

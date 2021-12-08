@@ -40,6 +40,8 @@ namespace mr
 
 			double distanceTo(Vector3D vec_pos);
 
+			bool IsVisible(Vector2D vec_pos);
+
 			double SimpleDistance(RobotState* p);
 
 			Vector3D getGhostPos();
@@ -56,7 +58,7 @@ namespace mr
 			//creates a ship at x,y,z and with Vx, Vy, W speed(0 default)
 			RobotState* createStateFromPoint3D(double x=0, double y=0, double yaw=0);
 			
-			virtual bool propagate(std::vector<double> v_auxCtrlAct, double delta_t, ShipState** p_retState);
+			virtual bool propagate(std::vector<double> v_auxCtrlAct, double delta_t, ShipState** p_retState, bool b_use_collision = true);
 
 			//moves the Ship one step from the current position towards
 			//the state. Local planner
@@ -98,6 +100,8 @@ namespace mr
 				_yaw = y;
 				_pose.z = y;
 			}
+
+			friend class Spline;
 
 	
 			virtual ~ShipState()
