@@ -77,7 +77,7 @@ double ShipState::distanceTo(RobotState* p)
 
 	//penalties the intersection
 	if (_world->segmentIntersection(segm, 0))
-		val *= 1.5;
+		val *= 2.0;
 
 	_ship->setIntersectable(true);
 

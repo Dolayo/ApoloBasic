@@ -278,7 +278,7 @@ RobotState *RDTstar::RDTtree::addNode(RobotState *in)
 	// de menor coste el cual lo almaceno en initNode
 	vector<RobotState*> neighbors;
 
-	if((_radius > n->distanceTo(initNode)) && (_paths.size()!=0)) 
+	if((_radius1 > n->distanceTo(initNode)) && (_paths.size()!=0)) 
 	{
 
 		getNeighbors(n, &neighbors);
@@ -481,7 +481,7 @@ void RDTstar::RDTtree::getNeighbors(RobotState *Xnew, vector<RobotState*> *v_nei
 	{
 		for(auto j_node: i_path->_inter)
 		{
-			if(j_node->distanceTo(Xnew)<_radius) v_nei->push_back(j_node);
+			if(j_node->distanceTo(Xnew)<_radius1) v_nei->push_back(j_node);
 		}
 	}
 }

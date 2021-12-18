@@ -191,7 +191,7 @@ protected:
 				static bool isGhostThere(ShipState* donkey, ShipState* carrot, Vector2D& newPos);
 				bool generateCtrlActCirc(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
 				bool generateCtrlActSpline(ShipState* ap_initState, Quadrant& ar_quad, ZoneType& ar_zone, std::vector<double>& ar_ctrl_act);
-				bool isLoop();
+				bool IsLoop();
 				bool isSplineOK()
 				{
 					if (_p_spline)
@@ -254,9 +254,13 @@ protected:
 			return b_ret;
 		}
 
-		EGKtree() : RDTtree(){}
+		EGKtree() : RDTtree()
+		{
+			_radius1 = 0.9 * 60 * sqrt(log(2.0) / 2.0);
+		}
 		//virtual double distance(RobotState* p, PathSegment* path, RobotState** mnode = 0) override;
 		virtual RobotState* addNode(RobotState* node) override;
+		RobotState* addNodeStar(RobotState* node);
 		virtual void Reconnect(vector<RobotState*>& v_nei, RobotState* Xnew, PathSegment* ap_initNodePath) override;
 		virtual void getNeighbors(RobotState* Xnew, vector<RobotState*>* v_nei) override;
 		void getLastNeighbors(RobotState* Xnew, vector<RobotState*>* v_nei);
@@ -271,6 +275,7 @@ protected:
 		virtual PathSegment* findPath4Node(RobotState* node) override;
 		PathSegment* findPath4NodeEnd(RobotState* node);
 		virtual void drawGL() override;
+		std::vector<double> _v_radius;
 	};
 
 public:

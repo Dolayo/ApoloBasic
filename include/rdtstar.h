@@ -104,7 +104,8 @@ protected:
 			
 		};
 
-		double _radius;
+		double _radius1;
+		double _radius2;
 		bool _divided;
 		void add(RobotState *n)
 		{
@@ -119,7 +120,7 @@ protected:
 		vector<PathSegment *> _paths;
 		vector<RobotState *> _nodes; 
 
-		RDTtree() { _root = 0; _radius = radius; _divided = false; }
+		RDTtree() { _root = 0; _radius1 = radius1; _divided = false; }
 		int getNumNodes(){return (int)_nodes.size();}
 		virtual bool rootTree(RobotState *rot);
 		virtual double distance(RobotState *p, PathSegment *path, RobotState **mnode=0);

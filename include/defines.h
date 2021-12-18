@@ -1,7 +1,7 @@
 #ifndef __DEFINES_
 #define __DEFINES_
 
-#define DELTA_T 0.1 //0.1seconds probablemente podamos estirar hasta 0.5
+#define DELTA_T 0.5 //0.1seconds probablemente podamos estirar hasta 0.5
 #define THETA1 3*PI/180 // 3º normal, 
 #define THETA2 10*PI/180 // 10º normal, 
 #define THETA3 15*PI/180 // 15º normal, 
@@ -63,28 +63,28 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 50.0;//45
-constexpr double Y_START = 50.0;//-50
+constexpr double X_START = 45.0;//45
+constexpr double Y_START = -50.0;//-50
 
 //! Orientacion relativa del robot en el punto de incio
-constexpr double YAW_START = 0.0;
+constexpr double YAW_START = 0.0 * PI / 180.0;
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 50;//5
+constexpr double X_GOAL = 5;//5
 constexpr double Y_GOAL = -50;//-50
 
 //! Orientacion goal, usado para testeo
 constexpr double TEST_YAW = -45.0 * PI / 180.0;
 
 //! Velocidad incial de avance
-constexpr double VX_INIT = V_MAX;//V_MAX
+constexpr double VX_INIT = 0.0;//V_MAX
 
 //! Radio de reconexion para el RRT*
-constexpr double radius = 25;//25
+constexpr double radius1 = 25;//25
 
 //! Iteraciones del planificador en fase de puntos controlados
-constexpr unsigned int NUM_ITERS = 200;
-
+constexpr unsigned int NUM_ITERS = 3000;//200
+constexpr unsigned int NUM_MORE_ITERS = 200;//200
 
 constexpr double T_TOP = 0.99;//0.9
 constexpr double T_LOW = 0.01;//0.01
