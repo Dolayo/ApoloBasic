@@ -256,7 +256,7 @@ protected:
 
 		EGKtree() : RDTtree()
 		{
-			_radius1 = 0.9 * 60 * sqrt(log(2.0) / 2.0);
+			setFirstRadius();
 		}
 		//virtual double distance(RobotState* p, PathSegment* path, RobotState** mnode = 0) override;
 		virtual RobotState* addNode(RobotState* node) override;
@@ -271,6 +271,7 @@ protected:
 		EGKRobotPath* GetPathFromRoot(ShipState* n);
 		double distance(RobotState* p, PathSegment* path, RobotState** mnode) override;
 		void PopulateVertexes();
+		void setFirstRadius(){ _radius1 = 0.9 * 60 * sqrt(log(2.0) / 2.0); }
 		EGKRobotPath* findSolution(RobotState* goal);
 		virtual PathSegment* findPath4Node(RobotState* node) override;
 		PathSegment* findPath4NodeEnd(RobotState* node);
