@@ -65,8 +65,9 @@ double ShipState::distanceTo(RobotState* p)
 
 	ShipState* naux = dynamic_cast<ShipState*>(p);
 	//if (!naux)return 10000.0;
-	Vector3D thisPos(_pose.x, _pose.y, 0.0);
-	Vector3D nauxPos(naux->_pose.x, naux->_pose.y, 0.0);
+
+	Vector3D thisPos = this->getGhostPos();
+	Vector3D nauxPos = naux->getGhostPos();
 	Vector3D dif_pos = nauxPos - thisPos;
 	
 	double val = dif_pos.module();
@@ -87,7 +88,7 @@ double ShipState::distanceTo(RobotState* p)
 double ShipState::distanceTo(Vector3D vec_pos)
 {
 
-	Vector3D thisPos(_pose.x, _pose.y, 0.0);
+	Vector3D thisPos = this->getGhostPos();
 
 	Vector3D dif_pos = vec_pos - thisPos;
 

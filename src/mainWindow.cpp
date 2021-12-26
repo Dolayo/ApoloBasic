@@ -745,7 +745,7 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 	sb->SetStatusText(wxT("EGK-RRT Ready!"));
 
 	_world.destroyContent();
-	createShipEnvironment_Obstacle3();
+	createShipEnvironment_Obstacle2();
 
 	if (_p_myship)
 		delete _p_myship;

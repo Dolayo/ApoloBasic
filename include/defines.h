@@ -63,14 +63,14 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 45.0;//45
-constexpr double Y_START = -50.0;//-50
+constexpr double X_START = 50.0;//45
+constexpr double Y_START = 50.0;//-50
 
 //! Orientacion relativa del robot en el punto de incio
 constexpr double YAW_START = 0.0 * PI / 180.0;
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 5;//5
+constexpr double X_GOAL = 50;//5
 constexpr double Y_GOAL = -50;//-50
 
 //! Orientacion goal, usado para testeo
