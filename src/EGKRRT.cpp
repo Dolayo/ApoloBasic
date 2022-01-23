@@ -57,7 +57,7 @@ bool EGKRRT::computePlan(int maxiterations)
 		
 		RobotState* node = getNextSample();
 
-		//! Buscamos la solucion cada 5 iteraciones
+		//! Buscamos la solucion cada 50 iteraciones
 		if ((i + 50) % 50 == 0)
 		{
 			dynamic_cast<ShipState*>(node)->setPose(Vector3D(X_GOAL, Y_GOAL, 0));
@@ -130,7 +130,6 @@ bool EGKRRT::computePlan(int maxiterations)
 
 bool EGKRRT::AddMoreNodes(int maxiterations)
 {
-	_tree->setFirstRadius();
 	for (int i = 0; i < maxiterations; i++)
 	{
 		RobotState* node = getNextSample();
@@ -186,22 +185,33 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 	// node es en realidad un ShipState*
 	// primer nodo del segmento que tratamos de crear al añadir el nodo in
-	RobotState* initNode;
-	RobotState* n = node->clone();
+	RobotState* initNode = nullptr;
+	RobotState* Qrand = node->clone();
 
 	//! Optimal radius = gamma*map_size*sqrt()
-	_radius2 = max(0.9 * 60 * sqrt(log((double)_paths.size() + 1.0) / ((double)_paths.size() + 1.0)), 10.0);
-	if (_sequence_solution.empty())
+	//! 
+	_radius = max(117.266 * sqrt(log((double)_paths.size() + 1.0) / ((double)_paths.size() + 1.0)), 15.0);
+	//_radius2 = max(0.9 * 60 * sqrt(log((double)_paths.size() + 1.0) / ((double)_paths.size() + 1.0)), 10.0);
+
+	/*if (_sequence_solution.empty())
 	{
 		_radius1 = 0.0;
 		_radius2 = 0.0;
-	}
-	//_v_radius.push_back(_radius2);
+	}*/
+	_v_radius.push_back(_radius);
 	//_radius = 0.9 * 60 * sqrt(log((double)_paths.size() + 1.0) / ((double)_paths.size() + 1.0));
 	// tomo el punto de conexion: estado y segmento
 	// closest_path es el segmento del arbol mas cercano al nodo que tratamos de añadir(in/n)
 	// initNode almacena el nodo de dicho segmento que esta mas cerca de n
-	PathSegment* closest_path = getClosestPathSegment(n, &initNode);
+	PathSegment* closest_path = getClosestPathSegment(Qrand, &initNode);
+
+	//! Si el estado muestreado esta demasiado cerca del árbol pasamos a la siguiente iteración
+	if (initNode && dynamic_cast<ShipState*>(initNode)->SimpleDistance(Qrand) < 1.0)
+	{
+		delete Qrand;
+
+		return nullptr;//no state created
+	}
 
 	// Si no hay ningun segmento es que el arbol esta vacio, solo tiene el origen
 	if (closest_path == 0)
@@ -212,16 +222,80 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 
 	}
 
-	// Compruebo si n puede tener vecinos, si es asi los almaceno en neighbors, y busco el 
-	// de menor coste el cual lo almaceno en initNode
-	vector<RobotState*> neighbors;
+	bool b_succes = false;
 
-	if ((_radius1 > n->distanceTo(initNode)) && (_paths.size() != 0))
+	EGKpath* path_Qnear2Qnew = EGKpath::createPath(initNode, Qrand, b_succes, 500, false, false);
+
+	if (!path_Qnear2Qnew || path_Qnear2Qnew->size() == 0 || !(path_Qnear2Qnew->_end))
 	{
-		getNeighbors(n, &neighbors);
+		delete path_Qnear2Qnew;
+		delete Qrand;
+
+		return nullptr;//no state created
+	}
+
+	RobotState* p_Qnew = path_Qnear2Qnew->last();
+
+	// Compruebo si Qnew puede tener vecinos, si es asi los almaceno en neighbors, y busco el 
+	// de menor coste el cual lo almaceno en initNode
+	vector<RobotState*> v_neighbors;
+
+	/*if ((_radius1 > Qrand->distanceTo(initNode)) && (_paths.size() != 0))
+	{
+		getLastNeighbors(Qrand, &neighbors);
 
 		closest_path = getBest(neighbors, &initNode);
+	}*/
+
+	getLastNeighbors(p_Qnew, &v_neighbors);
+
+	//closest_path = getBest(neighbors, &initNode);
+
+	sort(
+		v_neighbors.begin(),
+		v_neighbors.end(),
+		[](RobotState* const s1, RobotState* const s2)
+		{
+			if (dynamic_cast<ShipState*>(s1) && dynamic_cast<ShipState*>(s2))
+				return dynamic_cast<ShipState*>(s1)->getCost() > dynamic_cast<ShipState*>(s2)->getCost();
+			else return false;
+		}
+	);
+
+	EGKpath* path_Qmin2Qnew = nullptr;
+
+	bool b_optimized = false;
+
+	for (RobotState* i_neighbor : v_neighbors)
+	{
+		bool b_aux = false;
+
+		EGKpath* i_aux_path = EGKpath::createPath(i_neighbor, p_Qnew, b_aux, 500, false, false);
+
+		if (!i_aux_path || i_aux_path->size() == 0 || !(i_aux_path->_end))
+		{
+			delete i_aux_path;
+			continue;//no state created
+		}
+
+		ShipState* i_Qnew = dynamic_cast<ShipState*>(i_aux_path->last());
+
+		if (!i_Qnew)
+			throw ERRORNULL;
+
+		ShipState* p_EGK_Qnew = dynamic_cast<ShipState*>(p_Qnew);
+
+		if (b_aux && i_Qnew->getCost() < p_EGK_Qnew->getCost())
+		{
+			initNode = i_neighbor;
+			PathSegment* path_of_Qmin = findPath4Node(i_neighbor);
+			path_Qmin2Qnew = i_aux_path;
+			path_Qmin2Qnew->_parent = path_of_Qmin;
+			p_Qnew = path_Qmin2Qnew->last();
+			b_optimized = true;
+		}
 	}
+
 
 	// El segmento mas cercano aux queda dividido en dos por el nuevo segmento a añadir, por lo que
 	// se añade un nuevo segmento newPathA que va antes de initNode
@@ -236,13 +310,13 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	//! segmento mas cercano con la inclusion del nuevo segmento 
 	
 
-	bool success;
+	//bool success;
 
 	// este segmento sera el que una al nuevo nodo con el segmento que contiene al nodo de 
 	// menor coste
 	// creamos el nuevo segmento desde initNode hasta n
 	//dynamic_cast<ShipState*>(initNode)->setVels(Vector3D(V_MAX,0,0));
-	EGKpath* newPath = EGKpath::createPath(initNode, n, success, 500, false, false);
+	//EGKpath* newPath = EGKpath::createPath(initNode, Qrand, success, 500, false, false);
 
 	
 	
@@ -250,13 +324,7 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 	//_vertexes.push_back(newPath->_end);
 	// Si el nuevo segmento esta vacio, eliminamos todo 
 
-	if (!newPath || newPath->size() == 0 || !(newPath->_end))
-	{
-		delete newPath;
-		delete n;
-
-		return nullptr;//no state created
-	}
+	
 
 	/*solo para testing plan*/
 	/*if (newPath->isSplineOK())
@@ -268,86 +336,108 @@ RobotState* EGKRRT::EGKtree::addNode(RobotState* node)
 		}
 	}*/
 
-	dynamic_cast<ShipState*>(newPath->_end)->getYaw();
-
-	for (RobotState* i : newPath->_inter)
-		add(i);
-
-	// inicializo el nuevo segmento con el nodo de menor coste
-	newPath->_init = initNode;
-
-	//el padre del nuevo segmento es el segmento que contiene al nodo de menor coste
-	//newPath->_parent = newPathA; //findPath4Node(initNode)
-
-	// si no se ha llegado al final destruyo la copia
-	if (!success)
-		delete n;
-
-	// añado el nuevo path al arbol
-	_paths.push_back(newPath);
-
-	EGKpath* newPathA = nullptr;
-
-	if (closest_path != nullptr)
+	if (b_optimized)
 	{
-		if (_paths.size() != 0)
+		for (RobotState* i : path_Qmin2Qnew->_inter)
+				add(i);
+
+		PathSegment* path_of_Qmin = findPath4Node(path_Qmin2Qnew->_init);
+		path_Qmin2Qnew->_parent = path_of_Qmin;
+		_paths.push_back(path_Qmin2Qnew);
+	}
+	else
+	{
+		for (RobotState* i : path_Qnear2Qnew->_inter)
+			add(i);
+
+		// inicializo el nuevo segmento con el nodo de menor coste
+		// Esto en teoria ya lo hace la funcion createPath()
+		//path_Qnear2Qnew->_init = initNode;
+
+		if (!b_succes)
+				delete Qrand;
+
+		// añado el nuevo path al arbol
+		_paths.push_back(path_Qnear2Qnew);
+
+		EGKpath* newPathA = nullptr;
+
+		if (closest_path != nullptr)
 		{
-			if (closest_path->_init == initNode)
+			if (_paths.size() != 0)
 			{
-				newPath->_parent = closest_path->_parent;
-			}
-			else if(closest_path->_end == initNode)
-			{
-				newPath->_parent = closest_path;
-			}
+				if (closest_path->_init == initNode)
+				{
+					path_Qnear2Qnew->_parent = closest_path->_parent;
+				}
+				else if(closest_path->_end == initNode)
+				{
+					path_Qnear2Qnew->_parent = closest_path;
+				}
 
-			else
-			{
-				bool b_aux = false;
+				else
+				{
+					bool b_aux = false;
 
-				// Creamos el path desde el inicio del antiguo segmento hasta el punto intermedio initNode
-				newPathA = new EGKpath();
+					// Creamos el path desde el inicio del antiguo segmento hasta el punto intermedio initNode
+					newPathA = new EGKpath();
 
-				//! Buscamos la posicion que ocupa initNode en oldPath
-				int pos_node = 0;
-				for (int w = 0; w < closest_path->size(); ++w)
-					if(closest_path->_inter[w] == initNode)
-					{
-						pos_node = w;
-						break;
-					}
+					//! Buscamos la posicion que ocupa initNode en oldPath
+					int pos_node = 0;
+					for (int w = 0; w < closest_path->size(); ++w)
+						if(closest_path->_inter[w] == initNode)
+						{
+							pos_node = w;
+							break;
+						}
 
-				newPathA->_init = closest_path->_init;
-				newPathA->_parent = closest_path->_parent;
-				newPathA->_end = initNode;
-				newPathA->_inter.assign(closest_path->_inter.begin(), closest_path->_inter.begin() + pos_node);
+					newPathA->_init = closest_path->_init;
+					newPathA->_parent = closest_path->_parent;
+					newPathA->_end = initNode;
+					newPathA->_inter.assign(closest_path->_inter.begin(), closest_path->_inter.begin() + pos_node);
 
-				closest_path->_init = initNode;
-				closest_path->_parent = newPathA;
-				closest_path->_inter.erase(closest_path->_inter.begin(), closest_path->_inter.begin()+ pos_node);
+					closest_path->_init = initNode;
+					closest_path->_parent = newPathA;
+					closest_path->_inter.erase(closest_path->_inter.begin(), closest_path->_inter.begin()+ pos_node);
 
-				_paths.push_back(newPathA);	
+					_paths.push_back(newPathA);	
 
-				newPath->_parent = newPathA;
+					path_Qnear2Qnew->_parent = newPathA;
+				}
 			}
 		}
 	}
 
-	std::vector<RobotState*> v_last_neighbours;
+	
+	//el padre del nuevo segmento es el segmento que contiene al nodo de menor coste
+	//newPath->_parent = newPathA; //findPath4Node(initNode)
+
+	// si no se ha llegado al final destruyo la copia
+
+	
+
+	/*std::vector<RobotState*> v_last_neighbours;
 
 	if((neighbors.size() != 0))
-		getLastNeighbors(newPath->_end, &v_last_neighbours);
+		getLastNeighbors(newPath->_end, &v_last_neighbours);*/
 
-	if ((_paths.size() > 1) && (v_last_neighbours.size() != 0) && !(_sequence_solution.empty()))
+	if ((_paths.size() > 1) && (v_neighbors.size() != 0) && !(_sequence_solution.empty()))
 	{
-		Reconnect(v_last_neighbours, newPath->_end, newPath);//v_last_neighbours
+		
+		if(b_optimized)
+		{
+			Reconnect(v_neighbors, p_Qnew, path_Qmin2Qnew);
+		}
+		else
+		{
+			Reconnect(v_neighbors, p_Qnew, path_Qnear2Qnew);
+		}
 	}
 
 	// devuelvo el extremo del nuevo segmento añadido
-	return newPath->_end;
+	return p_Qnew;
 
 }
-
 
 void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, PathSegment* ap_initNodePath)
 {
@@ -417,6 +507,7 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 			// Si el coste de un vecino es mayor que la distancia a Xnew mas el coste de Xnew, creo el nuevo segmento de Xnew al vecino
 			if (((distance + Xnew->getCost()) < vecino->getCost()) && b_reach)
 			{
+				//AQUI EMPIEZO A CAMBIAR ALGUNAS COSAS PARA EL CTRL Z
 				++num_llamadas_exito;
 
 				for (RobotState* i : newRePath->_inter)
@@ -456,6 +547,8 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 					//oldPath->_parent = miniPath;
 
 					oldPath->_inter.assign(miniPath->_inter.begin(), miniPath->_inter.end());
+					oldPath->_init = miniPath->_init;
+					oldPath->_end = miniPath->_end;
 
 					miniPath->_inter.clear();
 					miniPath->_init = nullptr;
@@ -468,6 +561,11 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 
 				else
 				{
+					/*oldPath->_parent = ap_initNodePath;
+
+					oldPath->_init = newRePath->_end;
+					oldPath->_parent = newRePath;
+					oldPath->_inter.clear();*/
 					delete miniPath;
 				}
 			}
@@ -480,93 +578,93 @@ void EGKRRT::EGKtree::Reconnect(vector<RobotState*>& v_nei, RobotState* xnew, Pa
 				continue;
 			}
 		}
-		else
-		{
-			//! Esta es la parte del codigo perteneciente al abanico de nodos
-			//! 
-			//! Si el nodo esta en la lista de baneados se obvia
-			bool pass = false;
-			for (PathSegment* i_path : v_used_paths)
-				if ((oldEGK->IsEqual(i_path)))
-				{
-					pass = true;
-				}
-				
+		//else
+		//{
+		//	//! Esta es la parte del codigo perteneciente al abanico de nodos
+		//	//! 
+		//	//! Si el nodo esta en la lista de baneados se obvia
+		//	bool pass = false;
+		//	for (PathSegment* i_path : v_used_paths)
+		//		if ((oldEGK->IsEqual(i_path)))
+		//		{
+		//			pass = true;
+		//		}
+		//		
 
-			if (pass)
-				continue;
+		//	if (pass)
+		//		continue;
 
-			bool b_reach = false;
+		//	bool b_reach = false;
 
-			// El nuevo segmento que une a Xnew con el vecino
-			EGKpath* newRePath = EGKpath::createPath(Xnew, vecino, b_reach, NUM_ITER_PATH, true, false);
-			++num_llamadas_create;
-			if (!newRePath || newRePath->_inter.empty() || newRePath->_sequence.empty())
-			{
-				delete newRePath;
-				continue;
-			}
-				
-			double distance = newRePath->getLength();
+		//	// El nuevo segmento que une a Xnew con el vecino
+		//	EGKpath* newRePath = EGKpath::createPath(Xnew, vecino, b_reach, NUM_ITER_PATH, true, false);
+		//	++num_llamadas_create;
+		//	if (!newRePath || newRePath->_inter.empty() || newRePath->_sequence.empty())
+		//	{
+		//		delete newRePath;
+		//		continue;
+		//	}
+		//		
+		//	double distance = newRePath->getLength();
 
-			// Si el coste de un vecino es mayor que la distancia a Xnew mas el coste de Xnew, creo el nuevo segmento de Xnew al vecino
-			if (((distance + Xnew->getCost()) < vecino->getCost()) && b_reach)
-			{
-				++num_llamadas_exito;
+		//	// Si el coste de un vecino es mayor que la distancia a Xnew mas el coste de Xnew, creo el nuevo segmento de Xnew al vecino
+		//	if (((distance + Xnew->getCost()) < vecino->getCost()) && b_reach)
+		//	{
+		//		++num_llamadas_exito;
 
-				for (RobotState* i : newRePath->_inter)
-					add(i);
+		//		for (RobotState* i : newRePath->_inter)
+		//			add(i);
 
-				//! Añadimos oldPath a la lista de paths ya utilizados
-				 v_used_paths.push_back(oldPath);
+		//		//! Añadimos oldPath a la lista de paths ya utilizados
+		//		 v_used_paths.push_back(oldPath);
 
-				//! Buscamos la posicion que ocupa vecino en oldPath
-				int pos_node = 0;
-				for (int w = 0; w < oldPath->size(); ++w)
-					if (oldPath->_inter[w] == vecino)
-					{
-						pos_node = w;
-						break;
-					}
+		//		//! Buscamos la posicion que ocupa vecino en oldPath
+		//		int pos_node = 0;
+		//		for (int w = 0; w < oldPath->size(); ++w)
+		//			if (oldPath->_inter[w] == vecino)
+		//			{
+		//				pos_node = w;
+		//				break;
+		//			}
 
-				for (int w = 1; w < pos_node; ++w)
-					v_dead_nodes.push_back(oldPath->_inter[w]);
-			
-				newRePath->_parent = ap_initNodePath; 
+		//		for (int w = 1; w < pos_node; ++w)
+		//			v_dead_nodes.push_back(oldPath->_inter[w]);
+		//	
+		//		newRePath->_parent = ap_initNodePath; 
 
-				oldPath->_init = vecino;
-				oldPath->_parent = newRePath;
-				oldPath->_inter.erase(oldPath->_inter.begin(), oldPath->_inter.begin() + pos_node);
+		//		oldPath->_init = vecino;
+		//		oldPath->_parent = newRePath;
+		//		oldPath->_inter.erase(oldPath->_inter.begin(), oldPath->_inter.begin() + pos_node);
 
-				bool b_mini_reach;
-				EGKpath* miniPath = EGKpath::createPath(newRePath->_end, oldPath->_init, b_mini_reach, NUM_ITER_PATH, false, true);
+		//		bool b_mini_reach;
+		//		EGKpath* miniPath = EGKpath::createPath(newRePath->_end, oldPath->_init, b_mini_reach, NUM_ITER_PATH, false, true);
 
-				_paths.push_back(newRePath);
+		//		_paths.push_back(newRePath);
 
-				if (miniPath && b_mini_reach && (miniPath->getLength() < 1.1))
-				{
-					_paths.push_back(miniPath);
-					miniPath->_parent = newRePath;
-					oldPath->_parent = miniPath;
+		//		if (miniPath && b_mini_reach && (miniPath->getLength() < 1.1))
+		//		{
+		//			_paths.push_back(miniPath);
+		//			miniPath->_parent = newRePath;
+		//			oldPath->_parent = miniPath;
 
-					for (RobotState* i : miniPath->_inter)
-						add(i);
-				}
-					
-				else
-				{
-					delete miniPath;
-				}
-			}
+		//			for (RobotState* i : miniPath->_inter)
+		//				add(i);
+		//		}
+		//			
+		//		else
+		//		{
+		//			delete miniPath;
+		//		}
+		//	}
 
-			else
-			{
-				// Existe un choque o el vecino no tiene un coste interesante
-				delete newRePath;
+		//	else
+		//	{
+		//		// Existe un choque o el vecino no tiene un coste interesante
+		//		delete newRePath;
 
-				continue;
-			}
-		}
+		//		continue;
+		//	}
+		//}
 		
 	}
 
@@ -610,6 +708,7 @@ EGKRobotPath* EGKRRT::EGKtree::GetPathFromRoot(ShipState* n)
 
 	if (p_egk)
 	{
+		_sequence_solution.clear();
 		for (auto a : p_egk->_sequence)
 		{
 			_sequence_solution.push_back(a);
@@ -625,10 +724,10 @@ EGKRobotPath* EGKRRT::EGKtree::GetPathFromRoot(ShipState* n)
 		p = p->_parent;
 
 		for (int i = (int)p->_inter.size() - 1; i >= 0; i--)
-			path->path.insert(path->path.begin(), p->_inter[i]);
+			path->path.insert(path->path.begin(), (p->_inter)[i]);
 
 		for (int i = (int)p_egk->_sequence.size() - 1; i >= 0; i--)
-			_sequence_solution.insert(_sequence_solution.begin(), p_egk->_sequence[i]);
+			_sequence_solution.insert(_sequence_solution.begin(), (p_egk->_sequence)[i]);
 	}
 
 	path->path.insert(path->path.begin(), _root);
@@ -840,7 +939,7 @@ void EGKRRT::EGKtree::getLastNeighbors(RobotState* Xnew, vector<RobotState*>* v_
 	{
 		if (!(i_path->_end))
 			continue;
-		if ((Xnew != i_path->_end) && (i_path->_end->distanceTo(Xnew) < _radius2))
+		if ((Xnew != i_path->_end) && (i_path->_end->distanceTo(Xnew) < _radius))
 			v_nei->push_back(i_path->_end);
 	}
 }

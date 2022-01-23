@@ -24,11 +24,11 @@ _p_planner(nullptr),
 _p_sampler(nullptr),
 _p_solution(nullptr),
 _thrustXinp(nullptr),
-_thrustYinp(nullptr),
+//_thrustYinp(nullptr),
 _button_sim(nullptr),
 _timeinp(nullptr),
 _label_thrustXinp(nullptr),
-_label_thrustYinp(nullptr),
+//_label_thrustYinp(nullptr),
 _label_timeinp(nullptr),
 the_planner(0)
 {
@@ -358,20 +358,79 @@ void MainWindow::createShipEnvironment_Obstacle3()
 	Face land2;
 	Face land3;
 	Face land4;
-	Face transversal;
+	//Face transversal;
 	Face room1;
 	Face room2;
 	Face room3;
+
+	vector<Vector2D> dock1_list_bod;
+	PrismaticPart* dock1 = new PrismaticPart;
+	double dock1_width = 2.0;
+	double dock1_length = 60.0;
+	dock1_list_bod.push_back(Vector2D(dock1_width / 2, dock1_width / 2));
+	dock1_list_bod.push_back(Vector2D(dock1_width / 2, -dock1_width / 2));
+	dock1_list_bod.push_back(Vector2D(-dock1_width / 2, -dock1_width / 2));
+	dock1_list_bod.push_back(Vector2D(-dock1_width / 2, dock1_width / 2));
+	dock1->setPolygonalBase(dock1_list_bod);
+	dock1->setHeight(dock1_length);
+	dock1->setRelativePosition(Vector3D(35, -60, dock1_width / 2));
+	dock1->setRelativeOrientation(0, PI / 2, PI / 2);
+	dock1->setColor(0.502, 0.251, 0.1);
+
+	vector<Vector2D> dock2_list_bod;
+	PrismaticPart* dock2 = new PrismaticPart;
+	double dock2_width = 2.0;
+	double dock2_length = 20.0;
+	dock2_list_bod.push_back(Vector2D(dock2_width / 2, dock2_width / 2));
+	dock2_list_bod.push_back(Vector2D(dock2_width / 2, -dock2_width / 2));
+	dock2_list_bod.push_back(Vector2D(-dock2_width / 2, -dock2_width / 2));
+	dock2_list_bod.push_back(Vector2D(-dock2_width / 2, dock2_width / 2));
+	dock2->setPolygonalBase(dock2_list_bod);
+	dock2->setHeight(dock2_length);
+	dock2->setRelativePosition(Vector3D(0, -40, dock2_width / 2));
+	dock2->setRelativeOrientation(0, PI / 2, 0);
+	dock2->setColor(0.502, 0.251, 0.1);
+
+	vector<Vector2D> dock3_list_bod;
+	PrismaticPart* dock3 = new PrismaticPart;
+	double dock3_width = 2.0;
+	double dock3_length = 20.0;
+	dock3_list_bod.push_back(Vector2D(dock3_width / 2, dock3_width / 2));
+	dock3_list_bod.push_back(Vector2D(dock3_width / 2, -dock3_width / 2));
+	dock3_list_bod.push_back(Vector2D(-dock3_width / 2, -dock3_width / 2));
+	dock3_list_bod.push_back(Vector2D(-dock3_width / 2, dock3_width / 2));
+	dock3->setPolygonalBase(dock3_list_bod);
+	dock3->setHeight(dock3_length);
+	dock3->setRelativePosition(Vector3D(0, -20, dock3_width / 2));
+	dock3->setRelativeOrientation(0, PI / 2, 0);
+	dock3->setColor(0.502, 0.251, 0.1);
+
+	vector<Vector2D> dock4_list_bod;
+	PrismaticPart* dock4 = new PrismaticPart;
+	double dock4_width = 2.0;
+	double dock4_length = 40.0;
+	dock4_list_bod.push_back(Vector2D(dock4_width / 2, dock4_width / 2));
+	dock4_list_bod.push_back(Vector2D(dock4_width / 2, -dock4_width / 2));
+	dock4_list_bod.push_back(Vector2D(-dock4_width / 2, -dock4_width / 2));
+	dock4_list_bod.push_back(Vector2D(-dock4_width / 2, dock4_width / 2));
+	dock4->setPolygonalBase(dock4_list_bod);
+	dock4->setHeight(dock4_length);
+	dock4->setRelativePosition(Vector3D(45, 20, dock4_width / 2));
+	dock4->setRelativeOrientation(0, PI / 2, PI / 2);
+	dock4->setColor(0.502, 0.251, 0.1);
+
+
+
 
 	//! Paredes exteriores
 	land1.setBase(Transformation3D(0, 60, 0, X_AXIS, -PI / 2));
 	land2.setBase(Transformation3D(0, -60, 0, X_AXIS, -PI / 2));
 	land3.setBase(Transformation3D(60, -60, 0, Y_AXIS, -PI / 2));
 	land4.setBase(Transformation3D(0, -60, 0, Y_AXIS, -PI / 2));
-	transversal.setBase(Transformation3D(30, -60, 0, Y_AXIS, -PI / 2));
-	room1.setBase(Transformation3D(0, -40, 0, X_AXIS, -PI / 2));
-	room2.setBase(Transformation3D(0, -20, 0, X_AXIS, -PI / 2));
-	room3.setBase(Transformation3D(45, 20, 0, Y_AXIS, -PI / 2));
+	//transversal.setBase(Transformation3D(30, -60, 0, Y_AXIS, -PI / 2));
+	//room1.setBase(Transformation3D(0, -40, 0, X_AXIS, -PI / 2));
+	//room2.setBase(Transformation3D(0, -20, 0, X_AXIS, -PI / 2));
+	//room3.setBase(Transformation3D(45, 20, 0, Y_AXIS, -PI / 2));
 
 	land1.addVertex(60, 0);
 	land1.addVertex(60, -10);
@@ -397,29 +456,29 @@ void MainWindow::createShipEnvironment_Obstacle3()
 	land4.addVertex(10, 0);
 	land4.setColor(0.502, 0.251, 0.1, 1);
 
-	transversal.addVertex(0, 0);
+	/*transversal.addVertex(0, 0);
 	transversal.addVertex(0, 80);
 	transversal.addVertex(10, 80);
 	transversal.addVertex(10, 0);
-	transversal.setColor(0.502, 0.251, 0.1, 1);
+	transversal.setColor(0.502, 0.251, 0.1, 1);*/
 
-	room1.addVertex(20, 0);
+	/*room1.addVertex(20, 0);
 	room1.addVertex(20, -10);
 	room1.addVertex(0, -10);
 	room1.addVertex(0, 0);
-	room1.setColor(0.502, 0.251, 0.1, 1);
+	room1.setColor(0.502, 0.251, 0.1, 1);*/
 
-	room2.addVertex(20, 0);
+	/*room2.addVertex(20, 0);
 	room2.addVertex(20, -10);
 	room2.addVertex(0, -10);
 	room2.addVertex(0, 0);
-	room2.setColor(0.502, 0.251, 0.1, 1);
+	room2.setColor(0.502, 0.251, 0.1, 1);*/
 
-	room3.addVertex(0, 0);
+	/*room3.addVertex(0, 0);
 	room3.addVertex(0, 40);
 	room3.addVertex(10, 40);
 	room3.addVertex(10, 0);
-	room3.setColor(0.502, 0.251, 0.1, 1);
+	room3.setColor(0.502, 0.251, 0.1, 1);*/
 
 
 	
@@ -430,11 +489,15 @@ void MainWindow::createShipEnvironment_Obstacle3()
 	shore->addFace(land2);
 	shore->addFace(land3);
 	shore->addFace(land4);
-	shore->addFace(transversal);
-	shore->addFace(room1);
-	shore->addFace(room2);
-	shore->addFace(room3);
+	//shore->addFace(transversal);
+	//shore->addFace(room1);
+	/*shore->addFace(room2);
+	shore->addFace(room3);*/
 
+	_world += dock1;
+	_world += dock2;
+	_world += dock3;
+	_world += dock4;
 	_world += shore;
 }
 
@@ -639,19 +702,19 @@ void MainWindow::OnShip(wxCommandEvent& event)
 	_thrustXinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 100), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
 
-	_label_thrustYinp = new wxStaticText(this, wxID_ANY, "Thrust y", wxPoint(20, 140), wxDefaultSize);
+	/*_label_thrustYinp = new wxStaticText(this, wxID_ANY, "Thrust y", wxPoint(20, 140), wxDefaultSize);
 	_thrustYinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 160), wxDefaultSize,
+		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);*/
+
+	_label_thrustWinp = new wxStaticText(this, wxID_ANY, "Thrust Rot", wxPoint(20, 140), wxDefaultSize);
+	_thrustWinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 160), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
 
-	_label_thrustWinp = new wxStaticText(this, wxID_ANY, "Thrust Rot", wxPoint(20, 200), wxDefaultSize);
-	_thrustWinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 220), wxDefaultSize,
-		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
-
-	/*
+	
 		_label_timeinp = new wxStaticText(this, wxID_ANY, "Time", wxPoint(20, 200), wxDefaultSize);
 	_timeinp = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(20, 220), wxDefaultSize,
 		wxTE_LEFT, wxDefaultValidator, wxTextCtrlNameStr);
-	*/
+	
 
 	/*_label_Wind_Force_Drag = new wxStaticText(this, wxID_ANY, "Wind Force drag", wxPoint(140, 80), wxDefaultSize);
 	_Wind_Force_Drag = new wxTextCtrl(this, wxID_ANY, "0.0", wxPoint(140, 100), wxDefaultSize,
@@ -691,7 +754,7 @@ void MainWindow::OnTimer(wxTimerEvent& event)
 {
 
 	//_myship->simpleSim(0.1);
-	_p_myship->simpleDynamicsSim(0.1);
+	_p_myship->simpleDynamicsSim(_time_f);
 	//(*_Wind_Force_Drag).WriteText(to_string(round(_myship->getWind_Force_Drag())));
 	
 	MyGLCanvas->sh = _p_myship;
@@ -711,11 +774,11 @@ void MainWindow::OnSimulate(wxCommandEvent& WXUNUSED(event))
 	myship->setW(0);*/
 
 	float thrustX_f = std::stof(_thrustXinp->GetLineText(0).ToStdString());
-	float thrustY_f = std::stof(_thrustYinp->GetLineText(0).ToStdString());
+	//float thrustY_f = std::stof(_thrustYinp->GetLineText(0).ToStdString());
 	float thrustW_M = std::stof(_thrustWinp->GetLineText(0).ToStdString());
-	//float time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
+	_time_f = std::stof(_timeinp->GetLineText(0).ToStdString());
 
-	_p_myship->setThrusts(thrustX_f, thrustY_f, thrustW_M);
+	_p_myship->setThrusts(thrustX_f, 0.0, thrustW_M);
 	//myship->simulate(0.1);
 
 	_mytimer->Start(100);	
@@ -745,7 +808,7 @@ void MainWindow::OnEGK(wxCommandEvent& event)
 	sb->SetStatusText(wxT("EGK-RRT Ready!"));
 
 	_world.destroyContent();
-	createShipEnvironment_Obstacle2();
+	createShipEnvironment_Obstacle3();
 
 	if (_p_myship)
 		delete _p_myship;

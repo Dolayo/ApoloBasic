@@ -100,7 +100,7 @@ double ShipState::distanceTo(Vector3D vec_pos)
 
 	//penalties the intersection
 	if (_world->segmentIntersection(segm, 0))
-		val *= 1.5;
+		val *= 10;
 
 	_ship->setIntersectable(true);
 

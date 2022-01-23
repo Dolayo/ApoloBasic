@@ -106,6 +106,7 @@ protected:
 
 		double _radius1;
 		double _radius2;
+		double _radius;
 		bool _divided;
 		void add(RobotState *n)
 		{

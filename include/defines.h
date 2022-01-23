@@ -63,14 +63,14 @@ constexpr double CIRC_TOL_OUTER = 10;
 constexpr double CIRC_TOL_2 = 2;
 
 //! Coordenadas absolutas X e Y del punto de inicio
-constexpr double X_START = 50.0;//45
-constexpr double Y_START = 50.0;//-50
+constexpr double X_START = 45.0;//45
+constexpr double Y_START = -50.0;//-50
 
 //! Orientacion relativa del robot en el punto de incio
 constexpr double YAW_START = 0.0 * PI / 180.0;
 
 //! Coordenadas absolutas X e Y del punto destino
-constexpr double X_GOAL = 50;//5
+constexpr double X_GOAL = 5;//5
 constexpr double Y_GOAL = -50;//-50
 
 //! Orientacion goal, usado para testeo
@@ -83,8 +83,8 @@ constexpr double VX_INIT = 0.0;//V_MAX
 constexpr double radius1 = 25;//25
 
 //! Iteraciones del planificador en fase de puntos controlados
-constexpr unsigned int NUM_ITERS = 3000;//200
-constexpr unsigned int NUM_MORE_ITERS = 200;//200
+constexpr unsigned int NUM_ITERS = 1000;//200
+constexpr unsigned int NUM_MORE_ITERS = 50;//200
 
 constexpr double T_TOP = 0.99;//0.9
 constexpr double T_LOW = 0.01;//0.01

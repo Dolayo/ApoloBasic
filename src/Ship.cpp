@@ -10,20 +10,20 @@ namespace mr
 		_length(LENGTH),
 		_mass(MASS),
 		_J(J),
-		_xp(XP),
+		/*_xp(XP),
 		_Sair(S_AIR),
-		_Swater(S_WATER),
+		_Swater(S_WATER),*/
 		_vMax(V_MAX),
 		_aMax(A_MAX),
-		_Marm(M_ARM),
-		_trueWindDirection(TRUE_WIND_DIR),
-		_trueWaterDirection(TRUE_WATER_DIR),
-		_windSpeed(WIND_SPEED),//20
-		_waterSpeed(WATER_SPEED),//2
-		_Crs_water(CRS_WATER),
-		_Crs_air(CRS_AIR),
-		_ro_water(RO_WATER),
-		_ro_air(RO_AIR),
+		//_Marm(M_ARM),
+		//_trueWindDirection(TRUE_WIND_DIR),
+		//_trueWaterDirection(TRUE_WATER_DIR),
+		//_windSpeed(WIND_SPEED),//20
+		//_waterSpeed(WATER_SPEED),//2
+		//_Crs_water(CRS_WATER),
+		//_Crs_air(CRS_AIR),
+		//_ro_water(RO_WATER),
+		//_ro_air(RO_AIR),
 		_u(0),
 		_v(0),
 		_w(0),
@@ -32,18 +32,18 @@ namespace mr
 		_yaw(0),
 		_thrust_x(0),
 		_thrust_y(0),
-		_Wind_Force_Drag(0),
+		/*_Wind_Force_Drag(0),
 		_Water_Force_Drag(0),
 		_Wind_Force_Side(0),
 		_Water_Force_Side(0),
 		_Wind_Moment(0),
 		_Water_Moment(0),
-		_Rotational_Moment(0),
+		_Rotational_Moment(0),*/
 		_move_success(true)
 
 	{
-		_alpha_water = _Crs_water * _Swater * _ro_water / (_length / 2);
-		_alpha_air = _Crs_air * _Sair * _ro_air / (_length / 2);
+		/*_alpha_water = _Crs_water * _Swater * _ro_water / (_length / 2);
+		_alpha_air = _Crs_air * _Sair * _ro_air / (_length / 2);*/
 		
 
 		// Pintar el barquito
@@ -176,9 +176,9 @@ namespace mr
 		double ay = 0.0;
 		double aw = 0.0;
 
-		double F_roz_x = 0.6 * _mass * 9.18;
-		double F_roz_y = 0.6 * _mass * 9.18;
-		double M_roz_w = 0.9 * _J * 9.18;
+		double F_roz_x = _mu_surge * _mass * 9.18;
+		double F_roz_y = _mu_surge * _mass * 9.18;
+		double M_roz_w = _mu_rot * _J * 9.18;
 
 		if ((_u > 0.001) || (_u < -0.001))
 		{
@@ -319,73 +319,73 @@ namespace mr
 		return true; //se pudo realizar el movimiento
 	}
 
-	bool Ship::dynamicsSim(double delta_t)
-	{
-	
-		_Wind_Force_Drag = sdl('a','f','d');// Valores demasiado altos
-		_Water_Force_Drag = sdl('w', 'f', 'd');
+	//bool Ship::dynamicsSim(double delta_t)
+	//{
+	//
+	//	_Wind_Force_Drag = sdl('a','f','d');// Valores demasiado altos
+	//	_Water_Force_Drag = sdl('w', 'f', 'd');
 
-		_Wind_Force_Side = sdl('a', 'f', 's');
-		_Water_Force_Side = sdl('w', 'f', 's');
+	//	_Wind_Force_Side = sdl('a', 'f', 's');
+	//	_Water_Force_Side = sdl('w', 'f', 's');
 
-		_Wind_Moment = sdl('a', 'm', 'y');
-		_Water_Moment = sdl('w', 'm', 'y');
-		_Rotational_Moment = Mfront('a') + Mfront('w') + Mback('a') + Mback('w');
+	//	_Wind_Moment = sdl('a', 'm', 'y');
+	//	_Water_Moment = sdl('w', 'm', 'y');
+	//	_Rotational_Moment = Mfront('a') + Mfront('w') + Mback('a') + Mback('w');
 
-		double ax = (1 / _mass) * (_Wind_Force_Drag + _Water_Force_Drag + _thrust_x);
-		double ay = (1 / _mass) * (_Wind_Force_Side + _Water_Force_Side + _thrust_y);
-		double aw = (1 / _J) * (_Wind_Moment + _Water_Moment + /*_Rotational_Moment +*/ _thrust_y * _xp);
-		// Hola mundo
-		if (std::abs(ax) > _aMax)
-			ax = _aMax * (ax / std::abs(ax));
+	//	double ax = (1 / _mass) * (_Wind_Force_Drag + _Water_Force_Drag + _thrust_x);
+	//	double ay = (1 / _mass) * (_Wind_Force_Side + _Water_Force_Side + _thrust_y);
+	//	double aw = (1 / _J) * (_Wind_Moment + _Water_Moment + /*_Rotational_Moment +*/ _thrust_y * _xp);
+	//	// Hola mundo
+	//	if (std::abs(ax) > _aMax)
+	//		ax = _aMax * (ax / std::abs(ax));
 
-		if (std::abs(ay) > _aMax)
-			ay = _aMax * (ay / std::abs(ay));
+	//	if (std::abs(ay) > _aMax)
+	//		ay = _aMax * (ay / std::abs(ay));
 
-		if (std::abs(aw) > _aMax)
-			aw = _aMax * (aw / std::abs(aw));
-		
+	//	if (std::abs(aw) > _aMax)
+	//		aw = _aMax * (aw / std::abs(aw));
+	//	
 
-		// MRUA
-		double delta_x = _u * delta_t + 0.5 * ax * delta_t * delta_t;
-		double delta_y = _v * delta_t + 0.5 * ay * delta_t * delta_t;
+	//	// MRUA
+	//	double delta_x = _u * delta_t + 0.5 * ax * delta_t * delta_t;
+	//	double delta_y = _v * delta_t + 0.5 * ay * delta_t * delta_t;
 
-		// MCUA
-		double delta_th = _w * delta_t + 0.5 * aw * delta_t * delta_t;;
-		_move_success = false;
+	//	// MCUA
+	//	double delta_th = _w * delta_t + 0.5 * aw * delta_t * delta_t;;
+	//	_move_success = false;
 
-		_u += ax * delta_t;
+	//	_u += ax * delta_t;
 
-		if (std::abs(_u) > _vMax)
-			_u = _vMax * (_u/std::abs(_u));
+	//	if (std::abs(_u) > _vMax)
+	//		_u = _vMax * (_u/std::abs(_u));
 
-		_v += ay * delta_t;
+	//	_v += ay * delta_t;
 
-		if (std::abs(_v) > _vMax)
-			_v = _vMax * (_v / std::abs(_v));
+	//	if (std::abs(_v) > _vMax)
+	//		_v = _vMax * (_v / std::abs(_v));
 
-		_w += aw * delta_t;
+	//	_w += aw * delta_t;
 
-		if (std::abs(_w) > _vMax)
-			_w = _vMax * (_w / std::abs(_w));
+	//	if (std::abs(_w) > _vMax)
+	//		_w = _vMax * (_w / std::abs(_w));
 
-		Transformation3D position = getAbsoluteT3D();
-		Transformation3D delta(delta_x, delta_y, 0, 0, 0, delta_th);
+	//	Transformation3D position = getAbsoluteT3D();
+	//	Transformation3D delta(delta_x, delta_y, 0, 0, 0, delta_th);
 
-		Transformation3D newposition = position * delta;
+	//	Transformation3D newposition = position * delta;
 
-		setAbsoluteT3D(newposition);
+	//	setAbsoluteT3D(newposition);
 
-		World* world = getWorld();
-		if (world) {
-			if (world->checkCollisionWith(*this)) {
-				setAbsoluteT3D(position); //no muevo el robot
-				return false;
-			}
-		}
+	//	World* world = getWorld();
+	//	if (world) {
+	//		if (world->checkCollisionWith(*this)) {
+	//			setAbsoluteT3D(position); //no muevo el robot
+	//			return false;
+	//		}
+	//	}
 
-		return true; //se pudo realizar el movimiento
-	}
+	//	return true; //se pudo realizar el movimiento
+	//}
 
 	void Ship::drawGL()
 	{
@@ -407,316 +407,316 @@ namespace mr
 		return true;
 	}
 
-	double Ship::coeff(const double& x, const char& fluid, const char& type)
-	{
-		// x is apparent flow angle in radians [-PI, PI]
-		// fluid is either air(a) or water(w)
-		// type is either drag(d), side(s), or yaw(y)
+	//double Ship::coeff(const double& x, const char& fluid, const char& type)
+	//{
+	//	// x is apparent flow angle in radians [-PI, PI]
+	//	// fluid is either air(a) or water(w)
+	//	// type is either drag(d), side(s), or yaw(y)
 
-		if (fluid == 'a')
-		{
-			switch (type)
-			{
-			case 'd':
-				//drag
-				return (0.195738 + 0.518615 * std::abs(x) - 0.496029 * std::abs(x) * std::abs(x) +
-					0.0941925 * std::abs(x) * std::abs(x) * std::abs(x) +
-					1.86427 * sin(2 * PI * pow(std::abs(x) / PI, 1.05)) *
-					exp(-2.17281 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
-				break;
+	//	if (fluid == 'a')
+	//	{
+	//		switch (type)
+	//		{
+	//		case 'd':
+	//			//drag
+	//			return (0.195738 + 0.518615 * std::abs(x) - 0.496029 * std::abs(x) * std::abs(x) +
+	//				0.0941925 * std::abs(x) * std::abs(x) * std::abs(x) +
+	//				1.86427 * sin(2 * PI * pow(std::abs(x) / PI, 1.05)) *
+	//				exp(-2.17281 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
+	//			break;
 
-			case 's':
-				// side
-				if ((x < ((PI / 2)+0.1))&&(x > ((PI / 2) - 0.1)))
-				{
-					return _Crs_air;
-					break;
-				}
-				else
-				{
-					double sgn = ((x > 0) ? 1 : -1);
-					return (sgn * (12.3722 - 15.453 * std::abs(x) + 6.0261 * std::abs(x) -
-						0.532325 * std::abs(x) * std::abs(x) * std::abs(x))
-						* sin(std::abs(x)) *
-						exp(-1.68668 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
-					break;
-				}
+	//		case 's':
+	//			// side
+	//			if ((x < ((PI / 2)+0.1))&&(x > ((PI / 2) - 0.1)))
+	//			{
+	//				return _Crs_air;
+	//				break;
+	//			}
+	//			else
+	//			{
+	//				double sgn = ((x > 0) ? 1 : -1);
+	//				return (sgn * (12.3722 - 15.453 * std::abs(x) + 6.0261 * std::abs(x) -
+	//					0.532325 * std::abs(x) * std::abs(x) * std::abs(x))
+	//					* sin(std::abs(x)) *
+	//					exp(-1.68668 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
+	//				break;
+	//			}
 
 
-			case 'y':
-			{
-				double sgn = ((x > 0) ? 1 : -1);
-				return (sgn * (0.710204 - 0.297196 * std::abs(x) +
-					0.0857296 * std::abs(x) * std::abs(x)) *
-					sin(2 * PI * pow(std::abs(x) / PI, 1.05)));
-				break;
-			}
-				
+	//		case 'y':
+	//		{
+	//			double sgn = ((x > 0) ? 1 : -1);
+	//			return (sgn * (0.710204 - 0.297196 * std::abs(x) +
+	//				0.0857296 * std::abs(x) * std::abs(x)) *
+	//				sin(2 * PI * pow(std::abs(x) / PI, 1.05)));
+	//			break;
+	//		}
+	//			
 
-			default:
-				// wrong type input
-				return -1;
-				break;
-			}
-		}
-		else
-		{
-			if (fluid == 'w')
-			{
-				switch (type)
-				{
-					case 'd':
-					{
-						return (0.245219 - 0.93044 * std::abs(x) + 0.745752 * std::abs(x) *
-							std::abs(x) - 0.15915 * std::abs(x) * std::abs(x) *
-							std::abs(x) + 2.79188 * sin(2 * std::abs(x)) *
-							exp(-1.05667 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
-						break;
-					}
-					
+	//		default:
+	//			// wrong type input
+	//			return -1;
+	//			break;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		if (fluid == 'w')
+	//		{
+	//			switch (type)
+	//			{
+	//				case 'd':
+	//				{
+	//					return (0.245219 - 0.93044 * std::abs(x) + 0.745752 * std::abs(x) *
+	//						std::abs(x) - 0.15915 * std::abs(x) * std::abs(x) *
+	//						std::abs(x) + 2.79188 * sin(2 * std::abs(x)) *
+	//						exp(-1.05667 * (std::abs(x) - PI / 2) * (std::abs(x) - PI / 2)));
+	//					break;
+	//				}
+	//				
 
-					case 's':
-					{
-						if ((x < ((PI / 2) + 0.01)) && (x > ((PI / 2) - 0.01)))
-						{
-							return _Crs_water;
-							break;
-						}
-						double sgn = ((x > 0) ? 1 : -1);
-						return (sgn * (0.115554 + 3.09423 * std::abs(x) - 0.984923 * std::abs(x) *
-							std::abs(x)) * sin(std::abs(x)));
-						break;
-					}
-					
-					case 'y':
-					{
-						double sgn = ((x > 0) ? 1 : -1);
-						return (sgn * (0.322986 + 0.317964 * std::abs(x) - 0.1021844 * std::abs(x)
-							* std::abs(x)) * sin(2 * std::abs(x)));
-						break;
-					}
-					
+	//				case 's':
+	//				{
+	//					if ((x < ((PI / 2) + 0.01)) && (x > ((PI / 2) - 0.01)))
+	//					{
+	//						return _Crs_water;
+	//						break;
+	//					}
+	//					double sgn = ((x > 0) ? 1 : -1);
+	//					return (sgn * (0.115554 + 3.09423 * std::abs(x) - 0.984923 * std::abs(x) *
+	//						std::abs(x)) * sin(std::abs(x)));
+	//					break;
+	//				}
+	//				
+	//				case 'y':
+	//				{
+	//					double sgn = ((x > 0) ? 1 : -1);
+	//					return (sgn * (0.322986 + 0.317964 * std::abs(x) - 0.1021844 * std::abs(x)
+	//						* std::abs(x)) * sin(2 * std::abs(x)));
+	//					break;
+	//				}
+	//				
 
-					default:
-					{
-						// wrong type input
-						return -1;
-						break;
-					}
-					
-				}
-			}
-			else
-			{
-				// wrong fluid input
-				return -2;
-			}
-		}
-	}
+	//				default:
+	//				{
+	//					// wrong type input
+	//					return -1;
+	//					break;
+	//				}
+	//				
+	//			}
+	//		}
+	//		else
+	//		{
+	//			// wrong fluid input
+	//			return -2;
+	//		}
+	//	}
+	//}
 
-	double Ship::sdl(const char& fluid, const char& type, const char& type2)
-	{
-		// Square Drag Law
-		// x is apparent flow angle in radians [-PI, PI]
-		// fluid is either air(a) or water(w)
-		// type is eitcher force(f) or momentum(m)
-		// type2 is either drag(d), side(s), or yaw(y)
+	//double Ship::sdl(const char& fluid, const char& type, const char& type2)
+	//{
+	//	// Square Drag Law
+	//	// x is apparent flow angle in radians [-PI, PI]
+	//	// fluid is either air(a) or water(w)
+	//	// type is eitcher force(f) or momentum(m)
+	//	// type2 is either drag(d), side(s), or yaw(y)
 
-		if (fluid == 'a')
-		{
-			double vr = sqrt(pow(_windSpeed * cos(_trueWindDirection - _yaw /*+ PI / 2*/) - _u, 2)     
-			+ pow(_windSpeed * sin(_trueWindDirection - _yaw /*+ PI / 2*/) - _v, 2));
+	//	if (fluid == 'a')
+	//	{
+	//		double vr = sqrt(pow(_windSpeed * cos(_trueWindDirection - _yaw /*+ PI / 2*/) - _u, 2)     
+	//		+ pow(_windSpeed * sin(_trueWindDirection - _yaw /*+ PI / 2*/) - _v, 2));
 
-			if (type == 'f')
-			{
+	//		if (type == 'f')
+	//		{
 
-				double apparent_dir = _trueWindDirection - _yaw;//+ PI / 2
+	//			double apparent_dir = _trueWindDirection - _yaw;//+ PI / 2
 
-				double aux_phi = atan((_windSpeed * sin(apparent_dir) -_v / (_windSpeed * cos(apparent_dir) - _u)));
+	//			double aux_phi = atan((_windSpeed * sin(apparent_dir) -_v / (_windSpeed * cos(apparent_dir) - _u)));
 
-				if ((_windSpeed * cos(apparent_dir) - _u) == 0)
-					aux_phi = PI / 2.0;
+	//			if ((_windSpeed * cos(apparent_dir) - _u) == 0)
+	//				aux_phi = PI / 2.0;
 
-				double sgn = 1;
-				if(type2=='d')
-				{
-					if ((apparent_dir > (PI / 2.0)) && (apparent_dir < ((3.0/2.0) * PI)))
-						sgn = -1.0;
-				}
-				else
-				{
-					if (type2 == 's')
-					{
-						if ((apparent_dir > PI) && (apparent_dir < (2.0 * PI)))
-							sgn = -1.0;
-					}
-				}
-				
-				double aux_coeff = coeff(aux_phi, fluid, type2);
-				return (sgn * 0.5 * aux_coeff * _Sair * _ro_air * vr * vr);
+	//			double sgn = 1;
+	//			if(type2=='d')
+	//			{
+	//				if ((apparent_dir > (PI / 2.0)) && (apparent_dir < ((3.0/2.0) * PI)))
+	//					sgn = -1.0;
+	//			}
+	//			else
+	//			{
+	//				if (type2 == 's')
+	//				{
+	//					if ((apparent_dir > PI) && (apparent_dir < (2.0 * PI)))
+	//						sgn = -1.0;
+	//				}
+	//			}
+	//			
+	//			double aux_coeff = coeff(aux_phi, fluid, type2);
+	//			return (sgn * 0.5 * aux_coeff * _Sair * _ro_air * vr * vr);
 
-			}
-			else
-			{
-				if (type == 'm')
-				{
-					double apparent_dir = _trueWindDirection - _yaw;//+ PI / 2
+	//		}
+	//		else
+	//		{
+	//			if (type == 'm')
+	//			{
+	//				double apparent_dir = _trueWindDirection - _yaw;//+ PI / 2
 
-					double aux_phi = atan((_windSpeed * sin(apparent_dir) - _v / (_windSpeed * cos(apparent_dir) - _u)));
+	//				double aux_phi = atan((_windSpeed * sin(apparent_dir) - _v / (_windSpeed * cos(apparent_dir) - _u)));
 
-					if ((_windSpeed * cos(apparent_dir) - _u) == 0)
-						aux_phi = PI / 2.0;
+	//				if ((_windSpeed * cos(apparent_dir) - _u) == 0)
+	//					aux_phi = PI / 2.0;
 
-					double sgn = 1;
-			
-					if ((apparent_dir > PI) && (apparent_dir < (2.0 * PI)))
-						sgn = -1.0;
-		
+	//				double sgn = 1;
+	//		
+	//				if ((apparent_dir > PI) && (apparent_dir < (2.0 * PI)))
+	//					sgn = -1.0;
+	//	
 
-					double aux_coeff = coeff(aux_phi, fluid, type2);
+	//				double aux_coeff = coeff(aux_phi, fluid, type2);
 
-					return (sgn * 0.5 * aux_coeff * _Marm * _Sair * _ro_air * vr * vr);
-				}
-				else
-				{
-					// wrong type input
-					return -1;
-				}
-			}
+	//				return (sgn * 0.5 * aux_coeff * _Marm * _Sair * _ro_air * vr * vr);
+	//			}
+	//			else
+	//			{
+	//				// wrong type input
+	//				return -1;
+	//			}
+	//		}
 
-		}
-		else
-		{
-			if (fluid == 'w')
-			{
-				double vr = sqrt(pow(_waterSpeed * cos(_trueWaterDirection - _yaw /*+ PI / 2*/) - _u, 2)
-					+ pow(_waterSpeed * sin(_trueWaterDirection - _yaw /*+ PI / 2*/) - _v, 2));
+	//	}
+	//	else
+	//	{
+	//		if (fluid == 'w')
+	//		{
+	//			double vr = sqrt(pow(_waterSpeed * cos(_trueWaterDirection - _yaw /*+ PI / 2*/) - _u, 2)
+	//				+ pow(_waterSpeed * sin(_trueWaterDirection - _yaw /*+ PI / 2*/) - _v, 2));
 
-				if (type == 'f')
-				{
+	//			if (type == 'f')
+	//			{
 
-					// DEBUGGING
-					double apparent_dir = _trueWaterDirection - _yaw;//+ PI / 2
+	//				// DEBUGGING
+	//				double apparent_dir = _trueWaterDirection - _yaw;//+ PI / 2
 
-					double aux_phi = atan((_waterSpeed * sin(apparent_dir) - _v) / (_waterSpeed * cos(apparent_dir) - _u));
+	//				double aux_phi = atan((_waterSpeed * sin(apparent_dir) - _v) / (_waterSpeed * cos(apparent_dir) - _u));
 
-					if ((_waterSpeed * cos(apparent_dir) - _u) == 0)
-						aux_phi = PI / 2.0;
+	//				if ((_waterSpeed * cos(apparent_dir) - _u) == 0)
+	//					aux_phi = PI / 2.0;
 
-					double sgn = 1.0;
-					if (type2 == 'd')
-					{
-						if ((apparent_dir > (PI / 2.0)) && (apparent_dir < (3.0 * PI / 2.0)))
-							sgn = -1.0;
-					}
-					else
-					{
-						if (type2 == 's')
-						{
-							if ((apparent_dir > (PI / 2.0)) && (apparent_dir < (2.0 * PI)))
-								sgn = -1.0;
-						}
-					}
+	//				double sgn = 1.0;
+	//				if (type2 == 'd')
+	//				{
+	//					if ((apparent_dir > (PI / 2.0)) && (apparent_dir < (3.0 * PI / 2.0)))
+	//						sgn = -1.0;
+	//				}
+	//				else
+	//				{
+	//					if (type2 == 's')
+	//					{
+	//						if ((apparent_dir > (PI / 2.0)) && (apparent_dir < (2.0 * PI)))
+	//							sgn = -1.0;
+	//					}
+	//				}
 
-					double aux_coeff = coeff(aux_phi, fluid, type2);
+	//				double aux_coeff = coeff(aux_phi, fluid, type2);
 
-					return (sgn * 0.5 * aux_coeff * _Swater * _ro_water * vr * vr);
-				}
-				else
-				{
-					if (type == 'm')
-					{
-						double apparent_dir = _trueWaterDirection - _yaw ;//+ PI / 2
+	//				return (sgn * 0.5 * aux_coeff * _Swater * _ro_water * vr * vr);
+	//			}
+	//			else
+	//			{
+	//				if (type == 'm')
+	//				{
+	//					double apparent_dir = _trueWaterDirection - _yaw ;//+ PI / 2
 
-						double aux_phi = atan((_waterSpeed * sin(apparent_dir) - _v) / (_waterSpeed * cos(apparent_dir) - _u));
+	//					double aux_phi = atan((_waterSpeed * sin(apparent_dir) - _v) / (_waterSpeed * cos(apparent_dir) - _u));
 
-						if ((_waterSpeed * cos(apparent_dir) - _u) == 0)
-							aux_phi = PI / 2.0;
+	//					if ((_waterSpeed * cos(apparent_dir) - _u) == 0)
+	//						aux_phi = PI / 2.0;
 
-						double sgn = 1;
+	//					double sgn = 1;
 
-						if ((apparent_dir > PI) && (apparent_dir < (2.0 * PI)))
-							sgn = -1.0;
+	//					if ((apparent_dir > PI) && (apparent_dir < (2.0 * PI)))
+	//						sgn = -1.0;
 
-						double aux_coeff = coeff(aux_phi, fluid, type2);
-						return (sgn * 0.5 * aux_coeff * _Marm * _Swater * _ro_water * vr * vr);
-					}
-					else
-					{
-						// wrong type input
-						return -1;
-					}
-				}
-			}
-			else
-			{
-				// wrong fluid input
-				return -2;
-			}
-		}
+	//					double aux_coeff = coeff(aux_phi, fluid, type2);
+	//					return (sgn * 0.5 * aux_coeff * _Marm * _Swater * _ro_water * vr * vr);
+	//				}
+	//				else
+	//				{
+	//					// wrong type input
+	//					return -1;
+	//				}
+	//			}
+	//		}
+	//		else
+	//		{
+	//			// wrong fluid input
+	//			return -2;
+	//		}
+	//	}
 
-	}
+	//}
 
-	double Ship::Mfront(const char& fluid)
-	{
-		// fluid is either air(a) or water(w)
+	//double Ship::Mfront(const char& fluid)
+	//{
+	//	// fluid is either air(a) or water(w)
 
-		double alpha_aux;
-		if (fluid == 'a')
-		{
-			alpha_aux = _alpha_air;
-		}
-		else
-		{
-			if (fluid == 'w')
-			{
-				alpha_aux = _alpha_water;
-			}
-			else
-			{
-				// wrong fluid input
-				return -2;
-			}
-		}
-		double aux = ((_length * _length * alpha_aux / 192) * (3 * _length * _length * _w * _w + 16 * _length * _w * _v + 24 * _v * _v));
-		return aux;
-	}
+	//	double alpha_aux;
+	//	if (fluid == 'a')
+	//	{
+	//		alpha_aux = _alpha_air;
+	//	}
+	//	else
+	//	{
+	//		if (fluid == 'w')
+	//		{
+	//			alpha_aux = _alpha_water;
+	//		}
+	//		else
+	//		{
+	//			// wrong fluid input
+	//			return -2;
+	//		}
+	//	}
+	//	double aux = ((_length * _length * alpha_aux / 192) * (3 * _length * _length * _w * _w + 16 * _length * _w * _v + 24 * _v * _v));
+	//	return aux;
+	//}
 
-	double Ship::Mback(const char& fluid)
-	{
-		// fluid is either air(a) or water(w)
+	//double Ship::Mback(const char& fluid)
+	//{
+	//	// fluid is either air(a) or water(w)
 
-		double alpha_aux;
-		if (fluid == 'a')
-		{
-			alpha_aux = _alpha_air;
-		}
-		else
-		{
-			if (fluid == 'w')
-			{
-				alpha_aux = _alpha_water;
-			}
-			else
-			{
-				// wrong fluid input
-				return -2;
-			}
-		}
-	
-		if(_v > (_w * _length / 2))
-		{
-			double aux = ((-1 * _length * _length * alpha_aux / 192) * (3 * _length * _length * _w * _w - 16 * _length * _w * _v + 24 * _v * _v));
-			return aux;
-		}
-		else
-		{
-			double _w_aux = _w;
-			if (_w_aux == 0)
-				_w_aux = 0.001;
-			double aux = (alpha_aux / (192 * _w_aux * _w_aux) * ((_length * _w_aux - 2 * _v) * (_length * _w_aux - 2 * _v) * (_length * _w_aux - 2 * _v) * (3 * _length * _w_aux + 2 * _v) - 16 * _v * _v * _v * _v));
-			return aux;
-		}
-	}
+	//	double alpha_aux;
+	//	if (fluid == 'a')
+	//	{
+	//		alpha_aux = _alpha_air;
+	//	}
+	//	else
+	//	{
+	//		if (fluid == 'w')
+	//		{
+	//			alpha_aux = _alpha_water;
+	//		}
+	//		else
+	//		{
+	//			// wrong fluid input
+	//			return -2;
+	//		}
+	//	}
+	//
+	//	if(_v > (_w * _length / 2))
+	//	{
+	//		double aux = ((-1 * _length * _length * alpha_aux / 192) * (3 * _length * _length * _w * _w - 16 * _length * _w * _v + 24 * _v * _v));
+	//		return aux;
+	//	}
+	//	else
+	//	{
+	//		double _w_aux = _w;
+	//		if (_w_aux == 0)
+	//			_w_aux = 0.001;
+	//		double aux = (alpha_aux / (192 * _w_aux * _w_aux) * ((_length * _w_aux - 2 * _v) * (_length * _w_aux - 2 * _v) * (_length * _w_aux - 2 * _v) * (3 * _length * _w_aux + 2 * _v) - 16 * _v * _v * _v * _v));
+	//		return aux;
+	//	}
+	//}
 
 }

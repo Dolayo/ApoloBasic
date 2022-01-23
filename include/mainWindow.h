@@ -37,11 +37,11 @@ private:
     // Cajas de texto
 
     wxTextCtrl* _thrustXinp;
-    wxTextCtrl* _thrustYinp;
+    /*wxTextCtrl* _thrustYinp;*/
     wxTextCtrl* _thrustWinp;
     wxTextCtrl* _timeinp;
 
-    wxTextCtrl* _Wind_Force_Drag;
+    /*wxTextCtrl* _Wind_Force_Drag;
     wxTextCtrl* _Water_Force_Drag;
 
     wxTextCtrl* _Wind_Force_Side;
@@ -49,20 +49,20 @@ private:
 
     wxTextCtrl* _Wind_Moment;
     wxTextCtrl* _Water_Moment;
-    wxTextCtrl* _Rotational_Moment;
+    wxTextCtrl* _Rotational_Moment;*/
 
     // Etiquetas
 
-    wxStaticText* _label_Wind_Force_Drag;
+   /* wxStaticText* _label_Wind_Force_Drag;
     wxStaticText* _label_Water_Force_Drag;
     wxStaticText* _label_Wind_Force_Side;
     wxStaticText* _label_Water_Force_Side;
     wxStaticText* _label_Wind_Moment;
     wxStaticText* _label_Water_Moment;
-    wxStaticText* _label_Rotational_Moment;
+    wxStaticText* _label_Rotational_Moment;*/
 
     wxStaticText* _label_thrustXinp;
-    wxStaticText* _label_thrustYinp;
+    /*wxStaticText* _label_thrustYinp;*/
     wxStaticText* _label_thrustWinp;
     wxStaticText* _label_timeinp;
 
@@ -88,6 +88,8 @@ private:
     double _y_goal{Y_GOAL};
     
     int _n_iter{ NUM_ITERS };
+
+    float _time_f{ 0.1 };
 
     void createEnvironment();
     void createShipEnvironment_Blank();
